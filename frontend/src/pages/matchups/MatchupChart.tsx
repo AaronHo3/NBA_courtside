@@ -114,7 +114,7 @@ export function MatchupChart({ rows, view, minPoss, metric, limit, prior, onSele
     }] : []
     return {
       height,
-      margin: { l: 150, r: 16, t: 18, b: 44 },
+      margin: { l: 12, r: 16, t: 18, b: 44 }, // y-axis automargin sizes the name column
       showlegend: isPct,
       legend: { orientation: 'h', y: -0.05 - 40 / height, x: 0, font: { color: t.ink2, size: 11 } },
       hovermode: 'closest',

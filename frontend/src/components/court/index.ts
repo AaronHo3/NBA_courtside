@@ -1,6 +1,7 @@
 export { CourtChart, type CourtChartProps } from './CourtChart'
 export { CourtLines } from './Court'
 export { CourtLegend } from './CourtLegend'
+export { CourtKey, type CourtKeyProps } from './CourtKey'
 export * from './geometry'
 export * from './colour'
 export * from './diff'

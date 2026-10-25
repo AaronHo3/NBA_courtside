@@ -1,14 +1,15 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { Badge, Button, EmptyState, ErrorState, Loading, Panel, Refetching } from '@/components/ui'
+import { Badge, Button, Disclosure, EmptyState, ErrorState, Loading, Panel, Refetching } from '@/components/ui'
 import { useCourt, useExplorer, useShotFilters, useTeams } from '@/hooks/useApi'
 import type { Shot, ZoneSummary } from '@/lib/types'
 import { CourtChart } from '@/components/court/CourtChart'
 import { METRIC_LABEL, colourDomain } from '@/components/court/colour'
 import { mergeDifference } from '@/components/court/diff'
-import { pointToHex, providerToFeet, zoneLabel } from '@/components/court/geometry'
+import { pointToHex, providerToFeet } from '@/components/court/geometry'
 import type { CourtSelection } from '@/components/court/types'
-import { BinDetail } from './shooting/BinDetail'
+import { CourtAside } from './shooting/CourtAside'
+import { CourtLayout } from './shooting/CourtLayout'
 import { FilterRow } from './shooting/FilterRow'
 import { MethodNote } from './shooting/MethodNote'
 import { ShotEvidencePanel } from './shooting/ShotEvidencePanel'
@@ -17,9 +18,12 @@ import { SubjectPicker } from './shooting/SubjectPicker'
 import { ViewControls } from './shooting/ViewControls'
 import { subjectParams, useShootingState } from './shooting/state'
 import { useSubjectLabel, useSubjectShots } from './shooting/useSubjectShots'
-import { ZoneTable, type ZoneRow } from './shooting/ZoneTable'
+import type { ZoneRow } from './shooting/ZoneTable'
 
 const EMPTY: never[] = []
+/** The court is width-driven but never taller than this. */
+const COURT_MAX_HEIGHT = 640
+const COURT_MAX_WIDTH = 720
 const LAYER_METHOD: Record<string, string> = {
   hex: 'Hexagon size or opacity = share of attempts; colour = accuracy on a fixed range; hatched = below the low-sample threshold.',
   zones: 'Provider zones filled by accuracy on a fixed range; labels print the metric, attempts and FG%.',
@@ -29,6 +33,7 @@ const LAYER_METHOD: Record<string, string> = {
 
 export default function ShootingLab() {
   const st = useShootingState()
+  const [hoverZone, setHoverZone] = useState<string | null>(null)
   const court = useCourt()
   const teams = useTeams()
   const teamName = useCallback((id: number) => teams.data?.data.find((t) => t.team_id === id)?.abbreviation ?? String(id), [teams.data])
@@ -66,8 +71,8 @@ export default function ShootingLab() {
   const findCell = (sel: CourtSelection, hex: typeof hexA, zones: ZoneSummary[]) =>
     sel.kind === 'hex' ? hex.find((b) => b.q === sel.q && b.r === sel.r) ?? null : zones.find((z) => z.zone === sel.zone) ?? null
   const zoneRows: ZoneRow[] = useMemo(() => [
-    ...zonesA.map((z) => ({ ...z, subject: labelA })),
-    ...(st.subjectB ? zonesB.map((z) => ({ ...z, subject: labelB })) : []),
+    ...zonesA.map((z) => ({ ...z, subject: labelA, side: 'A' as const })),
+    ...(st.subjectB ? zonesB.map((z) => ({ ...z, subject: labelB, side: 'B' as const })) : []),
   ], [zonesA, zonesB, labelA, labelB, st.subjectB])
 
   const geometry = court.data?.data
@@ -75,6 +80,8 @@ export default function ShootingLab() {
   const loadingB = B.hexbins.isFetching || B.zones.isFetching
   const errorA = A.hexbins.error ?? A.zones.error ?? A.markers.error
 
+  const isDiff = st.view === 'diff' && Boolean(st.subjectB) && diffBins !== undefined && B.available
+  const highlightZone = hoverZone ?? (st.selected?.kind === 'hex' ? findCell(st.selected, hexA, zonesA)?.zone ?? null : null)
   const courtFor = (hex: typeof hexA, zones: ZoneSummary[], shots: Shot[], title: string, label: string) => geometry && (
     <CourtChart
       geometry={geometry}
@@ -91,26 +98,67 @@ export default function ShootingLab() {
       lowSampleThreshold={st.minAttempts}
       hideLowSample={st.hideLow}
       selected={st.selected}
+      highlightZone={hoverZone}
       onSelect={st.setSelected}
       teamName={teamName}
       title={`${title} shot chart for ${label}`}
-      legendPlacement={st.view === 'side' ? 'below' : 'right'}
+      maxWidth={COURT_MAX_WIDTH}
+      maxHeight={COURT_MAX_HEIGHT}
+      showLegend={false}
     />
   )
+  const noB = <EmptyState title={`No shot detail for ${labelB}`} body={B.reason} />
+  const courts = st.view === 'side' && st.subjectB ? (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <div className="min-w-0"><p className="mb-2 text-sm font-medium text-ink">A · {labelA}</p>{courtFor(hexA, zonesA, shotsA, 'Subject A', labelA)}</div>
+      <div className="min-w-0">
+        <p className="mb-2 text-sm font-medium text-ink">B · {labelB}</p>
+        {B.available ? courtFor(hexB, zonesB, B.markers.data?.data ?? [], 'Subject B', labelB) : noB}
+      </div>
+    </div>
+  ) : st.view === 'diff' && st.subjectB && diffBins ? (
+    !B.available ? noB : geometry && (
+      <CourtChart
+        geometry={geometry}
+        layer="hex"
+        diffBins={diffBins}
+        diffLabels={[labelA, labelB]}
+        sizeFt={st.sizeFt}
+        metric={st.metric}
+        domain={domain}
+        encoding={st.encoding}
+        lowSampleThreshold={st.minAttempts}
+        hideLowSample={st.hideLow}
+        selected={st.selected}
+        highlightZone={hoverZone}
+        onSelect={st.setSelected}
+        title={`Difference shot chart, ${labelA} minus ${labelB}`}
+        maxWidth={COURT_MAX_WIDTH}
+        maxHeight={COURT_MAX_HEIGHT}
+        showLegend={false}
+      />
+    )
+  ) : courtFor(hexA, zonesA, shotsA, 'Subject A', labelA)
 
   const question = st.subjectA
     ? st.view === 'diff' ? `Where does ${labelA} shoot better or worse than ${labelB}?` : `Where does ${labelA} shoot from, and does it go in?`
     : 'Where do the shots come from, and do they go in?'
+  const activeFilters = Object.values(st.filters).filter(Boolean).length
 
   return (
     <>
       <PageHeader
         title="Shooting lab"
-        lede="Shot locations as hexbins, provider zones, raw markers or density. Frequency and accuracy are encoded separately, the colour range is fixed so subjects can be compared, and every FG% carries a Wilson interval."
+        lede="Shot locations as hexbins, zones, raw markers or density. Size carries frequency, colour carries accuracy on a fixed range, and every FG% has a Wilson interval."
       />
-      <div className="flex flex-col gap-4">
-        <Panel question="Who are we looking at?" method="Subject A is a player or team; subject B is optional: another player, a team, or the same subject in another season with shot detail.">
+      <div className="flex flex-col gap-5">
+        <Panel question="Who are we looking at, and which shots count?" method="Subject A is a player or team; subject B is optional: another player, a team, or the same subject in another season. Filters apply server-side to every layer and table.">
           <SubjectPicker st={st} labelA={labelA} labelB={labelB} />
+          {st.subjectA && A.available && (
+            <Disclosure summary={activeFilters ? `Shot filters · ${activeFilters} active` : 'Shot filters · none'} defaultOpen={activeFilters > 0} className="mt-3" testId="shot-filters">
+              <FilterRow st={st} options={filterOpts.data?.data} />
+            </Disclosure>
+          )}
         </Panel>
 
         {court.error && <ErrorState error={court.error} retry={() => court.refetch()} />}
@@ -131,10 +179,6 @@ export default function ShootingLab() {
 
         {st.subjectA && A.available && (
           <>
-            <Panel question="Which shots count?" method="Filters are applied server-side to every layer and table. Filters the public shot-chart feed cannot support are listed below the row.">
-              <FilterRow st={st} options={filterOpts.data?.data} />
-            </Panel>
-
             <Panel
               question={question}
               method={LAYER_METHOD[st.layer]}
@@ -145,55 +189,26 @@ export default function ShootingLab() {
               </div>}
             >
               <div className="mb-4 border-b border-line pb-4"><ViewControls st={st} /></div>
-              {!geometry ? <Loading label="Loading court geometry" /> : (
-                <Refetching loading={loadingA || (st.subjectB ? loadingB : false)} error={errorA} retry={() => { void A.hexbins.refetch(); void A.zones.refetch() }}>
-                  {st.view === 'side' && st.subjectB ? (
-                    <div className="grid gap-6 md:grid-cols-2">
-                      <div><p className="mb-2 text-sm font-medium text-ink">A · {labelA}</p>{courtFor(hexA, zonesA, shotsA, 'Subject A', labelA)}</div>
-                      <div>
-                        <p className="mb-2 text-sm font-medium text-ink">B · {labelB}</p>
-                        {B.available ? courtFor(hexB, zonesB, B.markers.data?.data ?? [], 'Subject B', labelB) : <EmptyState title={`No shot detail for ${labelB}`} body={B.reason} />}
-                      </div>
-                    </div>
-                  ) : st.view === 'diff' && st.subjectB && diffBins ? (
-                    !B.available ? <EmptyState title={`No shot detail for ${labelB}`} body={B.reason} /> : (
-                      <CourtChart
-                        geometry={geometry}
-                        layer="hex"
-                        diffBins={diffBins}
-                        diffLabels={[labelA, labelB]}
-                        sizeFt={st.sizeFt}
-                        metric={st.metric}
-                        domain={domain}
-                        encoding={st.encoding}
-                        lowSampleThreshold={st.minAttempts}
-                        hideLowSample={st.hideLow}
-                        selected={st.selected}
-                        onSelect={st.setSelected}
-                        title={`Difference shot chart, ${labelA} minus ${labelB}`}
-                      />
-                    )
-                  ) : courtFor(hexA, zonesA, shotsA, 'Subject A', labelA)}
-                </Refetching>
-              )}
-              {st.view === 'diff' && st.layer !== 'hex' && <p className="mt-2 text-xs text-ink-3">The difference view always uses hexbins; switch the view to see {st.layer} for A alone or side by side.</p>}
-            </Panel>
-
-            {st.selected && (
-              <Panel question="What happened in the selected area?" method="Attempts, makes, FG% with its 95% Wilson interval, the league FG% in the same provider zone, and points per FGA (field goals only).">
-                <BinDetail
-                  selection={st.selected}
-                  threshold={st.minAttempts}
-                  onClear={() => st.setSelected(null)}
-                  cells={[{ label: `A · ${labelA}`, cell: findCell(st.selected, hexA, zonesA) }, ...(st.subjectB ? [{ label: `B · ${labelB}`, cell: findCell(st.selected, hexB, zonesB) }] : [])]}
-                />
-              </Panel>
-            )}
-
-            <Panel question="How does each zone add up?" method="Provider zones with attempts, share, makes, FG%, league FG% in the same zone and season, the difference, points per FGA and the 95% Wilson interval. Click a row to select the zone." actions={st.selected?.kind === 'zone' ? <Badge tone="accent">{zoneLabel(st.selected.zone)}</Badge> : undefined}>
-              <Refetching loading={A.zones.isFetching} error={A.zones.error} retry={() => { void A.zones.refetch() }}>
-                <ZoneTable rows={zoneRows} showSubject={Boolean(st.subjectB)} threshold={st.minAttempts} selected={st.selected} onSelect={st.setSelected} />
-              </Refetching>
+              <CourtLayout
+                court={<>
+                  {!geometry ? <Loading label="Loading court geometry" /> : (
+                    <Refetching loading={loadingA || (st.subjectB ? loadingB : false)} error={errorA} retry={() => { void A.hexbins.refetch(); void A.zones.refetch() }}>
+                      {courts}
+                    </Refetching>
+                  )}
+                  {st.view === 'diff' && st.layer !== 'hex' && <p className="mt-2 text-xs text-ink-3">The difference view always uses hexbins; switch the view to see {st.layer} for A alone or side by side.</p>}
+                </>}
+                aside={<CourtAside
+                  legend={{ layer: isDiff ? 'hex' : st.layer, metric: st.metric, domain, encoding: st.encoding, threshold: st.minAttempts, diff: isDiff, diffLabels: isDiff ? [labelA, labelB] : undefined }}
+                  zones={{ rows: zoneRows, showSubject: Boolean(st.subjectB), loading: A.zones.isFetching, error: A.zones.error, retry: () => { void A.zones.refetch() } }}
+                  selected={st.selected}
+                  onSelect={st.setSelected}
+                  onHoverZone={setHoverZone}
+                  highlightZone={highlightZone}
+                  cells={st.selected ? [{ label: `A · ${labelA}`, cell: findCell(st.selected, hexA, zonesA) }, ...(st.subjectB ? [{ label: `B · ${labelB}`, cell: findCell(st.selected, hexB, zonesB) }] : [])] : []}
+                  comparison={st.subjectB ? { label: labelB, view: st.view, fga: B.hexbins.data?.meta.total_fga } : null}
+                />}
+              />
             </Panel>
 
             <Panel question={st.selected ? `Which shots are in the selected ${st.selected.kind === 'hex' ? 'hex' : 'zone'}?` : `Which shots did ${labelA} take?`} method="Every attempt under the current filters for subject A; selecting a hex or zone narrows the list. Export writes the same rows as CSV." actions={A.markers.data?.meta.capped ? <Badge tone="warning">Capped at {A.markers.data.meta.cap?.toLocaleString()} shots</Badge> : undefined}>

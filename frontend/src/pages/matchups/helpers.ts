@@ -75,6 +75,11 @@ export function formatPpp(v: number | null | undefined): string {
   return isNil(v) ? '–' : v.toFixed(2)
 }
 
+/** Possessions with up to two decimals and no trailing zeros ("14.5", "22.25", "30"). */
+export function formatPoss(v: number | null | undefined): string {
+  return isNil(v) ? '–' : String(Number(v.toFixed(2)))
+}
+
 export function isLowSample(row: Pick<MatchupRow, 'matchup_fga'>, threshold = LOW_SAMPLE_FGA): boolean {
   return isNil(row.matchup_fga) || row.matchup_fga < threshold
 }

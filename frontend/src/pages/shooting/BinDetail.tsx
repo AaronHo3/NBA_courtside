@@ -1,3 +1,4 @@
+import { clsx } from 'clsx'
 import type { HexBin, ZoneSummary } from '@/lib/types'
 import { formatPct, wilsonText } from '@/lib/format'
 import { Badge, Button, Stat } from '@/components/ui'
@@ -8,7 +9,16 @@ import type { CourtSelection } from '@/components/court/types'
 type Cell = HexBin | ZoneSummary
 
 /** Stat row for the selected hex or zone. */
-export function BinDetail({ selection, cells, threshold, onClear }: { selection: CourtSelection; cells: Array<{ label: string; cell: Cell | null }>; threshold: number; onClear: () => void }) {
+type Props = {
+  selection: CourtSelection
+  cells: Array<{ label: string; cell: Cell | null }>
+  threshold: number
+  onClear: () => void
+  /** Two-column stat grid for a narrow side column. */
+  compact?: boolean
+}
+
+export function BinDetail({ selection, cells, threshold, onClear, compact = false }: Props) {
   const where = selection.kind === 'hex' ? `Hex (q ${selection.q}, r ${selection.r})` : zoneLabel(selection.zone)
   return (
     <div className="flex flex-col gap-3" data-testid="bin-detail">
@@ -23,7 +33,7 @@ export function BinDetail({ selection, cells, threshold, onClear }: { selection:
           {!cell ? (
             <p className="text-sm text-ink-2">No attempts here.</p>
           ) : (
-            <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4 lg:grid-cols-8">
+            <div className={clsx('grid grid-cols-2 gap-x-6 gap-y-3', !compact && 'sm:grid-cols-4 lg:grid-cols-8')}>
               <Stat label="Attempts" value={cell.fga} />
               <Stat label="Makes" value={cell.fgm} />
               <Stat label="FG%" value={formatPct(cell.fg_pct)} />

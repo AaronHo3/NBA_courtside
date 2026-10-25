@@ -6,7 +6,7 @@ import { colourDomain, makeColourScale, type AccuracyMetric, type Domain, type R
 import { CourtLines } from './Court'
 import { CourtLegend } from './CourtLegend'
 import type { DiffBin } from './diff'
-import { courtScales } from './geometry'
+import { courtScales, zoneShapes } from './geometry'
 import { DiffLayer, HexLayer, MarkerLayer, ZoneLayer, type Ink, type InteractionProps } from './layers'
 import type { CourtLayer, CourtSelection, FrequencyEncoding, MarkerFilter, TooltipState } from './types'
 import { useContainerWidth } from './useContainerWidth'
@@ -20,6 +20,8 @@ export type CourtChartProps = {
   width?: number
   /** Upper bound on the responsive width, so a wide panel does not produce a giant court. Default 640. */
   maxWidth?: number
+  /** Upper bound on the drawn height in px; the width shrinks to keep the court's aspect ratio. */
+  maxHeight?: number
   /** Raw shots for the `markers` layer (provider units: tenths of a foot). */
   shots?: readonly Shot[]
   markerFilter?: MarkerFilter
@@ -46,6 +48,8 @@ export type CourtChartProps = {
   lowSampleThreshold?: number
   hideLowSample?: boolean
   selected?: CourtSelection | null
+  /** Provider zone to outline (e.g. while its row in a zone table is hovered). A selected zone is outlined too. */
+  highlightZone?: string | null
   /** Clicking (or Enter/Space on) a hex or zone toggles selection. */
   onSelect?: (sel: CourtSelection | null) => void
   showLegend?: boolean
@@ -66,13 +70,17 @@ export type CourtChartProps = {
  */
 export function CourtChart(props: CourtChartProps) {
   const {
-    geometry, layer, width: fixedWidth, maxWidth = 640, shots = [], markerFilter = 'both', emphasiseShot, hexbins = [], diffBins, diffLabels, zones = [],
-    sizeFt = 1.5, metric = 'fg_pct', rangePreset = 'standard', encoding = 'size', lowSampleThreshold, hideLowSample, selected, onSelect,
+    geometry, layer, width: fixedWidth, maxWidth = 640, maxHeight, shots = [], markerFilter = 'both', emphasiseShot, hexbins = [], diffBins, diffLabels, zones = [],
+    sizeFt = 1.5, metric = 'fg_pct', rangePreset = 'standard', encoding = 'size', lowSampleThreshold, hideLowSample, selected, highlightZone, onSelect,
     showLegend = true, legendPlacement = 'right', teamName, title, className,
   } = props
   const t = useChartTheme()
   const [ref, measured] = useContainerWidth<HTMLDivElement>(fixedWidth ?? 480)
-  const width = fixedWidth ?? measured
+  const aspect = (geometry.bounds.x_max - geometry.bounds.x_min) / (geometry.bounds.y_max - geometry.bounds.y_min)
+  const heightCap = maxHeight !== undefined ? Math.floor(maxHeight * aspect) : Infinity
+  const width = fixedWidth ?? Math.min(measured, maxWidth, heightCap)
+  const outlineZone = highlightZone ?? (selected?.kind === 'zone' && layer !== 'zones' ? selected.zone : null)
+  const outlineShape = useMemo(() => (outlineZone ? zoneShapes(geometry).find((z) => z.zone === outlineZone) ?? null : null), [geometry, outlineZone])
   const scales = useMemo(() => courtScales(geometry, width), [geometry, width])
   const isDiff = layer === 'hex' && diffBins !== undefined
   const domain = props.domain ?? colourDomain(metric, rangePreset, isDiff)
@@ -103,7 +111,7 @@ export function CourtChart(props: CourtChartProps) {
 
   return (
     <div className={clsx('flex gap-4', legendPlacement === 'right' ? 'flex-col md:flex-row md:items-start' : 'flex-col', className)}>
-      <div ref={ref} className="relative min-w-0 flex-1" style={fixedWidth ? { width: fixedWidth, flex: 'none' } : { maxWidth }} onKeyDown={(e) => { if (e.key === 'Escape' && onSelect) onSelect(null) }}>
+      <div ref={ref} className="relative min-w-0 flex-1" style={fixedWidth ? { width: fixedWidth, flex: 'none' } : { maxWidth: Math.min(maxWidth, heightCap) }} onKeyDown={(e) => { if (e.key === 'Escape' && onSelect) onSelect(null) }}>
         <svg
           role="img"
           aria-label={title ?? 'Half court shot chart'}
@@ -125,6 +133,10 @@ export function CourtChart(props: CourtChartProps) {
             <HexLayer bins={hexbins} scales={scales} sizeFt={sizeFt} metric={metric} scale={scale} encoding={encoding} threshold={threshold} hideLowSample={hideLowSample} selected={selected} hatchId={hatchId} ink={ink} io={io} density={layer === 'density'} />
           )}
           <CourtLines geometry={geometry} scales={scales} stroke={layer === 'zones' ? t.ink2 : t.ink3} strokeWidth={Math.max(1, Math.min(1.6, scales.pxPerFt / 7))} />
+          {outlineShape && (
+            <path d={outlineShape.path(scales)} data-testid="zone-outline" data-zone={outlineShape.zone} fillRule="evenodd" fill="none" pointerEvents="none"
+              stroke={highlightZone ? t.accent : t.ink} strokeWidth={2.5} strokeDasharray={highlightZone ? '6 3' : undefined} strokeLinejoin="round" />
+          )}
           {layer === 'markers' && <MarkerLayer shots={shots} scales={scales} filter={markerFilter} emphasise={emphasiseShot} ink={ink} io={io} teamName={teamName} />}
         </svg>
         {tip && (

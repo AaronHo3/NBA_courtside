@@ -12,7 +12,11 @@ export function CourtLegend({ layer, metric, domain, scale, encoding, threshold,
   const [lo, hi] = domain
   const mid = (lo + hi) / 2
   const fmt = (v: number) => formatMetricValue(metric, v, Boolean(diff))
-  const title = layer === 'density' ? 'Share of attempts' : diff ? `A − B difference in ${METRIC_LABEL[metric]}` : METRIC_LABEL[metric]
+  const diverging = scale.diverging
+  const title = layer === 'density'
+    ? 'Opacity = frequency (share of attempts)'
+    : diff ? `Colour = A − B difference in ${METRIC_LABEL[metric]} (diverging)`
+      : diverging ? `Colour = relative accuracy · ${METRIC_LABEL[metric]} (diverging)` : `Colour = accuracy · ${METRIC_LABEL[metric]}`
   const stops = layer === 'density' ? [ink.accent, ink.accent] : scale.stops
   return (
     <div className="flex flex-wrap gap-x-8 gap-y-3 text-xs text-ink-2 md:flex-col md:gap-3" data-testid="court-legend">
@@ -33,11 +37,16 @@ export function CourtLegend({ layer, metric, domain, scale, encoding, threshold,
             <div className="flex w-[170px] justify-between tnum"><span>≤ {fmt(lo)}</span><span>{fmt(mid)}</span><span>≥ {fmt(hi)}</span></div>
           )}
           {layer !== 'density' && <span className="max-w-[260px] text-ink-3">Fixed range; values beyond it are clamped so subjects share one scale.</span>}
+          {layer !== 'density' && (
+            <span className="max-w-[260px] text-ink-3">
+              {diverging ? 'Diverging scale: the middle colour is no difference; the two ends are below and above.' : 'Relative FG% switches to a diverging scale centred on the league zone average.'}
+            </span>
+          )}
         </div>
       )}
       {(layer === 'hex' || layer === 'density') && (
         <div className="flex flex-col gap-1">
-          <span className="font-medium text-ink">{layer === 'density' || encoding === 'opacity' ? 'Opacity = share of attempts' : 'Size = share of attempts'}</span>
+          <span className="font-medium text-ink">{layer === 'density' || encoding === 'opacity' ? 'Opacity = frequency (share of attempts)' : 'Size = frequency (share of attempts)'}</span>
           <div className="flex items-center gap-2">
             <svg width="70" height="26" aria-hidden="true">
               {layer === 'density' || encoding === 'opacity' ? (

@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { Button, EmptyState, Info, Panel, Refetching } from '@/components/ui'
+import { Button, Disclosure, EmptyState, Info, Panel, Refetching } from '@/components/ui'
 import { useMatchupAvailability, useMatchupDefense, useMatchupOffense, usePlayer, useStatus } from '@/hooks/useApi'
 import { useSeason } from '@/hooks/useSeason'
 import { useNumberParam, useParam } from '@/lib/urlState'
@@ -74,7 +74,7 @@ export default function MatchupExplorer() {
         title="Who guards whom, and how did it go?"
         lede="Tracked scorer–defender matchups: how a player's efficiency varied across the defenders he faced, or across the scorers he guarded. Observations, not verdicts."
       />
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-5">
         <SubjectBar
           playerName={playerName}
           playerPosition={playerPosition}
@@ -107,9 +107,6 @@ export default function MatchupExplorer() {
 
         {available && id && (
           <>
-            {meta?.wording && (
-              <p className="rounded-[var(--radius-control)] border border-line bg-raised px-3 py-2 text-sm text-ink-2" role="note">{meta.wording}</p>
-            )}
             <Panel
               question={view === 'offense' ? `Which defenders limited ${playerName ?? 'him'}, and against whom did he score freely?` : `Which scorers did ${playerName ?? 'he'} limit, and who scored on him?`}
               method={`${season} ${seasonType}. Qualifying = at least ${minPoss} partial possessions. ${priorText(priorObj)}.`}
@@ -120,6 +117,11 @@ export default function MatchupExplorer() {
                   <CalloutStrip lowest={lowest} highest={highest} view={view} minPoss={minPoss} qualifyingCount={qualifying.length} totalCount={rows.length} onOpenPair={openPair} />
                 )}
               </Refetching>
+              {meta?.wording && (
+                <Disclosure summary="What matchup data can and cannot show" className="mt-3" testId="matchup-wording">
+                  <p>{meta.wording}</p>
+                </Disclosure>
+              )}
             </Panel>
 
             <Panel
