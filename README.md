@@ -15,8 +15,7 @@ fallback when an image is unavailable).
 
 ## Demo
 
-<!-- Video player: paste the github.com/user-attachments/assets/... URL for docs/media/courtside-demo.mp4
-     on its own line here (see "Adding the video" below). GitHub renders a bare asset URL as a player. -->
+https://github.com/user-attachments/assets/db43b44b-a879-44b6-97f1-d34184eb0bfe
 
 A 74-second tour: the research pages, a live draft with recommendations, then my league's matchups,
 power rankings, free agents and performers. It runs against a copy of my own ESPN league for the
