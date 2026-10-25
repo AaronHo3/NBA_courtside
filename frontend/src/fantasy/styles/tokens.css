@@ -1,0 +1,80 @@
+/* Courtside copilot tokens. Every value aliases the shared palette in frontend/src/index.css
+   (`--c-*`), so the copilot follows the app theme (dark primary, light alternative). Semantics:
+   accent (orange) for actions and selection, amber for draft status and what is yours, teal/coral
+   only for favoured/unfavoured and over/under expectation. Names are unchanged so the copilot's
+   stylesheets did not have to be rewritten. */
+:root {
+  --canvas: var(--c-page);
+  --surface: var(--c-surface);
+  --surface-2: var(--c-raised);
+  --surface-3: var(--c-overlay);
+  --border: var(--c-line);
+  --border-strong: var(--c-line-strong);
+  --ink: var(--c-ink);
+  --ink-2: var(--c-ink-2);
+  --ink-3: var(--c-ink-3);
+  --ink-4: var(--c-ink-4);
+  --mix-base: var(--c-mix);
+  --hatch: var(--c-hatch);
+  --hatch-faint: var(--c-hatch-faint);
+
+  /* dark strips (draft status) and anything that used to sit on the charcoal sidebar */
+  --nav-bg: var(--c-raised);
+  --nav-bg-2: var(--c-overlay);
+  --nav-border: var(--c-line-strong);
+  --nav-ink: var(--c-ink);
+  --nav-muted: var(--c-ink-3);
+
+  /* "teal" is the copilot's action colour; it now maps to the product accent */
+  --teal: var(--c-accent);
+  --teal-hover: var(--c-accent-hover);
+  --teal-soft: var(--c-accent-soft);
+  --teal-ink: var(--c-accent-ink);
+  --teal-dark: var(--c-accent);
+
+  --amber: var(--c-amber);
+  --amber-bright: var(--c-amber);
+  --amber-soft: var(--c-amber-soft);
+  --mine: var(--c-amber-soft);
+  --mine-border: color-mix(in srgb, var(--c-amber) 55%, transparent);
+
+  --good: var(--c-pos);
+  --good-soft: var(--c-pos-soft);
+  --bad: var(--c-neg);
+  --bad-soft: var(--c-neg-soft);
+  --even: var(--c-line-strong);
+  --projected: var(--c-ink-3);
+
+  --focus: var(--c-focus);
+
+  --font-body: var(--font-sans);
+  --font-display: 'Barlow Semi Condensed', 'Arial Narrow', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs: 13px;
+  --fs-md: 15px;
+  --fs-lg: 18px;
+  --fs-xl: 24px;
+  --fs-2xl: 32px;
+
+  --r-sm: 6px;
+  --r: 10px;
+  --r-pill: 999px;
+  --shadow-float: var(--shadow-float);
+
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+
+  --sidebar-w: 232px;
+  --sidebar-rail: 60px;
+
+  --dur-fast: 160ms;
+  --dur: 220ms;
+  --dur-panel: 280ms;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}

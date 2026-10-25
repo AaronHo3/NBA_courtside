@@ -1,0 +1,50 @@
+{
+ "resource": "videoevents",
+ "parameters": {
+  "GameID": "0022400061",
+  "GameEventID": 7
+ },
+ "resultSets": {
+  "Meta": {
+   "videoUrls": [
+    {
+     "uuid": "3004ffde-b7de-f12e-a352-ce6008af6287",
+     "sdur": 12750,
+     "surl": "<redacted-url>",
+     "sth": "<redacted-url>",
+     "mdur": 12750,
+     "murl": "<redacted-url>",
+     "mth": "<redacted-url>",
+     "ldur": 12750,
+     "lurl": "<redacted-url>",
+     "lth": "<redacted-url>",
+     "vtt": "<redacted-url>",
+     "scc": "<redacted-url>",
+     "srt": "<redacted-url>",
+     "mediaId": null
+    }
+   ]
+  },
+  "playlist": [
+   {
+    "gi": "0022400061",
+    "ei": 7,
+    "y": 2024,
+    "m": "10",
+    "d": "22",
+    "gc": "2024-10-22/NYKBOS",
+    "p": 1,
+    "dsc": "Tatum 27' 3PT Pullup Jump Shot (3 PTS) (White 1 AST)",
+    "ha": "BOS",
+    "hid": 1610612738,
+    "va": "NYK",
+    "vid": 1610612752,
+    "hpb": 0,
+    "hpa": 3,
+    "vpb": 0,
+    "vpa": 0,
+    "pta": 0
+   }
+  ]
+ }
+}

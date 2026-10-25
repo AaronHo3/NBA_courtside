@@ -1,0 +1,113 @@
+{
+ "resource": "commonplayerinfo",
+ "parameters": {
+  "PlayerID": 1001
+ },
+ "resultSets": [
+  {
+   "name": "CommonPlayerInfo",
+   "headers": [
+    "PERSON_ID",
+    "FIRST_NAME",
+    "LAST_NAME",
+    "DISPLAY_FIRST_LAST",
+    "DISPLAY_LAST_COMMA_FIRST",
+    "DISPLAY_FI_LAST",
+    "PLAYER_SLUG",
+    "BIRTHDATE",
+    "SCHOOL",
+    "COUNTRY",
+    "LAST_AFFILIATION",
+    "HEIGHT",
+    "WEIGHT",
+    "SEASON_EXP",
+    "JERSEY",
+    "POSITION",
+    "ROSTERSTATUS",
+    "TEAM_ID",
+    "TEAM_NAME",
+    "TEAM_ABBREVIATION",
+    "TEAM_CODE",
+    "TEAM_CITY",
+    "PLAYERCODE",
+    "FROM_YEAR",
+    "TO_YEAR",
+    "DLEAGUE_FLAG",
+    "NBA_FLAG",
+    "GAMES_PLAYED_FLAG",
+    "DRAFT_YEAR",
+    "DRAFT_ROUND",
+    "DRAFT_NUMBER"
+   ],
+   "rowSet": [
+    [
+     1001,
+     "Tom",
+     "Traded",
+     "Tom Traded",
+     "Traded, Tom",
+     "T. Traded",
+     "tom-traded",
+     "1990-03-14T00:00:00",
+     "Duke",
+     "USA",
+     "Duke/USA",
+     "6-7",
+     "215",
+     12,
+     "7",
+     "Guard-Forward",
+     "Active",
+     1610612752,
+     "Knicks",
+     "NYK",
+     "knicks",
+     "New York",
+     "tom_traded",
+     2012,
+     2024,
+     "N",
+     "Y",
+     "Y",
+     "2012",
+     "1",
+     "7"
+    ]
+   ]
+  },
+  {
+   "name": "PlayerHeadlineStats",
+   "headers": [
+    "PLAYER_ID",
+    "PLAYER_NAME",
+    "TimeFrame",
+    "PTS",
+    "AST",
+    "REB",
+    "PIE"
+   ],
+   "rowSet": [
+    [
+     1001,
+     "Tom Traded",
+     "2024-25",
+     21.4,
+     5.1,
+     6.2,
+     0.14
+    ]
+   ]
+  },
+  {
+   "name": "AvailableSeasons",
+   "headers": [
+    "SEASON_ID"
+   ],
+   "rowSet": [
+    [
+     "22024"
+    ]
+   ]
+  }
+ ]
+}

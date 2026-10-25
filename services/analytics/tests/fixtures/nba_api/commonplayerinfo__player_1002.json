@@ -1,0 +1,113 @@
+{
+ "resource": "commonplayerinfo",
+ "parameters": {
+  "PlayerID": 1002
+ },
+ "resultSets": [
+  {
+   "name": "CommonPlayerInfo",
+   "headers": [
+    "PERSON_ID",
+    "FIRST_NAME",
+    "LAST_NAME",
+    "DISPLAY_FIRST_LAST",
+    "DISPLAY_LAST_COMMA_FIRST",
+    "DISPLAY_FI_LAST",
+    "PLAYER_SLUG",
+    "BIRTHDATE",
+    "SCHOOL",
+    "COUNTRY",
+    "LAST_AFFILIATION",
+    "HEIGHT",
+    "WEIGHT",
+    "SEASON_EXP",
+    "JERSEY",
+    "POSITION",
+    "ROSTERSTATUS",
+    "TEAM_ID",
+    "TEAM_NAME",
+    "TEAM_ABBREVIATION",
+    "TEAM_CODE",
+    "TEAM_CITY",
+    "PLAYERCODE",
+    "FROM_YEAR",
+    "TO_YEAR",
+    "DLEAGUE_FLAG",
+    "NBA_FLAG",
+    "GAMES_PLAYED_FLAG",
+    "DRAFT_YEAR",
+    "DRAFT_ROUND",
+    "DRAFT_NUMBER"
+   ],
+   "rowSet": [
+    [
+     1002,
+     "Ben",
+     "Boston",
+     "Ben Boston",
+     "Boston, Ben",
+     "B. Boston",
+     "ben-boston",
+     "1996-07-01T00:00:00",
+     "",
+     "Canada",
+     "Canada",
+     "",
+     "",
+     9,
+     "0",
+     "Center",
+     "Active",
+     1610612738,
+     "Celtics",
+     "BOS",
+     "celtics",
+     "Boston",
+     "ben_boston",
+     2015,
+     2024,
+     "N",
+     "Y",
+     "Y",
+     "Undrafted",
+     "Undrafted",
+     "Undrafted"
+    ]
+   ]
+  },
+  {
+   "name": "PlayerHeadlineStats",
+   "headers": [
+    "PLAYER_ID",
+    "PLAYER_NAME",
+    "TimeFrame",
+    "PTS",
+    "AST",
+    "REB",
+    "PIE"
+   ],
+   "rowSet": [
+    [
+     1002,
+     "Ben Boston",
+     "2024-25",
+     10.0,
+     1.0,
+     8.0,
+     0.1
+    ]
+   ]
+  },
+  {
+   "name": "AvailableSeasons",
+   "headers": [
+    "SEASON_ID"
+   ],
+   "rowSet": [
+    [
+     "22024"
+    ]
+   ]
+  }
+ ]
+}

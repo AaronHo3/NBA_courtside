@@ -1,0 +1,255 @@
+@import "tailwindcss";
+/* The fantasy copilot (src/fantasy) uses plain CSS class names such as `grid`; never turn them into utilities. */
+@source not "./fantasy";
+
+/* The fantasy copilot (src/fantasy) ships its own element styles and expects browser defaults
+   underneath them. Undo Tailwind's preflight for that subtree only. Its stylesheets are scoped to
+   .fantasy-root by the PostCSS prefixer in vite.config.ts and, being unlayered, win over this
+   layered reset. `revert` also discards presentational attributes (SVG stroke/fill, img
+   width/height), so replaced elements and SVG subtrees only get the properties preflight touches. */
+@layer base {
+  .fantasy-root,
+  .fantasy-root :not(svg, svg *, img, video, canvas, audio, iframe),
+  .fantasy-root ::before,
+  .fantasy-root ::after,
+  .fantasy-root ::backdrop,
+  .fantasy-root ::placeholder,
+  .fantasy-root ::file-selector-button,
+  .fantasy-root ::-webkit-search-decoration,
+  .fantasy-root ::-webkit-date-and-time-value,
+  .fantasy-root ::-webkit-datetime-edit,
+  .fantasy-root ::-webkit-inner-spin-button,
+  .fantasy-root ::-webkit-outer-spin-button,
+  .fantasy-root ::-webkit-calendar-picker-indicator {
+    all: revert;
+  }
+  .fantasy-root :is(svg, img, video, canvas, audio, iframe) {
+    display: revert;
+    vertical-align: revert;
+    margin: revert;
+    padding: revert;
+    border: revert;
+    box-sizing: revert;
+  }
+  .fantasy-root :is(img, video) {
+    max-width: revert;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Courtside design tokens. One palette under `--c-*` feeds both the Tailwind side (via the
+   `--color-*` theme below) and the fantasy copilot (frontend/src/fantasy/styles/tokens.css aliases
+   its own names to these). Dark is the primary theme; light is the alternative.
+   Spec: docs/superpowers/specs/2026-10-24-courtside-redesign.md
+   --------------------------------------------------------------------------------------------- */
+:root {
+  color-scheme: dark;
+  /* surfaces */
+  --c-page: #121314;
+  --c-surface: #19191b;
+  --c-raised: #202124;
+  --c-overlay: #26272b;
+  --c-line: rgba(255, 255, 255, 0.08);
+  --c-line-strong: rgba(255, 255, 255, 0.16);
+  --c-mix: #121314;              /* what tinted borders are mixed against */
+  --c-hatch: rgba(255, 255, 255, 0.18);
+  --c-hatch-faint: rgba(255, 255, 255, 0.05);
+  /* ink */
+  --c-ink: #f3efe8;
+  --c-ink-2: #b8b2a8;
+  --c-ink-3: #8a857c;
+  --c-ink-4: #5f5b54;
+  /* accent: selection and primary actions */
+  --c-accent: #e8742a;
+  --c-accent-hover: #f0844a;
+  --c-accent-ink: #15110d;
+  --c-accent-soft: rgba(232, 116, 42, 0.14);
+  /* signed differences */
+  --c-pos: #2cb9a7;
+  --c-pos-soft: rgba(44, 185, 167, 0.16);
+  --c-neg: #ef6a5a;
+  --c-neg-soft: rgba(239, 106, 90, 0.16);
+  /* status */
+  --c-amber: #e0a63a;
+  --c-amber-soft: rgba(224, 166, 58, 0.14);
+  --c-focus: #ffb27a;
+  /* chart scaffolding */
+  --c-grid: #26272b;
+  --c-axis: #3a3b40;
+  --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.4);
+  /* motion */
+  --dur-fast: 160ms;
+  --dur: 220ms;
+  --dur-panel: 280ms;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  /* type */
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  /* radii */
+  --radius-control: 6px;
+  --radius-panel: 10px;
+  --radius-pill: 999px;
+  --sidebar-w: 232px;
+
+  /* analytics-side aliases (kept so existing components and Plotly theming keep working) */
+  --page: var(--c-page);
+  --surface: var(--c-surface);
+  --raised: var(--c-raised);
+  --overlay: var(--c-overlay);
+  --line: var(--c-line);
+  --line-strong: var(--c-line-strong);
+  --ink: var(--c-ink);
+  --ink-2: var(--c-ink-2);
+  --ink-3: var(--c-ink-3);
+  --ink-4: var(--c-ink-4);
+  --accent: var(--c-accent);
+  --accent-ink: var(--c-accent-ink);
+  --accent-soft: var(--c-accent-soft);
+  --pos: var(--c-pos);
+  --pos-soft: var(--c-pos-soft);
+  --neg: var(--c-neg);
+  --neg-soft: var(--c-neg-soft);
+  --good: var(--c-pos);
+  --warning: var(--c-amber);
+  --critical: var(--c-neg);
+  --demo: var(--c-amber);
+  --grid: var(--c-grid);
+  --axis: var(--c-axis);
+  --focus: var(--c-focus);
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --c-page: #f4f2ee;
+  --c-surface: #ffffff;
+  --c-raised: #f7f5f1;
+  --c-overlay: #ece9e3;
+  --c-line: rgba(20, 18, 14, 0.09);
+  --c-line-strong: rgba(20, 18, 14, 0.2);
+  --c-mix: #ffffff;
+  --c-hatch: rgba(26, 29, 33, 0.18);
+  --c-hatch-faint: rgba(26, 29, 33, 0.04);
+  --c-ink: #1b1a17;
+  --c-ink-2: #4b4842;
+  --c-ink-3: #78736a;
+  --c-ink-4: #a39e94;
+  --c-accent: #d4621a;
+  --c-accent-hover: #e8742a;
+  --c-accent-ink: #ffffff;
+  --c-accent-soft: rgba(212, 98, 26, 0.12);
+  --c-pos: #168a7c;
+  --c-pos-soft: rgba(22, 138, 124, 0.12);
+  --c-neg: #c9473a;
+  --c-neg-soft: rgba(201, 71, 58, 0.12);
+  --c-amber: #b57a12;
+  --c-amber-soft: rgba(181, 122, 18, 0.14);
+  --c-focus: #d4621a;
+  --c-grid: #e6e2db;
+  --c-axis: #cbc6bd;
+  --shadow-float: 0 12px 32px rgba(26, 29, 33, 0.16), 0 1px 2px rgba(26, 29, 33, 0.08);
+}
+
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-overlay: var(--overlay);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-4: var(--ink-4);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-pos: var(--pos);
+  --color-pos-soft: var(--pos-soft);
+  --color-neg: var(--neg);
+  --color-neg-soft: var(--neg-soft);
+  --color-good: var(--good);
+  --color-warning: var(--warning);
+  --color-critical: var(--critical);
+  --color-demo: var(--demo);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
+  --radius-control: var(--radius-control);
+  --radius-panel: var(--radius-panel);
+}
+
+/* Utilities are a later layer than the base reset above, so any utility whose name the copilot also
+   uses as a plain class (`grid`, `block`, `table`, `fixed`, ...) would still win inside it. Neutralise
+   utilities for the whole subtree; the copilot's own (unlayered) rules keep winning. */
+@layer utilities {
+  .fantasy-root :not(svg, svg *, img, video, canvas, audio, iframe) {
+    all: revert;
+  }
+  .fantasy-root :is(svg, svg *, img, video, canvas, audio, iframe) {
+    display: revert;
+    position: revert;
+  }
+}
+
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+}
+.tnum { font-variant-numeric: tabular-nums; }
+.display { font-family: var(--font-display); letter-spacing: 0.005em; }
+:where(:not(.fantasy-root *)):focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 3px; }
+
+/* ---- motion ---------------------------------------------------------------------------------- */
+.t-fast { transition: color var(--dur-fast) var(--ease), background-color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease); }
+.t-panel { transition: opacity var(--dur-panel) var(--ease), transform var(--dur-panel) var(--ease), max-height var(--dur-panel) var(--ease); }
+.press:active { transform: translateY(0.5px) scale(0.985); }
+@keyframes pop-in { 0% { transform: scale(0.85); opacity: 0.4; } 60% { transform: scale(1.04); } 100% { transform: scale(1); opacity: 1; } }
+.pop-in { animation: pop-in var(--dur-panel) var(--ease) both; }
+@keyframes flash-once { 0% { background-color: var(--accent-soft); } 100% { background-color: transparent; } }
+.flash-once { animation: flash-once 900ms var(--ease) both; }
+@keyframes rise-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.rise-in { animation: rise-in var(--dur-panel) var(--ease) both; }
+@keyframes spin { to { transform: rotate(360deg); } }
+[aria-busy="true"] > .spin-when-busy, .spin-when-busy[aria-busy="true"], .is-spinning { animation: spin 900ms linear infinite; }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+.skeleton {
+  border-radius: var(--radius-control);
+  background: linear-gradient(90deg, var(--raised) 0%, var(--overlay) 40%, var(--raised) 80%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+  .skeleton { background: var(--raised); }
+}
+
+/* ---- native controls --------------------------------------------------------------------------- */
+select, input, button, textarea { font: inherit; color: inherit; }
+select.control, input.control {
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  padding: 6px 8px;
+  min-height: 32px;
+  transition: border-color var(--dur-fast) var(--ease), background-color var(--dur-fast) var(--ease);
+}
+select.control:hover, input.control:hover { border-color: var(--accent); }
+select.control:focus-visible, input.control:focus-visible { border-color: var(--accent); }
+input[type="range"] { accent-color: var(--accent); }
+input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
+
+/* ---- tables ------------------------------------------------------------------------------------ */
+.row-highlight { background: var(--accent-soft); }
+.team-rail { box-shadow: inset 3px 0 0 var(--team, var(--line-strong)); }
+
+/* plotly: keep modebar discreet; cross-fade chart updates */
+.js-plotly-plot .modebar { opacity: 0; transition: opacity var(--dur-fast) var(--ease); }
+.js-plotly-plot:hover .modebar, .js-plotly-plot:focus-within .modebar { opacity: 1; }
+.js-plotly-plot .modebar-btn path { fill: var(--ink-3) !important; }

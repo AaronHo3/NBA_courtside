@@ -1,0 +1,175 @@
+{
+ "resource": "teamplayeronoffsummary",
+ "parameters": {
+  "MeasureType": "Advanced",
+  "PerMode": "Totals",
+  "Season": "2024-25"
+ },
+ "resultSets": [
+  {
+   "name": "OverallTeamPlayerOnOffSummary",
+   "headers": [
+    "GROUP_SET",
+    "GROUP_VALUE",
+    "TEAM_ID",
+    "TEAM_ABBREVIATION",
+    "TEAM_NAME",
+    "GP",
+    "W",
+    "L",
+    "W_PCT",
+    "MIN",
+    "OFF_RATING",
+    "DEF_RATING",
+    "NET_RATING"
+   ],
+   "rowSet": [
+    [
+     "Overall",
+     "2024-25",
+     1610612738,
+     "BOS",
+     "Boston Celtics",
+     82,
+     60,
+     22,
+     0.732,
+     3960.0,
+     119.5,
+     109.6,
+     9.9
+    ]
+   ]
+  },
+  {
+   "name": "PlayersOnCourtTeamPlayerOnOffSummary",
+   "headers": [
+    "GROUP_SET",
+    "TEAM_ID",
+    "TEAM_ABBREVIATION",
+    "TEAM_NAME",
+    "VS_PLAYER_ID",
+    "VS_PLAYER_NAME",
+    "COURT_STATUS",
+    "GP",
+    "MIN",
+    "PLUS_MINUS",
+    "OFF_RATING",
+    "DEF_RATING",
+    "NET_RATING"
+   ],
+   "rowSet": [
+    [
+     "Players On Court",
+     1610612738,
+     "BOS",
+     "Boston Celtics",
+     1001,
+     "Tom Traded",
+     "On",
+     30,
+     900.0,
+     60.0,
+     118.2,
+     108.9,
+     9.3
+    ],
+    [
+     "Players On Court",
+     1610612738,
+     "BOS",
+     "Boston Celtics",
+     1002,
+     "Ben Boston",
+     "On",
+     60,
+     1500.0,
+     120.0,
+     120.1,
+     107.5,
+     12.6
+    ],
+    [
+     "Players On Court",
+     1610612752,
+     "NYK",
+     "New York Knicks",
+     1003,
+     "Nick York",
+     "On",
+     75,
+     2000.0,
+     -30.0,
+     115.0,
+     113.8,
+     1.2
+    ]
+   ]
+  },
+  {
+   "name": "PlayersOffCourtTeamPlayerOnOffSummary",
+   "headers": [
+    "GROUP_SET",
+    "TEAM_ID",
+    "TEAM_ABBREVIATION",
+    "TEAM_NAME",
+    "VS_PLAYER_ID",
+    "VS_PLAYER_NAME",
+    "COURT_STATUS",
+    "GP",
+    "MIN",
+    "PLUS_MINUS",
+    "OFF_RATING",
+    "DEF_RATING",
+    "NET_RATING"
+   ],
+   "rowSet": [
+    [
+     "Players Off Court",
+     1610612738,
+     "BOS",
+     "Boston Celtics",
+     1001,
+     "Tom Traded",
+     "Off",
+     52,
+     3060.0,
+     740.0,
+     119.9,
+     109.8,
+     10.1
+    ],
+    [
+     "Players Off Court",
+     1610612738,
+     "BOS",
+     "Boston Celtics",
+     1002,
+     "Ben Boston",
+     "Off",
+     82,
+     2460.0,
+     680.0,
+     119.0,
+     111.0,
+     8.0
+    ],
+    [
+     "Players Off Court",
+     1610612752,
+     "NYK",
+     "New York Knicks",
+     1003,
+     "Nick York",
+     "Off",
+     82,
+     1965.0,
+     330.0,
+     119.5,
+     110.7,
+     8.8
+    ]
+   ]
+  }
+ ]
+}

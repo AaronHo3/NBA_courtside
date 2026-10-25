@@ -1,0 +1,64 @@
+{
+ "resource": "leaguedashptdefend",
+ "parameters": {
+  "DefenseCategory": "Greater Than 15Ft",
+  "PerMode": "Totals",
+  "Season": "2024-25",
+  "SeasonType": "Regular Season"
+ },
+ "resultSets": [
+  {
+   "name": "LeagueDashPTDefend",
+   "headers": [
+    "CLOSE_DEF_PERSON_ID",
+    "PLAYER_NAME",
+    "PLAYER_LAST_TEAM_ID",
+    "PLAYER_LAST_TEAM_ABBREVIATION",
+    "PLAYER_POSITION",
+    "AGE",
+    "GP",
+    "G",
+    "FREQ",
+    "D_FGM",
+    "D_FGA",
+    "D_FG_PCT",
+    "NORMAL_FG_PCT",
+    "PCT_PLUSMINUS"
+   ],
+   "rowSet": [
+    [
+     1002,
+     "Ben Boston",
+     1610612738,
+     "BOS",
+     "C",
+     28.0,
+     60,
+     60,
+     0.45,
+     135,
+     279,
+     0.484,
+     0.471,
+     0.013
+    ],
+    [
+     1001,
+     "Tom Traded",
+     1610612752,
+     "NYK",
+     "G-F",
+     34.0,
+     70,
+     70,
+     0.405,
+     112,
+     243,
+     0.463,
+     0.469,
+     -0.006
+    ]
+   ]
+  }
+ ]
+}

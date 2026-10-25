@@ -1,0 +1,74 @@
+{
+ "resource": "draftcombineplayeranthro",
+ "parameters": {
+  "LeagueID": "00",
+  "SeasonYear": "2019-20"
+ },
+ "resultSets": [
+  {
+   "name": "Results",
+   "headers": [
+    "TEMP_PLAYER_ID",
+    "PLAYER_ID",
+    "FIRST_NAME",
+    "LAST_NAME",
+    "PLAYER_NAME",
+    "POSITION",
+    "HEIGHT_WO_SHOES",
+    "HEIGHT_WO_SHOES_FT_IN",
+    "HEIGHT_W_SHOES",
+    "HEIGHT_W_SHOES_FT_IN",
+    "WEIGHT",
+    "WINGSPAN",
+    "WINGSPAN_FT_IN",
+    "STANDING_REACH",
+    "STANDING_REACH_FT_IN",
+    "BODY_FAT_PCT",
+    "HAND_LENGTH",
+    "HAND_WIDTH"
+   ],
+   "rowSet": [
+    [
+     1003,
+     1003,
+     "Nick",
+     "York",
+     "Nick York",
+     "SG",
+     76.25,
+     "6' 4.25''",
+     77.5,
+     "6' 5.5''",
+     "205.2",
+     80.0,
+     "6' 8''",
+     101.5,
+     "8' 5.5''",
+     6.1,
+     8.75,
+     9.25
+    ],
+    [
+     1004,
+     1004,
+     "Lou",
+     "Angeles",
+     "Lou Angeles",
+     "PF",
+     80.0,
+     "6' 8''",
+     81.25,
+     "6' 9.25''",
+     "",
+     null,
+     "",
+     null,
+     "",
+     null,
+     null,
+     null
+    ]
+   ]
+  }
+ ]
+}

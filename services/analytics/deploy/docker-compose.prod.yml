@@ -1,0 +1,40 @@
+# Public, read-only deployment. Usage (on the server):
+#   SITE_ADDRESS=stats.example.com docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+# Without a domain: SITE_ADDRESS=:80 (plain HTTP on the server's IP; Caddy issues HTTPS only for a hostname).
+# Ingestion never runs here: sync ./data from the ingestion machine with `make sync-data HOST=user@server`.
+services:
+  api:
+    command: ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+    environment:
+      - NBA_NAMESPACE=nba
+      - PUBLIC_READ_ONLY=1
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./data:/data:ro
+    ports: !reset []
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=5).status == 200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  web:
+    ports: !reset []
+    restart: unless-stopped
+  caddy:
+    image: caddy:2-alpine
+    depends_on:
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - SITE_ADDRESS=${SITE_ADDRESS:-:80}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+volumes:
+  caddy_data:
+  caddy_config:

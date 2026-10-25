@@ -1,0 +1,339 @@
+import { useEffect, useState } from 'react'
+import { api } from '../api/client'
+import type { PerformersResponse } from '../api/types'
+import { Diverging } from '../components/charts/Diverging'
+import { Heatmap } from '../components/charts/Heatmap'
+import { Scatter } from '../components/charts/Scatter'
+import { Explainer } from '../components/performers/Explainer'
+import { FeatureCard } from '../components/performers/FeatureCards'
+import { LeaderboardCard } from '../components/performers/LeaderboardCard'
+import { PerformerTable, type Metric, type MoveTags } from '../components/performers/PerformerTable'
+import { ChartFrame } from '../components/ui/ChartFrame'
+import { Icon } from '../components/ui/Icon'
+import { PageHeader, type ContextChip } from '../components/ui/PageHeader'
+import { Segmented } from '../components/ui/Segmented'
+import { StatCard, StatRow } from '../components/ui/StatCard'
+import { EmptyState, ErrorState, LoadingState } from '../components/ui/States'
+import { categoryLabel, fmtNum, fmtSigned } from '../lib/format'
+import { readHashQuery, replaceHashQuery } from '../lib/hashQuery'
+import { buildUrl } from '../lib/router'
+import { teamColor } from '../lib/teamColors'
+import { useDraftStore } from '../store/draftStore'
+import { useSeasonStore } from '../store/seasonStore'
+
+type Scope = 'week' | 'season'
+type Unit = 'total' | 'per_game'
+
+const contribTip = (scoresTov: boolean) =>
+  `Top contributors: Σ over the league's scored categories of (per-game stat ÷ unit size) × games ESPN counted for this team. One unit = one standard deviation of per-game production across the league pool; FG%/FT% as shooting impact${scoresTov ? '; turnovers count against' : '; turnovers are not scored in this league'}.`
+const OVER_TIP = 'Biggest overperformers: contribution minus expected, where expected = the same formula on the projected per-game line × the games actually played. No projection or no games = not ranked.'
+
+/** Team performers: who produced the most for a fantasy team, and who beat their projection by the most. */
+export function PerformersScreen() {
+  const sessionId = useDraftStore((s) => s.sessionId)
+  const state = useDraftStore((s) => s.state)
+  const isDemo = useDraftStore((s) => s.snapshot?.is_demo ?? false)
+  const initial = readHashQuery(window.location.hash)
+  const [manager, setManager] = useState<string | null>(initial.team ?? null)
+  const [scope, setScope] = useState<Scope>(initial.scope === 'season' ? 'season' : 'week')
+  const [period, setPeriod] = useState<number | null>(/^\d+$/.test(initial.week ?? '') ? Number(initial.week) : null)
+  const [metric, setMetric] = useState<Metric>('contribution')
+  const [unit, setUnit] = useState<Unit>('total')
+  const perGame = unit === 'per_game'
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [openId, setOpenId] = useState<string | null>(null)
+  const [data, setData] = useState<PerformersResponse | null>(null)
+  const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle')
+  const [error, setError] = useState<string | null>(null)
+
+  const managerId = manager ?? state?.league.user_manager_id ?? null
+  const movesBody = useSeasonStore((s) => s.moves)
+  const loadMoves = useSeasonStore((s) => s.loadMoves)
+
+  useEffect(() => {
+    if (!sessionId || !managerId) return
+    let cancelled = false
+    setStatus('loading')
+    setError(null)
+    setData(null)
+    api
+      .seasonPerformers(sessionId, managerId, scope === 'week' ? period : null)
+      .then((res) => {
+        if (cancelled) return
+        setData(res)
+        setStatus('ready')
+        if (scope === 'week' && period === null && res.periods_available.length) setPeriod(res.periods_available[res.periods_available.length - 1])
+      })
+      .catch((e: unknown) => {
+        if (cancelled) return
+        setStatus('error')
+        setError(e instanceof Error ? e.message : String(e))
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [sessionId, managerId, scope, period])
+
+  useEffect(() => {
+    if (!sessionId || !state?.is_complete) return
+    void loadMoves(sessionId, scope === 'week' ? period : null)
+  }, [sessionId, scope, period, loadMoves, state?.is_complete])
+
+  useEffect(() => {
+    replaceHashQuery({ team: manager, scope: scope === 'season' ? 'season' : null, week: scope === 'week' && period !== null ? String(period) : null })
+  }, [manager, scope, period])
+
+  if (!sessionId || !state) {
+    return (
+      <EmptyState title="No session loaded" action={<a href={buildUrl('setup', null)}>Go to setup</a>}>
+        Performers are computed from ESPN box scores for a drafted, linked session.
+      </EmptyState>
+    )
+  }
+  if (!state.is_complete) {
+    return <EmptyState title="Team performers open once the draft is complete and the league is synced from ESPN" />
+  }
+  const periods = data?.periods_available ?? []
+  const rows = data ? (metric === 'contribution' ? data.contributors : data.overperformers) : []
+  const teamName = state.league.managers.find((m) => m.id === managerId)?.name ?? managerId ?? ''
+  const withBaseline = data ? data.contributors.filter((r) => r.over_expected !== null) : []
+  const totalContribution = data ? data.contributors.reduce((a, r) => a + r.contribution, 0) : 0
+  const totalExpected = withBaseline.reduce((a, r) => a + (r.expected_contribution ?? 0), 0)
+  const totalOver = withBaseline.reduce((a, r) => a + (r.over_expected ?? 0), 0)
+  const totalGames = data ? data.contributors.reduce((a, r) => a + r.games, 0) : 0
+  const select = (id: string) => {
+    setSelectedId(id)
+    setOpenId(id)
+  }
+  const moveTags: MoveTags = {}
+  const wantPeriod = scope === 'week' ? period : null
+  if (movesBody && movesBody.period === wantPeriod) {
+    for (const m of movesBody.moves) {
+      if (m.manager_id !== managerId) continue
+      ;(moveTags[m.player.player_id] ??= []).push({ kind: m.kind, period: m.period })
+    }
+  }
+  const nMoves = Object.values(moveTags).reduce((a, t) => a + t.length, 0)
+  const chips: ContextChip[] = [{ label: 'Team', value: teamName, tone: managerId === state.league.user_manager_id ? 'amber' : 'neutral' }]
+  if (data) chips.push({ label: scope === 'week' ? 'Week' : 'Scope', value: scope === 'week' ? data.period ?? '—' : `season · ${periods.length} wk` })
+  if (data) chips.push({ label: 'Scoring', value: `${data.categories.length}-cat${data.categories.some((c) => c.key === 'TOV') ? '' : ', no TOV'}`, title: data.categories.map((c) => c.label).join(', ') })
+  if (isDemo) chips.push({ label: 'Data', value: 'demo', tone: 'demo' })
+
+  return (
+    <div className="stack performers-screen" data-testid="performers">
+      <PageHeader
+        title="Team performers"
+        description="Who produced the most for a fantasy team, and who beat their projection by the most. Built from ESPN's applied box scores per matchup week; expected = projection per game × games actually played."
+        chips={chips}
+        filters={
+          <>
+            <span className="field">
+              <label htmlFor="perf-team">Team</label>
+              <select
+                id="perf-team"
+                value={managerId ?? ''}
+                onChange={(e) => {
+                  setManager(e.target.value)
+                  setSelectedId(null)
+                  setOpenId(null)
+                }}
+                data-testid="perf-team"
+              >
+                {state.league.managers.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                    {m.id === state.league.user_manager_id ? ' (you)' : ''}
+                  </option>
+                ))}
+              </select>
+            </span>
+            <Segmented<Scope>
+              variant="pill"
+              label="Scope"
+              value={scope}
+              onChange={setScope}
+              options={[
+                { id: 'week', label: 'Weekly', testId: 'scope-week' },
+                { id: 'season', label: 'Season to date', testId: 'scope-season' },
+              ]}
+            />
+            {scope === 'week' && (
+              <span className="field">
+                <label htmlFor="perf-week">Week</label>
+                <select id="perf-week" value={period ?? ''} onChange={(e) => setPeriod(Number(e.target.value))} disabled={periods.length === 0} data-testid="perf-week">
+                  {periods.length === 0 && <option value="">No weeks synced yet</option>}
+                  {periods.map((p) => (
+                    <option key={p} value={p}>
+                      Week {p}
+                    </option>
+                  ))}
+                </select>
+              </span>
+            )}
+            {(selectedId || openId) && (
+              <button
+                type="button"
+                className="small ghost"
+                onClick={() => {
+                  setSelectedId(null)
+                  setOpenId(null)
+                }}
+              >
+                <Icon name="close" size={12} /> Clear selection
+              </button>
+            )}
+            {data && (
+              <span className="status" title={data.baseline}>
+                Source: {data.source}
+              </span>
+            )}
+          </>
+        }
+      />
+
+      {status === 'loading' && !data && <LoadingState title="Loading box scores" />}
+      {status === 'error' && <ErrorState title="Could not load performers">{error}</ErrorState>}
+      {data && data.contributors.length === 0 && (
+        <EmptyState title="No box scores for this selection yet">{data.notes.join(' ') || 'Sync the league after games have been played; weekly stats fill in as ESPN applies them.'}</EmptyState>
+      )}
+      {data && data.contributors.length > 0 && (
+        <>
+          <div className="unit-row">
+            <Segmented<Unit>
+              variant="pill"
+              label="Units"
+              value={unit}
+              onChange={setUnit}
+              options={[
+                { id: 'total', label: 'Totals', testId: 'unit-total' },
+                { id: 'per_game', label: 'Per game', testId: 'unit-per-game' },
+              ]}
+            />
+            <span className="muted">{perGame ? 'Units per game played (ESPN-counted games only).' : 'Cumulative units for the selection.'}</span>
+          </div>
+          <StatRow>
+            <StatCard label="Team contribution" value={fmtNum(perGame ? (totalGames ? totalContribution / totalGames : null) : totalContribution, 1)} detail={`${perGame ? 'units / game' : 'units'} · ${data.contributors.length} players`} />
+            <StatCard label="Expected" value={withBaseline.length ? fmtNum(perGame ? totalExpected / Math.max(1, withBaseline.reduce((a, r) => a + r.games, 0)) : totalExpected, 1) : '—'} detail={withBaseline.length ? `${withBaseline.length} players with a baseline` : 'no baselines'} />
+            <StatCard
+              label="Vs expected"
+              value={withBaseline.length ? fmtSigned(perGame ? totalOver / Math.max(1, withBaseline.reduce((a, r) => a + r.games, 0)) : totalOver, 1) : '—'}
+              detail="players with a baseline only"
+              tone={withBaseline.length ? (totalOver >= 0 ? 'good' : 'bad') : 'neutral'}
+            />
+            <StatCard label="Games counted" value={totalGames} detail={scope === 'week' ? 'this week' : `across ${periods.length} week${periods.length === 1 ? '' : 's'}`} />
+          </StatRow>
+          <div className="feature-cards">
+            <FeatureCard title="Leading contributor" row={data.contributors[0]} metric="contribution" perGame={perGame} categories={data.categories} selected={selectedId === data.contributors[0]?.player.player_id} onSelect={select} testId="feature-contributor" />
+            <FeatureCard title="Biggest overperformer" row={data.overperformers[0]} metric="over_expected" perGame={perGame} categories={data.categories} selected={selectedId === data.overperformers[0]?.player.player_id} onSelect={select} testId="feature-overperformer" />
+          </div>
+          <div className="leaderboards">
+            <LeaderboardCard title="Top contributors" tooltip={contribTip(data.categories.some((c) => c.key === 'TOV'))} rows={data.contributors} metric="contribution" perGame={perGame} testId="top-contributors" selectedId={selectedId} onSelect={select} />
+            <LeaderboardCard title="Biggest overperformers" tooltip={OVER_TIP} rows={data.overperformers} metric="over_expected" perGame={perGame} testId="top-overperformers" selectedId={selectedId} onSelect={select} />
+          </div>
+          <ChartFrame
+            title="Contribution by player and category"
+            description="Units each player added (teal) or cost (coral) in every scored category; the lead column is the player's total. Click a cell to open that player."
+            help="Each cell is (per-game stat ÷ unit size) × games counted; FG%/FT% are shooting impact against the pool rate. Rows sum to the contribution total."
+            legend={[{ label: 'added', swatch: 'good' }, { label: 'cost', swatch: 'bad' }]}
+            testId="chart-heatmap"
+          >
+            <Heatmap
+              rows={data.contributors.slice(0, 16).map((r, i) => ({ id: r.player.player_id, label: r.player.name, className: i === 0 ? 'lead-row' : undefined }))}
+              columns={data.categories.map((c) => ({ key: c.key, label: categoryLabel(c.key, data.categories), title: c.higher_is_better ? undefined : 'lower is better' }))}
+              value={(id, key) => data.contributors.find((r) => r.player.player_id === id)?.contribution_by_category[key] ?? null}
+              format={(v) => fmtSigned(v, 1)}
+              tone={(v) => (v > 0.05 ? 'good' : v < -0.05 ? 'bad' : 'even')}
+              intensity={(v) => Math.min(1, Math.abs(v) / Math.max(1e-9, ...data.contributors.slice(0, 16).flatMap((r) => Object.values(r.contribution_by_category).map(Math.abs))))}
+              scaleNote="shade = size of the effect within this team"
+              lead={[
+                { key: 'rank', label: '#', render: (id) => String((data.contributors.findIndex((r) => r.player.player_id === id) ?? 0) + 1), numeric: true },
+                { key: 'name', label: 'Player', render: (id) => data.contributors.find((r) => r.player.player_id === id)?.player.name ?? id, header: true },
+                { key: 'total', label: 'Total', render: (id) => fmtNum(data.contributors.find((r) => r.player.player_id === id)?.contribution, 1), numeric: true },
+              ]}
+              caption="Contribution by category, units"
+              legendLabels={{ bad: 'cost', even: 'neutral', good: 'added' }}
+              selectedId={selectedId}
+              onSelect={select}
+              testId="heatmap"
+            />
+          </ChartFrame>
+          <div className="perf-charts">
+            <ChartFrame
+              title="Performance vs expectation"
+              description="Contribution minus expected, per player. Right of zero beat the projection; left fell short. Players without a baseline are not shown."
+              help="Expected = projected per-game line × games actually played, so missed games do not count against anyone."
+              legend={[
+                { label: 'above expectation', swatch: 'good' },
+                { label: 'below expectation', swatch: 'bad' },
+              ]}
+              unavailable={withBaseline.length === 0 ? 'No player on this team has a projection baseline for this selection.' : undefined}
+              testId="chart-diverging"
+            >
+              <Diverging
+                rows={[...withBaseline]
+                  .sort((a, b) => (b.over_expected ?? 0) - (a.over_expected ?? 0))
+                  .map((r) => ({ id: r.player.player_id, label: r.player.name, value: r.over_expected ?? 0, sublabel: `${r.games} GP` }))}
+                format={(v) => v.toFixed(1)}
+                unit="units"
+                selectedId={selectedId}
+                onSelect={select}
+              />
+            </ChartFrame>
+            <ChartFrame
+              title="Actual vs expected contribution"
+              description="One point per player. The dashed diagonal is 'exactly as projected'; distance above it is overperformance."
+              legend={[{ label: 'player (team colour)', swatch: 'team' }]}
+              unavailable={withBaseline.length === 0 ? 'Needs players with both a contribution and an expected value.' : undefined}
+              testId="chart-scatter"
+            >
+              <Scatter
+                points={data.contributors.map((r) => ({ id: r.player.player_id, label: r.player.name, x: r.expected_contribution, y: r.contribution, color: teamColor(r.player.team).primary }))}
+                xLabel="Expected"
+                yLabel="Actual"
+                format={(v) => v.toFixed(0)}
+                selectedId={selectedId}
+                onSelect={select}
+              />
+            </ChartFrame>
+            <ChartFrame
+              title="Week-by-week trend"
+              unavailable="Needs per-week observations per player. The performers endpoint returns one scope at a time (a single week, or season totals), so there is no history to draw yet; use the week selector to step through weeks."
+              testId="chart-trend"
+            >
+              <span />
+            </ChartFrame>
+          </div>
+          <section className="panel">
+            <div className="panel-head">
+              <h2>All players</h2>
+              <Segmented<Metric>
+                variant="pill"
+                label="Ranking"
+                value={metric}
+                onChange={setMetric}
+                options={[
+                  { id: 'contribution', label: 'By contribution' },
+                  { id: 'over_expected', label: 'By performance vs expected' },
+                ]}
+              />
+            </div>
+            <PerformerTable rows={rows} metric={metric} selectedId={selectedId} onSelect={setSelectedId} openId={openId} onOpenChange={setOpenId} categories={data.categories} moves={moveTags} />
+            {nMoves > 0 && (
+              <p className="table-note">
+                <span className="badge ok">added wk N</span> and <span className="badge error">dropped wk N</span> mark this team's roster moves {scope === 'week' ? 'this week' : 'this season'}; a dropped player keeps the games he played while rostered.
+              </p>
+            )}
+            {data.notes.length > 0 && (
+              <ul className="table-note" style={{ paddingLeft: 18 }}>
+                {data.notes.map((n) => (
+                  <li key={n}>{n}</li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </>
+      )}
+      {data && <Explainer unitSizes={data.unit_sizes} benchmarkRates={data.benchmark_rates} categories={data.categories} />}
+    </div>
+  )
+}

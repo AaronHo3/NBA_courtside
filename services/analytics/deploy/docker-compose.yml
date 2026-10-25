@@ -1,0 +1,15 @@
+services:
+  api:
+    build: ./backend
+    volumes:
+      - ./data:/data
+    environment:
+      - NBA_NAMESPACE=auto
+    ports:
+      - "8000:8000"
+  web:
+    build: ./frontend
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
