@@ -1,46 +1,59 @@
-import { Link } from 'react-router-dom'
 import type { CategoryDef, MatchupOddsView } from '@/fantasy/api/types'
-import { StatTile } from '@/components/ui'
+import { CategoryOutlook } from './CategoryOutlook'
+import { managerName, oddsForUser, pct } from './format'
 
-/** The user's matchup this week: odds, expected categories and per-category probabilities. Odds are simulated projections, not results. */
-export function MatchupSummary({ odds, me, categories, names, href }: { odds: MatchupOddsView; me: string; categories: CategoryDef[]; names: Record<string, string>; href: string }) {
-  const amUser = odds.manager_a === me
-  const pMe = amUser ? odds.p_win_a : odds.p_win_b
-  const pThem = amUser ? odds.p_win_b : odds.p_win_a
-  const expMe = amUser ? odds.expected_a : odds.expected_b
-  const expThem = amUser ? odds.expected_b : odds.expected_a
-  const them = amUser ? odds.manager_b : odds.manager_a
-  const favoured = pMe >= pThem
+/** Win/tie/lose as one stacked bar; each part is also printed in words beside it. */
+function OutcomeBar({ win, tie, lose }: { win: number; tie: number; lose: number }) {
+  return (
+    <span className="flex h-2 w-full overflow-hidden rounded-full bg-raised" aria-hidden="true">
+      <span className="bg-pos" style={{ width: `${win * 100}%` }} />
+      <span className="bg-ink-3" style={{ width: `${tie * 100}%` }} />
+      <span className="bg-neg" style={{ width: `${lose * 100}%` }} />
+    </span>
+  )
+}
+
+function Outcome({ label, value, tone }: { label: string; value: number; tone: string }) {
+  return (
+    <span className="inline-flex items-baseline gap-1.5">
+      <span className="text-sm text-ink-2">{label}</span>
+      <span className={`display text-[28px] font-semibold leading-none tnum ${tone}`}>{pct(value)}</span>
+    </span>
+  )
+}
+
+/** The user's matchup this week. Every number is a simulation from projections, not a running ESPN total. */
+export function MatchupSummary({ odds, me, categories, names }: { odds: MatchupOddsView; me: string; categories: CategoryDef[]; names: Record<string, string> }) {
+  const o = oddsForUser(odds, me)
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-meta uppercase tracking-wide text-ink-3">Week {odds.period} · projected</p>
-          <p className="display text-[22px] font-semibold text-ink">{names[me] ?? me} <span className="text-ink-3">vs</span> {names[them] ?? them}</p>
+      <div className="min-w-0">
+        <p className="text-meta uppercase tracking-wide text-ink-3">Week {odds.period}</p>
+        <h3 className="display text-[26px] font-semibold leading-tight text-ink">
+          {managerName(names, me)} (you) vs {managerName(names, o.opponent)}
+        </h3>
+      </div>
+      <div className="grid gap-5 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-8">
+        <div className="flex flex-col gap-3">
+          <p data-testid="matchup-outcome" className="flex flex-wrap items-baseline gap-x-4 gap-y-1" aria-label={`Simulated: win ${pct(o.win)}, tie ${pct(o.tie)}, lose ${pct(o.lose)}`}>
+            <Outcome label="Win" value={o.win} tone="text-pos" />
+            <span className="text-ink-3" aria-hidden="true">·</span>
+            <Outcome label="Tie" value={o.tie} tone="text-ink" />
+            <span className="text-ink-3" aria-hidden="true">·</span>
+            <Outcome label="Lose" value={o.lose} tone="text-neg" />
+            <span className="basis-full text-meta uppercase tracking-wide text-ink-3">simulated</span>
+          </p>
+          <OutcomeBar win={o.win} tie={o.tie} lose={o.lose} />
+          <div className="mt-1 flex flex-col gap-1.5 text-sm text-ink-2">
+            <p data-testid="matchup-expected">Expected categories <strong className="tnum font-semibold text-ink">{o.expectedMe.toFixed(1)} – {o.expectedThem.toFixed(1)}</strong> of {categories.length}</p>
+            <p data-testid="matchup-games">Games <strong className="tnum font-semibold text-ink">{o.gamesMe} · {o.gamesThem}</strong> (scheduled this week)</p>
+          </div>
         </div>
-        <Link to={href} className="text-xs font-medium text-accent hover:underline">Full matchup →</Link>
+        <div className="flex flex-col gap-1.5">
+          <p className="text-meta uppercase tracking-wide text-ink-3">Your chance per category</p>
+          <CategoryOutlook categories={categories} chanceOf={o.catP} />
+        </div>
       </div>
-      <div className="grid grid-cols-3 gap-4">
-        <StatTile label="Your win chance" value={`${Math.round(pMe * 100)}%`} tone={favoured ? 'pos' : 'neg'} size="lg" sub={`tie ${Math.round(odds.p_tie * 100)}% · ${names[them] ?? them} ${Math.round(pThem * 100)}%`} />
-        <StatTile label="Expected categories" value={`${expMe.toFixed(1)}–${expThem.toFixed(1)}`} sub="of the scored categories" />
-        <StatTile label="Games this week" value={`${amUser ? odds.games_a : odds.games_b} · ${amUser ? odds.games_b : odds.games_a}`} sub="yours · theirs" />
-      </div>
-      <ul className="grid gap-1.5 sm:grid-cols-2">
-        {categories.map((c) => {
-          const pa = odds.cat_p_a[c.key]
-          const p = pa == null ? null : amUser ? pa : 1 - pa
-          return (
-            <li key={c.key} className="flex items-center gap-2 text-xs">
-              <span className="w-28 shrink-0 text-ink-2">{c.label}{c.higher_is_better ? '' : <span className="text-ink-3"> ↓</span>}</span>
-              <span className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-raised" aria-hidden="true">
-                {p != null && <span className={p >= 0.5 ? 'absolute inset-y-0 left-0 rounded-full bg-pos' : 'absolute inset-y-0 left-0 rounded-full bg-neg'} style={{ width: `${p * 100}%` }} />}
-              </span>
-              <span className="w-10 text-right tnum text-ink">{p == null ? '—' : `${Math.round(p * 100)}%`}</span>
-            </li>
-          )
-        })}
-      </ul>
-      {odds.notes.length > 0 && <ul className="list-disc pl-4 text-xs text-ink-3">{odds.notes.slice(0, 3).map((n) => <li key={n}>{n}</li>)}</ul>}
     </div>
   )
 }

@@ -9,15 +9,16 @@ export function TrackRecord({ data }: { data: PredictionsResponse }) {
     .sort((a, b) => a.period - b.period)
   const w = 320, h = 96, pad = 18
   const bw = periods.length ? Math.min(28, (w - pad * 2) / periods.length - 6) : 0
+  if (s.n_decided === 0) {
+    return <p className="text-sm text-ink-2">Results are scored after each scoring period ends; the first arrives after week 1.</p>
+  }
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap gap-x-8 gap-y-3">
         <StatTile label="Projection hit rate" value={s.hit_rate == null ? '—' : `${Math.round(s.hit_rate * 100)}%`} sub={`${s.n_correct} of ${s.n_decided} decided matchups`} tone={s.hit_rate == null ? 'neutral' : s.hit_rate >= 0.5 ? 'pos' : 'neg'} />
         <StatTile label="Brier score" value={s.brier == null ? '—' : s.brier.toFixed(3)} sub="lower is better · 0.25 = coin flip" />
       </div>
-      {periods.length === 0 ? (
-        <p className="text-xs text-ink-3">No matchup has been decided yet; the first result arrives after a scoring period ends.</p>
-      ) : (
+      {periods.length > 0 && (
         <svg viewBox={`0 0 ${w} ${h}`} className="w-full max-w-sm" role="img" aria-label={`Correct projections per week: ${periods.map((p) => `week ${p.period} ${p.correct} of ${p.decided}`).join(', ')}`}>
           {periods.map((p, i) => {
             const x = pad + i * ((w - pad * 2) / periods.length) + 3

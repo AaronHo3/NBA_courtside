@@ -1,11 +1,16 @@
 import { Link } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { Badge, EmptyState, ErrorState, PlayerIdentity, Skeleton, StatTile } from '@/components/ui'
+import { Badge, EmptyState, ErrorState, Panel, PlayerIdentity, Skeleton } from '@/components/ui'
+import { Disclosure } from '@/components/ui/Disclosure'
+import type { SeasonOverview } from '@/fantasy/api/types'
 import { useStatus } from '@/hooks/useApi'
 import { fantasyHref } from '@/lib/fantasyBridge'
 import { useRecent } from '@/store/recent'
 import { FeatureCard } from './overview/FeatureCard'
+import { managerName, weakestCategories } from './overview/format'
 import { MatchupSummary } from './overview/MatchupSummary'
+import { NextActions, type NextAction } from './overview/NextActions'
+import { RankOutlook } from './overview/RankOutlook'
 import { TrackRecord } from './overview/TrackRecord'
 import { useOverviewData } from './overview/useOverviewData'
 
@@ -21,6 +26,27 @@ function Section({ title, children, aside }: { title: string; children: React.Re
   )
 }
 
+/** The matchup feature, or why there is none (bye week, nothing scheduled, odds not simulated yet). */
+function MatchupBlock({ ov, userId, names }: { ov: SeasonOverview; userId: string | null; names: Record<string, string> }) {
+  const m = ov.user_matchup
+  if (m?.odds && userId) return <MatchupSummary odds={m.odds} me={userId} categories={ov.league_categories} names={names} />
+  const me = userId ? `${managerName(names, userId)} (you)` : 'You'
+  const why = !m ? `No matchup is scheduled for you in week ${ov.current_period}.` : !m.away_manager_id ? `${me} · bye week: no opponent this period, so there are no odds to show.` : 'Odds for this matchup have not been simulated yet; sync the league to refresh them.'
+  return <p data-testid="matchup-none" className="text-sm text-ink-2">{why}</p>
+}
+
+function buildNextActions(sid: string, ov: SeasonOverview, userId: string | null, period: number, names: Record<string, string>): NextAction[] {
+  const me = ov.power.find((p) => p.is_user)
+  const weak = me ? weakestCategories(me, ov.league_categories).map((w) => w.label) : []
+  const opp = ov.user_matchup?.away_manager_id && userId ? (ov.user_matchup.home_manager_id === userId ? ov.user_matchup.away_manager_id : ov.user_matchup.home_manager_id) : null
+  const actions: NextAction[] = [
+    { label: 'Review free agents', detail: weak.length ? `Help in ${weak.join(', ')}` : undefined, href: fantasyHref('season', sid, { tab: 'free-agents' }) },
+  ]
+  if (userId) actions.push({ label: "See this week's performers", detail: `Your roster, week ${period}`, href: fantasyHref('performers', sid, { team: userId, week: String(period) }) })
+  actions.push({ label: 'Open my matchup', detail: opp ? `vs ${managerName(names, opp)}` : ov.user_matchup ? 'Bye week' : undefined, href: fantasyHref('season', sid, { tab: 'matchups' }) })
+  return actions
+}
+
 export default function Overview() {
   const { ctx, overview, performers, predictions, userId, linked } = useOverviewData()
   const status = useStatus()
@@ -30,6 +56,9 @@ export default function Overview() {
   const names = ov?.manager_names ?? {}
   const myPower = ov?.power.find((p) => p.is_user)
   const freshness = status.data?.data
+  const period = performers.data?.period ?? ov?.current_period ?? 1
+  const performersHref = sid && userId ? fantasyHref('performers', sid, { team: userId, week: String(period) }) : ''
+  const nextActions = sid && ov && linked ? buildNextActions(sid, ov, userId, period, names) : []
   const lede = sid
     ? linked && ov
       ? `${ov.league_name ?? 'Your league'} · week ${ov.current_period}${ov.synced_at ? ` · synced ${new Date(ov.synced_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}` : ''}`
@@ -58,42 +87,39 @@ export default function Overview() {
       )}
 
       {sid && ov && linked && (
-        <div className="grid gap-6 lg:grid-cols-12">
-          <div className="lg:col-span-7">
-            <Section title="This week's matchup">
-              {ov.user_matchup?.odds && userId ? (
-                <MatchupSummary odds={ov.user_matchup.odds} me={userId} categories={ov.league_categories} names={names} href={fantasyHref('season', sid, { tab: 'matchups' })} />
-              ) : (
-                <p className="text-sm text-ink-3">No matchup for you this period{ov.user_matchup && !ov.user_matchup.away_manager_id ? ' (bye week)' : ''}.</p>
-              )}
-            </Section>
-          </div>
-          <div className="flex flex-col gap-6 lg:col-span-5">
-            <Section title="Power ranking" aside={<Link to={fantasyHref('season', sid, { tab: 'power' })} className="text-xs text-accent hover:underline">All teams →</Link>}>
+        <div className="flex flex-col gap-5">
+          <div className="grid gap-5 lg:grid-cols-12">
+            <Panel question="This week's matchup" className="lg:col-span-8" actions={<Link to={fantasyHref('season', sid, { tab: 'matchups' })} className="text-xs text-accent hover:underline">Full matchup →</Link>}>
+              <MatchupBlock ov={ov} userId={userId} names={names} />
+            </Panel>
+            <Panel question="Season outlook" className="lg:col-span-4" actions={<Link to={fantasyHref('season', sid, { tab: 'power' })} className="text-xs text-accent hover:underline">All teams →</Link>}>
               {myPower ? (
-                <div className="flex flex-wrap gap-x-8 gap-y-3">
-                  <StatTile label="Your rank" value={`#${myPower.rank}`} sub={`of ${ov.power.length} teams`} tone="accent" size="lg" />
-                  <StatTile label="Expected categories won" value={myPower.expected_cats.toFixed(1)} sub="per week, simulated vs the league" />
-                  <StatTile label="Roster" value={myPower.n_players} sub={`${myPower.n_ir} on IR`} />
-                </div>
+                <RankOutlook power={myPower} teams={ov.power.length} categories={ov.league_categories}>
+                  <div className="flex flex-col gap-2 border-t border-line pt-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-meta font-semibold uppercase tracking-wide text-ink-3">Projection track record</h3>
+                      <Link to={fantasyHref('season', sid, { tab: 'predictions' })} className="text-xs text-accent hover:underline">Details →</Link>
+                    </div>
+                    {predictions.isLoading && <Skeleton lines={2} />}
+                    {predictions.error && <ErrorState error={predictions.error} retry={() => predictions.refetch()} />}
+                    {predictions.data && <TrackRecord data={predictions.data} />}
+                  </div>
+                </RankOutlook>
               ) : <p className="text-sm text-ink-3">Power rankings need a synced league.</p>}
-            </Section>
-            <Section title="Projection track record" aside={<Link to={fantasyHref('season', sid, { tab: 'predictions' })} className="text-xs text-accent hover:underline">Details →</Link>}>
-              {predictions.isLoading && <Skeleton lines={3} />}
-              {predictions.error && <ErrorState error={predictions.error} retry={() => predictions.refetch()} />}
-              {predictions.data && <TrackRecord data={predictions.data} />}
-            </Section>
+            </Panel>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:col-span-12">
+
+          <div className="grid gap-5 md:grid-cols-3">
             {performers.isLoading && <><Skeleton className="h-28" /><Skeleton className="h-28" /></>}
-            {performers.error && <ErrorState error={performers.error} retry={() => performers.refetch()} />}
+            {performers.error && <div className="md:col-span-2"><ErrorState error={performers.error} retry={() => performers.refetch()} /></div>}
             {performers.data && userId && (
               <>
-                <FeatureCard title="Leading contributor this week" row={performers.data.contributors[0]} metric="contribution" href={fantasyHref('performers', sid, { team: userId, week: String(performers.data.period ?? ov.current_period) })} />
-                <FeatureCard title="Biggest overperformer this week" row={performers.data.overperformers[0]} metric="over_expected" href={fantasyHref('performers', sid, { team: userId, week: String(performers.data.period ?? ov.current_period) })} />
+                <FeatureCard title="Leading contributor this week" row={performers.data.contributors[0]} metric="contribution" href={performersHref} />
+                <FeatureCard title="Biggest overperformer this week" row={performers.data.overperformers[0]} metric="over_expected" href={performersHref} />
               </>
             )}
-            {performers.data && <p className="text-xs text-ink-3 sm:col-span-2">Contribution is in copilot units (category standard deviations × games) from ESPN-counted box scores; "expected" is the frozen projection × games played. Source: {performers.data.source}.</p>}
+            {!performers.isLoading && !performers.error && !(performers.data && userId) && <div className="hidden md:col-span-2 md:block" />}
+            <NextActions actions={nextActions} />
           </div>
         </div>
       )}
@@ -102,11 +128,23 @@ export default function Overview() {
         {recent.length === 0 ? (
           <p className="text-sm text-ink-3">Profiles you open will appear here. <Link to="/explorer" className="text-accent hover:underline">Start in the explorer</Link> or press <kbd className="rounded border border-line-strong px-1 font-mono text-meta">⌘K</kbd>.</p>
         ) : (
-          <ul className="flex flex-wrap gap-x-6 gap-y-3">
-            {recent.map((p) => <li key={p.player_id}><PlayerIdentity playerId={p.player_id} name={p.full_name} team={p.team_abbreviation} position={p.position} size="sm" /></li>)}
+          <ul data-testid="recent-players" className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+            {recent.map((p) => <li key={p.player_id} className="shrink-0 rounded-full border border-line bg-surface py-1 pl-1 pr-3"><PlayerIdentity playerId={p.player_id} name={p.full_name} team={p.team_abbreviation} position={p.position} size="xs" /></li>)}
           </ul>
         )}
       </Section>
+
+      {sid && ov && linked && (
+        <Disclosure summary="How the odds are made" testId="overview-method" className="mt-5">
+          <div className="flex flex-col gap-2">
+            <p>Win, tie and lose chances, expected categories and the per-category chances are simulated from projections for the games each roster has scheduled this week. They are projections, not results, and not ESPN's running totals. Expected categories in the season outlook are per week, simulated against every team in the league; the vulnerable categories are the three with your lowest simulated chance.</p>
+            {ov.user_matchup?.odds && ov.user_matchup.odds.notes.length > 0 && (
+              <ul className="list-disc pl-5 text-xs text-ink-3">{ov.user_matchup.odds.notes.map((n) => <li key={n}>{n}</li>)}</ul>
+            )}
+            {performers.data && <p className="text-xs text-ink-3">Contribution is in copilot units (category standard deviations × games) from ESPN-counted box scores; "expected" is the frozen projection × games played. Source: {performers.data.source}.</p>}
+          </div>
+        </Disclosure>
+      )}
     </>
   )
 }
