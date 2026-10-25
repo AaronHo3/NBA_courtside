@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { AllPlayersTable } from '../components/draft/AllPlayersTable'
 import { CategoryProfileTable } from '../components/draft/CategoryProfileTable'
 import { CompareView } from '../components/draft/CompareView'
@@ -13,6 +13,7 @@ import { StrategyPanel } from '../components/draft/StrategyPanel'
 import { TeamsPanel } from '../components/draft/TeamsPanel'
 import { TechStatus } from '../components/draft/TechStatus'
 import { Drawer } from '../components/ui/Drawer'
+import { Icon } from '../components/ui/Icon'
 import { HowItWorks } from '../components/ui/HowItWorks'
 import { Segmented } from '../components/ui/Segmented'
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/States'
@@ -23,22 +24,29 @@ const NO_WARNINGS: string[] = []
 type WorkTab = 'recommendations' | 'players'
 type SideTab = 'roster' | 'categories' | 'strategy' | 'teams'
 type MobilePane = 'find' | 'picks' | 'mine'
-/** column: My team is a third column (>= 1480px) or a mobile pane (< 760px); drawer: opened from the recommendation header. */
-type TeamMode = 'column' | 'drawer'
+/**
+ * column: My team is always a third column (>= 1480px) or a mobile pane (<= 760px).
+ * docked: 1180–1479px, a plain third-column panel toggled from the recommendation header (no dialog semantics, no Esc).
+ * drawer: 761–1179px, the fantasy Drawer overlay (non-modal) toggled from the same header.
+ */
+type TeamMode = 'column' | 'docked' | 'drawer'
 
 const WIDE_QUERY = '(min-width: 1480px)'
+const DOCK_QUERY = '(min-width: 1180px)'
 const MOBILE_QUERY = '(max-width: 760px)'
 
 function readTeamMode(): TeamMode {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return 'column'
-  return window.matchMedia(WIDE_QUERY).matches || window.matchMedia(MOBILE_QUERY).matches ? 'column' : 'drawer'
+  const mq = (q: string) => window.matchMedia(q).matches
+  if (mq(WIDE_QUERY) || mq(MOBILE_QUERY)) return 'column'
+  return mq(DOCK_QUERY) ? 'docked' : 'drawer'
 }
 
 function useTeamMode(): TeamMode {
   const [mode, setMode] = useState<TeamMode>(readTeamMode)
   useEffect(() => {
     if (typeof window.matchMedia !== 'function') return
-    const queries = [window.matchMedia(WIDE_QUERY), window.matchMedia(MOBILE_QUERY)]
+    const queries = [WIDE_QUERY, DOCK_QUERY, MOBILE_QUERY].map((q) => window.matchMedia(q))
     const update = () => setMode(readTeamMode())
     queries.forEach((q) => q.addEventListener('change', update))
     return () => queries.forEach((q) => q.removeEventListener('change', update))
@@ -69,6 +77,12 @@ export function DraftScreen() {
   const [pane, setPane] = useState<MobilePane>('picks')
   const [teamOpen, setTeamOpen] = useState(false)
   const teamMode = useTeamMode()
+  const dockRef = useRef<HTMLElement>(null)
+  // The launcher shortcut that opened the docked panel unmounts, so hand focus to the panel's selected tab.
+  useEffect(() => {
+    if (teamMode !== 'docked' || !teamOpen) return
+    dockRef.current?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')?.focus()
+  }, [teamMode, teamOpen])
   const myCount = useDraftStore((s) => (s.state ? (s.state.rosters[s.state.league.user_manager_id] ?? []).length : 0))
   const remainingMine = useDraftStore((s) => s.state?.remaining_user_picks ?? 0)
 
@@ -99,7 +113,8 @@ export function DraftScreen() {
   if (!hasState) return <LoadingState title="Loading draft" />
 
   const strategyCount = activePunts > 0 ? `${activePunts} punt${activePunts > 1 ? 's' : ''}` : undefined
-  const drawerMode = teamMode === 'drawer'
+  // "drawer" below names both toggled presentations (docked panel and overlay Drawer).
+  const drawerMode = teamMode !== 'column'
   const drawerOpen = drawerMode && teamOpen
   const openTeam = (tab: SideTab) => {
     setSideTab(tab)
@@ -194,7 +209,19 @@ export function DraftScreen() {
             {workTab === 'recommendations' ? <ShortlistTable /> : <AllPlayersTable />}
           </section>
         </div>
-        {drawerMode ? (
+        {teamMode === 'docked' ? (
+          drawerOpen && (
+            <aside ref={dockRef} className="team-dock" id="team-drawer" aria-label="My team" data-testid="team-drawer">
+              <div className="team-dock-head">
+                <h2>My team</h2>
+                <button type="button" onClick={() => setTeamOpen(false)}>
+                  <Icon name="close" size={14} /> Close
+                </button>
+              </div>
+              {teamPanel}
+            </aside>
+          )
+        ) : teamMode === 'drawer' ? (
           <Drawer open={drawerOpen} onClose={() => setTeamOpen(false)} title="My team" modal={false} className="team-drawer" testId="team-drawer">
             <div id="team-drawer">{teamPanel}</div>
           </Drawer>

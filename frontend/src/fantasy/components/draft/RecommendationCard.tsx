@@ -52,7 +52,8 @@ export function RecommendationCard({ headerAside }: RecommendationCardProps) {
   if (!state) return null
 
   const onClock = userIsOnClock(state)
-  const alternatives = !previewing && current && rec && h ? rec.shortlist.filter((a) => a.player_id !== h.player_id).slice(0, 3) : []
+  // Stale alternatives stay (dimmed) so recalculation never removes rows.
+  const alternatives = !previewing && rec && h ? rec.shortlist.filter((a) => a.player_id !== h.player_id).slice(0, 3) : []
   const draftDisabledReason = pendingCommit
     ? 'A pick is still saving.'
     : !current
@@ -123,7 +124,9 @@ export function RecommendationCard({ headerAside }: RecommendationCardProps) {
               </button>
             </div>
           </div>
-          {draftDisabledReason && <p className="rec-why-disabled">{draftDisabledReason}</p>}
+          <p className="rec-why-disabled" data-testid="rec-why">
+            {draftDisabledReason ?? ''}
+          </p>
           <div className="rec-blocks">
             <section className="rec-block" aria-labelledby="rec-proj-h">
               <h4 id="rec-proj-h">Projected</h4>
@@ -160,9 +163,9 @@ export function RecommendationCard({ headerAside }: RecommendationCardProps) {
               <ImpactBars rows={impactRows(state, h)} />
             </section>
           </div>
-          <RecReasons reasons={h.reasons} notes={[...(current && rec ? rec.notes : NO_NOTES), ...refineNotes]} />
+          <RecReasons reasons={h.reasons} notes={[...(rec ? rec.notes : NO_NOTES), ...refineNotes]} />
           {alternatives.length > 0 && (
-            <div className="rec-alts" aria-label="Alternatives">
+            <div className="rec-alts" aria-label="Alternatives" data-testid="rec-alts">
               <span className="muted">Next best:</span>
               {alternatives.map((a) => (
                 <span key={a.player_id}>

@@ -202,28 +202,31 @@
   .draft-grid[data-team='drawer-open'] {
     grid-template-columns: minmax(260px, 300px) minmax(0, 1fr) minmax(300px, 340px);
   }
-  /* docked: the drawer takes the third column instead of covering the board */
-  .drawer.team-drawer {
-    position: sticky;
-    top: var(--s-4);
-    height: auto;
-    max-height: calc(100vh - 2 * var(--s-4));
-    width: auto;
-    z-index: auto;
-    box-shadow: none;
-    border: 1px solid var(--border);
-    border-radius: var(--r);
-    padding: var(--s-3) var(--s-4);
-  }
 }
-.drawer.team-drawer .drawer-head {
+/* docked (1180–1479px): a plain third-column panel, toggled from the recommendation header */
+.team-dock {
+  position: sticky;
+  top: var(--s-4);
+  max-height: calc(100vh - 2 * var(--s-4));
+  overflow: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: var(--s-3) var(--s-4);
+}
+.team-dock-head {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
   margin-bottom: var(--s-2);
 }
-.drawer.team-drawer .drawer-head h2 {
+.team-dock-head h2 {
+  font-family: var(--font-display);
   font-size: var(--fs-lg);
+  font-weight: 700;
 }
-.drawer.team-drawer .drawer-head button {
+.team-dock-head button {
   min-height: 28px;
   padding: 0 10px;
 }
@@ -365,7 +368,8 @@
   background: var(--border-strong);
 }
 .rec-card.stale .rec-head,
-.rec-card.stale .rec-blocks {
+.rec-card.stale .rec-blocks,
+.rec-card.stale .rec-alts {
   opacity: 0.55;
   transition: opacity var(--dur) var(--ease);
 }
@@ -450,6 +454,9 @@
   font-weight: 700;
 }
 .rec-why-disabled {
+  /* always reserved (one line) so the reason appearing or clearing never shifts the blocks */
+  min-height: 1.4em;
+  line-height: 1.4;
   margin: calc(-1 * var(--s-2)) 0 0;
   font-size: var(--fs-sm);
   color: var(--ink-3);
@@ -588,6 +595,11 @@
   color: var(--ink-2);
   font-size: var(--fs-sm);
 }
+.rec-notes-empty {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--ink-3);
+}
 .rec-notes {
   margin: 6px 0 0;
   padding-left: 18px;
@@ -631,97 +643,6 @@
   .rec-name {
     font-size: var(--fs-xl);
   }
-}
-.player-link {
-  font: inherit;
-  text-decoration: none;
-}
-.rec-name .player-link:hover {
-  text-decoration: underline;
-}
-.rec-sub {
-  color: var(--ink-2);
-  margin-top: 4px;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-.rec-facts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: var(--s-2) var(--s-3);
-  margin-top: var(--s-3);
-}
-.fact {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-.fact-k {
-  font-size: var(--fs-xs);
-  color: var(--ink-3);
-}
-.fact-v {
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.05;
-}
-.fact-v .sd {
-  font-family: var(--font-body);
-  font-size: var(--fs-xs);
-  font-weight: 400;
-  color: var(--ink-3);
-}
-.fact-v.small {
-  font-size: var(--fs-md);
-}
-.rec-impact h4 {
-  font-size: var(--fs-sm);
-  color: var(--ink-2);
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-.rec-impact .diverging-rows {
-  gap: 1px;
-}
-.rec-impact .div-row {
-  min-height: 22px;
-  padding: 1px 4px;
-  grid-template-columns: 76px 1fr 46px;
-  font-size: var(--fs-sm);
-}
-.rec-impact .div-track {
-  height: 9px;
-}
-.rec-impact .diverging-axis {
-  grid-template-columns: 76px 1fr 46px;
-  padding: 0 4px 2px;
-}
-.rec-reasons {
-  margin: var(--s-3) 0 0;
-  padding-left: 18px;
-  color: var(--ink-2);
-  font-size: var(--fs-sm);
-}
-.rec-actions {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  align-items: center;
-  margin-top: var(--s-3);
-}
-.rec-alts {
-  margin-top: var(--s-3);
-  padding-top: var(--s-2);
-  border-top: 1px dashed var(--border);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 14px;
-  font-size: var(--fs-sm);
-  color: var(--ink-2);
-  align-items: baseline;
 }
 .player-link {
   border: none;

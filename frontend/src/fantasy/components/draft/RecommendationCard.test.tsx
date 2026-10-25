@@ -56,21 +56,36 @@ describe('RecommendationCard', () => {
   })
 
   it('keeps the card height while refining', () => {
+    useDraftStore.setState({ rec: { ...useDraftStore.getState().rec!, notes: ['model note'] } })
     const { rerender } = render(<RecommendationCard />)
-    const card = screen.getByTestId('rec-card')
-    expect(card.style.minHeight).toBe('300px')
-    // a refine job runs on the current ranking: same card, same height
+    // jsdom has no layout: assert that the same sections and rows stay rendered across states
+    const structure = () => {
+      const card = screen.getByTestId('rec-card')
+      return {
+        minHeight: card.style.minHeight,
+        name: screen.queryByTestId('rec-name') !== null,
+        draft: screen.queryByTestId('rec-draft') !== null,
+        why: screen.queryByTestId('rec-why') !== null,
+        alts: within(card).queryByTestId('rec-alts')?.querySelectorAll('.player-link').length ?? 0,
+        disclosure: within(card).queryByRole('button', { name: /all reasons and model notes/i }) !== null,
+        reasons: within(card).queryByRole('list', { name: 'Reasons' })?.children.length ?? 0,
+        impactRows: within(card).queryByRole('list', { name: /category impact/i })?.children.length ?? 0,
+        blocks: ['Projected', 'Fantasy value', 'Category impact'].filter((h) => within(card).queryByRole('heading', { name: h })).length,
+      }
+    }
+    const ready = structure()
+    expect(ready).toEqual({ minHeight: '300px', name: true, draft: true, why: true, alts: 1, disclosure: true, reasons: 3, impactRows: 9, blocks: 3 })
+    // a refine job runs on the current ranking: same card, same rows
     useDraftStore.setState({ refineJob: { jobId: 'j', ids: makeIds(state), status: 'running', startedAt: 0, elapsedMs: null, error: null } })
     rerender(<RecommendationCard />)
-    expect(screen.getByTestId('rec-card').style.minHeight).toBe('300px')
-    expect(screen.getByTestId('rec-name')).toBeInTheDocument()
-    // the board moved on and the ranking is recalculating: the last pick stays on screen, dimmed
+    expect(structure()).toEqual(ready)
+    // the board moved on and the ranking is recalculating: the last ranking stays on screen, dimmed and not draftable
     const stale = useDraftStore.getState().rec!
     useDraftStore.setState({ recStatus: 'updating', rec: { ...stale, ids: makeIds(state, { draft_revision: 99 }) } })
     rerender(<RecommendationCard />)
     expect(screen.getByTestId('rec-updating')).toBeInTheDocument()
-    expect(screen.getByTestId('rec-card').style.minHeight).toBe('300px')
-    expect(screen.getByTestId('rec-name')).toBeInTheDocument()
+    expect(structure()).toEqual(ready)
     expect(screen.getByTestId('rec-draft')).toBeDisabled()
+    expect(screen.getByTestId('rec-why')).toHaveTextContent(/recalculating/i)
   })
 })
