@@ -33,13 +33,40 @@ describe('identity', () => {
   it('uses the fallback straight away when there is no source, keeping the requested size', () => {
     render(<Portrait name="Unknown" src={null} size="sm" />)
     expect(box(screen.getByTestId('portrait-fallback'))).toEqual({ width: '32px', height: '32px' })
-    render(<TeamMark abbreviation="LAL" teamId={null} size={18} />)
-    expect(box(screen.getByTestId('teammark-fallback'))).toEqual({ width: '18px', height: '18px' })
   })
 
-  it('names the team on both logo and tricode fallback', () => {
-    render(<TeamMark abbreviation="NYK" teamId={null} />)
-    expect(screen.getByRole('img', { name: 'NYK' })).toBeInTheDocument()
+  it('no teamId renders an inline tricode at readable size', () => {
+    render(<TeamMark abbreviation="LAL" teamId={null} size={14} />)
+    const code = screen.getByTestId('teammark-inline')
+    expect(code).toHaveTextContent('LAL')
+    expect(code.className).toContain('text-meta')
+    expect(code.style.fontSize).toBe('')
+    expect(code.style.width).toBe('')
+    expect(screen.queryByTestId('teammark-fallback')).toBeNull()
+  })
+
+  it('a failed small logo falls back to an 18px box with at least 10px text', () => {
+    const { container } = render(<TeamMark abbreviation="NYK" teamId={1610612752} size={14} />)
+    fireEvent.error(container.querySelector('img')!)
+    const fb = screen.getByTestId('teammark-fallback')
+    expect(box(fb)).toEqual({ width: '18px', height: '18px' })
+    expect(parseFloat(fb.style.fontSize)).toBeGreaterThanOrEqual(10)
+    expect(screen.getByRole('img', { name: 'NYK' })).toBe(fb)
+  })
+
+  it('a new src after a failure tries the image again', () => {
+    const { container, rerender } = render(<Portrait name="Jayson Tatum" src={nbaHeadshotUrl(1628369)} size="lg" />)
+    fireEvent.error(container.querySelector('img')!)
+    expect(screen.getByTestId('portrait-fallback')).toBeInTheDocument()
+    rerender(<Portrait name="Jaylen Brown" src={nbaHeadshotUrl(1627759)} size="lg" />)
+    expect(screen.queryByTestId('portrait-fallback')).toBeNull()
+    expect(container.querySelector('img')).toHaveAttribute('src', nbaHeadshotUrl(1627759))
+
+    const { container: logo, rerender: rerenderLogo } = render(<TeamMark abbreviation="BOS" teamId={1610612738} />)
+    fireEvent.error(logo.querySelector('img')!)
+    expect(screen.getByTestId('teammark-fallback')).toBeInTheDocument()
+    rerenderLogo(<TeamMark abbreviation="DEN" teamId={1610612743} />)
+    expect(logo.querySelector('img')).toHaveAttribute('src', nbaLogoUrl(1610612743))
   })
 
   it('builds initials and links the name to the profile', () => {

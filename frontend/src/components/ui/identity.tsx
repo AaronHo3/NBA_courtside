@@ -22,7 +22,9 @@ export type PortraitSize = keyof typeof SIZES
  * the fallback carries the same ring so identity blocks keep their shape when a photo is missing.
  */
 export function Portrait({ name, src, team, size = 'md', className, ring = true }: { name: string; src: string | null; team?: string | null; size?: PortraitSize; className?: string; ring?: boolean }) {
-  const [failed, setFailed] = useState(false)
+  // Track which src failed, so a new player's headshot is tried again instead of inheriting the fallback.
+  const [failedSrc, setFailedSrc] = useState<string | null>(null)
+  const failed = src != null && failedSrc === src
   const px = SIZES[size]
   const colour = teamColour(team)
   const style: CSSProperties = { width: px, height: px, ['--team' as string]: colour }
@@ -36,33 +38,41 @@ export function Portrait({ name, src, team, size = 'md', className, ring = true 
   }
   return (
     <span className={base} style={style}>
-      <img src={src} alt="" width={px} height={px} style={{ width: px, height: px }} loading="lazy" decoding="async" className="h-full w-full object-cover object-top scale-[1.15] translate-y-[6%]" onError={() => setFailed(true)} />
+      <img src={src} alt="" width={px} height={px} style={{ width: px, height: px }} loading="lazy" decoding="async" className="h-full w-full object-cover object-top scale-[1.15] translate-y-[6%]" onError={() => setFailedSrc(src)} />
     </span>
   )
 }
 
+/** Smallest box and text for a failed logo's tricode, so it stays legible wherever the mark is used. */
+const FALLBACK_MIN_BOX = 18
+const FALLBACK_MIN_FONT = 10
+
 /**
- * Team logo with the tricode as fallback; `teamId` is the NBA team id. Logo and fallback occupy the same
- * `size`×`size` box so rows never shift when the CDN is blocked or a team has no logo.
+ * Team logo with the tricode as fallback; `teamId` is the NBA team id. Without a `teamId` there is no logo
+ * to match, so the tricode is readable inline text. When a logo fails to load, the tricode fills a fixed
+ * box the size of the logo (at least 18px, text at least 10px) so the row does not shift.
  */
 export function TeamMark({ abbreviation, teamId, size = 20, className }: { abbreviation: string | null | undefined; teamId?: number | null; size?: number; className?: string }) {
-  const [failed, setFailed] = useState(false)
-  const box: CSSProperties = { width: size, height: size }
-  if (!teamId || failed) {
-    const code = abbreviation ?? '—'
+  const [failedId, setFailedId] = useState<number | null>(null)
+  const underline = `inset 0 -2px 0 ${teamColour(abbreviation)}`
+  if (!teamId) {
+    return <span data-testid="teammark-inline" className={clsx('inline-flex items-center rounded-sm px-1 font-mono text-meta font-medium text-ink-2', className)} style={{ boxShadow: underline }}>{abbreviation ?? '—'}</span>
+  }
+  if (failedId === teamId) {
+    const box = Math.max(size, FALLBACK_MIN_BOX)
     return (
       <span
         data-testid="teammark-fallback"
         role="img"
         aria-label={abbreviation ?? 'Unknown team'}
         className={clsx('inline-flex shrink-0 items-center justify-center overflow-hidden rounded-sm bg-raised font-display font-semibold leading-none tracking-tight text-ink-2', className)}
-        style={{ ...box, fontSize: Math.max(7, Math.round(size * (code.length > 2 ? 0.4 : 0.5))), boxShadow: `inset 0 -2px 0 ${teamColour(abbreviation)}` }}
+        style={{ width: box, height: box, fontSize: Math.max(FALLBACK_MIN_FONT, Math.round(box * 0.45)), boxShadow: underline }}
       >
-        {code}
+        {abbreviation ?? '—'}
       </span>
     )
   }
-  return <img src={nbaLogoUrl(teamId)} alt={abbreviation ?? ''} width={size} height={size} style={box} loading="lazy" className={clsx('inline-block shrink-0', className)} onError={() => setFailed(true)} />
+  return <img src={nbaLogoUrl(teamId)} alt={abbreviation ?? ''} width={size} height={size} style={{ width: size, height: size }} loading="lazy" className={clsx('inline-block shrink-0', className)} onError={() => setFailedId(teamId)} />
 }
 
 export type PlayerIdentityProps = {
