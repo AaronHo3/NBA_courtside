@@ -7,11 +7,12 @@ function focusables(root: HTMLElement): HTMLElement[] {
 }
 
 /**
- * Modal focus management for a panel that is mounted while `open`: focus moves to the first focusable
- * (or the panel), Tab and Shift+Tab wrap inside it, Escape calls `onClose`, and focus returns to the
- * element that had it when the panel opened.
+ * Focus management for a panel that is mounted while `open`: focus moves to the first focusable (or the
+ * panel), Tab and Shift+Tab wrap inside it, Escape calls `onClose`, and focus returns to the element that
+ * had it when the panel opened. When `modal`, Tab from outside the panel is pulled back in; when not,
+ * the page behind stays usable and Tab only wraps while focus is already inside the panel.
  */
-export function useDialogFocus(panelRef: RefObject<HTMLElement | null>, open: boolean, onClose: () => void) {
+export function useDialogFocus(panelRef: RefObject<HTMLElement | null>, open: boolean, onClose: () => void, modal = true) {
   const onCloseRef = useRef(onClose)
   useEffect(() => {
     onCloseRef.current = onClose
@@ -32,6 +33,7 @@ export function useDialogFocus(panelRef: RefObject<HTMLElement | null>, open: bo
         return
       }
       if (e.key !== 'Tab') return
+      if (!modal && !panel.contains(document.activeElement)) return
       const items = focusables(panel)
       if (items.length === 0) {
         e.preventDefault()
@@ -57,5 +59,5 @@ export function useDialogFocus(panelRef: RefObject<HTMLElement | null>, open: bo
       document.removeEventListener('keydown', onKey)
       if (opener && opener.isConnected) opener.focus()
     }
-  }, [open, panelRef])
+  }, [open, panelRef, modal])
 }

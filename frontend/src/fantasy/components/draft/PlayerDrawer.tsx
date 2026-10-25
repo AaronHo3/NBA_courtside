@@ -36,7 +36,8 @@ export function PlayerDrawer() {
     </div>
   )
   return (
-    <Drawer open={Boolean(id)} onClose={() => close(null)} title="Player details" head={head} closeLabel="Close player details" testId="player-drawer">
+    // Non-modal: on draft night the picker must stay usable while peeking at a player.
+    <Drawer modal={false} open={Boolean(id)} onClose={() => close(null)} title="Player details" head={head} closeLabel="Close player details" testId="player-drawer">
       {!player && <p className="muted">{playersStatus === 'loading' ? 'Loading player index…' : 'Player not in the loaded snapshot index.'}</p>}
       {player && (
         <>

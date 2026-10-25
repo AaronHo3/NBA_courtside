@@ -423,6 +423,18 @@
 }
 
 /* drawer (components/ui/Drawer.tsx); the panel itself is `.drawer` in base.css */
+.drawer-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 39;
+  background: rgb(0 0 0 / 0.4);
+  animation: drawer-scrim-in var(--dur) var(--ease) both;
+}
+@keyframes drawer-scrim-in {
+  from {
+    opacity: 0;
+  }
+}
 .drawer:focus {
   outline: none;
 }

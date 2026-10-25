@@ -5,23 +5,26 @@ import { useDialogFocus } from './useDialogFocus'
 
 const WIDTH = { md: 'w-[min(480px,100vw)]', lg: 'w-[min(640px,100vw)]' } as const
 
-/** Side panel over the page: modal dialog labelled by its title, focus trapped, Esc and scrim close, focus returns on close. */
-export function Drawer({ open, onClose, title, children, width = 'md', testId }: { open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; width?: 'md' | 'lg'; testId?: string }) {
+/**
+ * Side panel labelled by its title; focus moves in, Esc closes, focus returns on close. `modal` (default)
+ * adds a scrim that closes on pointerdown and traps Tab; `modal={false}` leaves the page behind usable.
+ */
+export function Drawer({ open, onClose, title, children, width = 'md', testId, modal = true }: { open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; width?: 'md' | 'lg'; testId?: string; modal?: boolean }) {
   const panelRef = useRef<HTMLDivElement>(null)
   const titleId = useId()
-  useDialogFocus(panelRef, open, onClose)
+  useDialogFocus(panelRef, open, onClose, modal)
   if (!open) return null
   return createPortal(
-    <div className="fixed inset-0 z-50">
-      <div aria-hidden="true" className="fade-in absolute inset-0 bg-black/40" onMouseDown={onClose} />
+    <>
+      {modal && <div aria-hidden="true" data-drawer-scrim="" className="fade-in fixed inset-0 z-50 bg-black/40" onPointerDown={onClose} />}
       <div
         ref={panelRef}
         role="dialog"
-        aria-modal="true"
+        aria-modal={modal ? 'true' : undefined}
         aria-labelledby={titleId}
         tabIndex={-1}
         data-testid={testId}
-        className={clsx('drawer-in absolute inset-y-0 right-0 flex max-w-full flex-col border-l border-line-strong bg-surface shadow-[var(--shadow-float)] outline-none', WIDTH[width])}
+        className={clsx('drawer-in fixed inset-y-0 right-0 z-50 flex max-w-full flex-col border-l border-line-strong bg-surface shadow-[var(--shadow-float)] outline-none', WIDTH[width])}
       >
         <header className="flex items-start justify-between gap-3 border-b border-line px-5 py-4">
           <h2 id={titleId} className="min-w-0 text-base font-semibold text-ink">{title}</h2>
@@ -31,7 +34,7 @@ export function Drawer({ open, onClose, title, children, width = 'md', testId }:
         </header>
         <div className="min-h-0 flex-1 overflow-auto px-5 py-4">{children}</div>
       </div>
-    </div>,
+    </>,
     document.body,
   )
 }
