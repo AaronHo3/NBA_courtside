@@ -1,10 +1,9 @@
-import { useEffect } from 'react'
 import { managerName } from '../../lib/draftState'
 import { fmtNum, PER_GAME_KEYS, positionsText } from '../../lib/format'
 import { useDraftStore } from '../../store/draftStore'
 import { Badge } from '../common/Badge'
 import { Portrait } from '../performers/Portrait'
-import { Icon } from '../ui/Icon'
+import { Drawer } from '../ui/Drawer'
 import { TeamMark } from '../ui/PlayerIdentity'
 
 /** Slide-in player detail: identity, eligibility, status, projected per-game line with its spread. */
@@ -19,36 +18,25 @@ export function PlayerDrawer() {
   const previewPlayerId = useDraftStore((s) => s.previewPlayerId)
   const setPreview = useDraftStore((s) => s.setPreview)
 
-  useEffect(() => {
-    if (!id) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close(null)
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [id, close])
-
-  if (!id) return null
-  const pick = state?.picks.find((p) => p.player_id === id)
-  return (
-    <aside className="drawer" role="dialog" aria-label="Player details" data-testid="player-drawer">
-      <div className="drawer-head">
-        <div className="row" style={{ gap: 12 }}>
-          {player && <Portrait name={player.name} espnId={player.espn_id} team={player.team} size={56} />}
-          <div>
-            <h2>{player?.name ?? id}</h2>
-            {player && (
-              <div className="row" style={{ gap: 8 }}>
-                <TeamMark team={player.team} />
-                <span>
-                  primary <b>{player.primary_position ?? '—'}</b> · eligible <b>{positionsText(player.eligible_positions)}</b>
-                </span>
-              </div>
-            )}
+  const pick = id ? state?.picks.find((p) => p.player_id === id) : undefined
+  const head = (
+    <div className="row" style={{ gap: 12 }}>
+      {player && <Portrait name={player.name} espnId={player.espn_id} team={player.team} size={56} />}
+      <div>
+        <h2>{player?.name ?? id}</h2>
+        {player && (
+          <div className="row" style={{ gap: 8 }}>
+            <TeamMark team={player.team} />
+            <span>
+              primary <b>{player.primary_position ?? '—'}</b> · eligible <b>{positionsText(player.eligible_positions)}</b>
+            </span>
           </div>
-        </div>
-        <button type="button" onClick={() => close(null)} aria-label="Close player details">
-          <Icon name="close" size={14} /> Close
-        </button>
+        )}
       </div>
+    </div>
+  )
+  return (
+    <Drawer open={Boolean(id)} onClose={() => close(null)} title="Player details" head={head} closeLabel="Close player details" testId="player-drawer">
       {!player && <p className="muted">{playersStatus === 'loading' ? 'Loading player index…' : 'Player not in the loaded snapshot index.'}</p>}
       {player && (
         <>
@@ -111,6 +99,6 @@ export function PlayerDrawer() {
           </div>
         </>
       )}
-    </aside>
+    </Drawer>
   )
 }

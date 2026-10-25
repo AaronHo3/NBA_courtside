@@ -1,22 +1,30 @@
 import { clsx } from 'clsx'
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from 'react'
 import { useId, useState } from 'react'
+import { Link, type LinkProps } from 'react-router-dom'
 
-export function Button({ className, variant = 'default', size = 'md', ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'default' | 'primary' | 'ghost' | 'danger'; size?: 'sm' | 'md' }) {
-  return (
-    <button
-      {...props}
-      className={clsx(
-        't-fast press inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:active:transform-none',
-        size === 'sm' ? 'min-h-7 px-2 py-1 text-xs' : 'min-h-[34px] px-3 py-1.5 text-sm',
-        variant === 'primary' && 'bg-accent text-accent-ink border-accent hover:bg-[var(--c-accent-hover)] hover:border-[var(--c-accent-hover)]',
-        variant === 'default' && 'bg-surface border-line-strong hover:border-accent text-ink',
-        variant === 'ghost' && 'bg-transparent border-transparent hover:bg-accent-soft text-ink-2',
-        variant === 'danger' && 'bg-transparent border-line-strong text-critical hover:border-critical',
-        className,
-      )}
-    />
+type ButtonVariant = 'default' | 'primary' | 'ghost' | 'danger'
+type ButtonSize = 'sm' | 'md'
+
+function buttonClass(variant: ButtonVariant, size: ButtonSize, className?: string) {
+  return clsx(
+    't-fast press inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:active:transform-none',
+    size === 'sm' ? 'min-h-7 px-2 py-1 text-xs' : 'min-h-[34px] px-3 py-1.5 text-sm',
+    variant === 'primary' && 'bg-accent text-accent-ink border-accent hover:bg-[var(--c-accent-hover)] hover:border-[var(--c-accent-hover)]',
+    variant === 'default' && 'bg-surface border-line-strong hover:border-accent text-ink',
+    variant === 'ghost' && 'bg-transparent border-transparent hover:bg-accent-soft text-ink-2',
+    variant === 'danger' && 'bg-transparent border-line-strong text-critical hover:border-critical',
+    className,
   )
+}
+
+export function Button({ className, variant = 'default', size = 'md', ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: ButtonVariant; size?: ButtonSize }) {
+  return <button {...props} className={buttonClass(variant, size, className)} />
+}
+
+/** A router link that looks like a `Button`; use it for navigation so middle-click and copy-link work. */
+export function LinkButton({ className, variant = 'default', size = 'md', ...props }: LinkProps & { variant?: ButtonVariant; size?: ButtonSize }) {
+  return <Link {...props} className={buttonClass(variant, size, clsx('no-underline', className))} />
 }
 
 export function Select({ label, className, children, ...props }: SelectHTMLAttributes<HTMLSelectElement> & { label?: string }) {
@@ -105,10 +113,10 @@ export function Badge({ children, tone = 'neutral', className }: { children: Rea
 }
 
 /** A titled section. `question` is the basketball question the panel answers; `method` is one line on how. */
-export function Panel({ question, method, actions, children, className, info, tone = 'surface', padded = true }: { question: string; method?: string; info?: string; actions?: ReactNode; children: ReactNode; className?: string; tone?: 'surface' | 'plain'; padded?: boolean }) {
+export function Panel({ question, method, actions, children, className, info, tone = 'surface', padded = true, compact = false }: { question: string; method?: string; info?: string; actions?: ReactNode; children: ReactNode; className?: string; tone?: 'surface' | 'plain'; padded?: boolean; /** Tighter header and body padding for dense dashboards. */ compact?: boolean }) {
   return (
     <section className={clsx('rise-in', tone === 'surface' ? 'rounded-[var(--radius-panel)] border border-line bg-surface' : 'border-t border-line', className)}>
-      <header className={clsx('flex flex-wrap items-start justify-between gap-2', tone === 'surface' ? 'border-b border-line px-4 py-3' : 'py-3')}>
+      <header className={clsx('flex flex-wrap items-start justify-between gap-2', tone === 'surface' ? clsx('border-b border-line', compact ? 'px-3 py-2' : 'px-4 py-3') : compact ? 'py-2' : 'py-3')}>
         <div className="min-w-0">
           <h2 className="text-[15px] font-semibold leading-5 text-ink">{question}</h2>
           {method && (
@@ -120,17 +128,38 @@ export function Panel({ question, method, actions, children, className, info, to
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
       </header>
-      <div className={clsx(padded && (tone === 'surface' ? 'p-4' : 'pb-4'))}>{children}</div>
+      <div className={clsx(padded && (tone === 'surface' ? (compact ? 'p-3' : 'p-4') : compact ? 'pb-3' : 'pb-4'))}>{children}</div>
     </section>
   )
 }
 
-export function EmptyState({ title, body, action }: { title: string; body?: string; action?: ReactNode }) {
+export function EmptyState({ title, body, action, icon }: { title: string; body?: string; action?: ReactNode; /** Small decorative glyph shown above the title. */ icon?: ReactNode }) {
   return (
     <div className="flex flex-col items-start gap-2 rounded-[var(--radius-control)] border border-dashed border-line-strong p-5 text-sm">
+      {icon && <span aria-hidden="true" className="text-ink-3">{icon}</span>}
       <p className="font-medium text-ink">{title}</p>
       {body && <p className="text-ink-2 max-w-prose">{body}</p>}
       {action}
+    </div>
+  )
+}
+
+const NOTICE_TONE = {
+  info: 'border-line-strong text-ink-2',
+  warning: 'border-warning/60 text-ink-2',
+  critical: 'border-critical/60 text-ink-2',
+  demo: 'border-demo/60 text-ink-2',
+} as const
+
+/** Inline page notice (stale data, demo mode, partial coverage); a left rule carries the tone, text stays readable. */
+export function Notice({ tone = 'info', title, children, action, className }: { tone?: keyof typeof NOTICE_TONE; title?: string; children?: ReactNode; action?: ReactNode; className?: string }) {
+  return (
+    <div role={tone === 'critical' ? 'alert' : 'status'} data-tone={tone} className={clsx('flex flex-wrap items-start justify-between gap-x-4 gap-y-2 rounded-[var(--radius-control)] border border-l-[3px] bg-surface px-3 py-2 text-sm', NOTICE_TONE[tone], className)}>
+      <div className="min-w-0">
+        {title && <p className="font-medium text-ink">{title}</p>}
+        {children && <div className={clsx(title && 'mt-0.5', 'text-xs leading-5')}>{children}</div>}
+      </div>
+      {action && <div className="flex items-center gap-2">{action}</div>}
     </div>
   )
 }
@@ -171,3 +200,6 @@ export { Delta, StatTile, StatRow, MiniBar } from './stats'
 export { Tabs } from './Tabs'
 export { Skeleton, SkeletonTable, SkeletonChart } from './Skeleton'
 export { Toolbar } from './Toolbar'
+export { Disclosure } from './Disclosure'
+export { Drawer } from './Drawer'
+export { Freshness } from './Freshness'

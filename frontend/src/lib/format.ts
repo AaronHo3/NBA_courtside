@@ -65,3 +65,37 @@ export function wilsonText(low: number | null, high: number | null): string {
   if (isNil(low) || isNil(high)) return ''
   return `${(low * 100).toFixed(0)}–${(high * 100).toFixed(0)}% (95% Wilson)`
 }
+
+export type FreshnessTone = 'accent' | 'neutral' | 'warning'
+
+const MINUTE = 60_000
+const HOUR = 60 * MINUTE
+const DAY = 24 * HOUR
+
+/** Age of an ISO timestamp in ms against `now`; null when missing or unparseable. Future times count as 0. */
+export function ageMs(at: string | null | undefined, now: number = Date.now()): number | null {
+  if (!at) return null
+  const t = Date.parse(at)
+  if (Number.isNaN(t)) return null
+  return Math.max(0, now - t)
+}
+
+/** Compact relative time: "just now", "5m ago", "2h ago", "3d ago", then a short date; "never" when missing. */
+export function relativeTime(at: string | null | undefined, now: number = Date.now()): string {
+  const age = ageMs(at, now)
+  if (age === null) return 'never'
+  if (age < MINUTE) return 'just now'
+  if (age < HOUR) return `${Math.floor(age / MINUTE)}m ago`
+  if (age < DAY) return `${Math.floor(age / HOUR)}h ago`
+  if (age < 45 * DAY) return `${Math.floor(age / DAY)}d ago`
+  return new Date(Date.parse(at as string)).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+/** Data freshness tone: within a day reads as current, within a week as neutral, older (or never) as a warning. */
+export function freshnessTone(at: string | null | undefined, now: number = Date.now()): FreshnessTone {
+  const age = ageMs(at, now)
+  if (age === null) return 'warning'
+  if (age <= DAY) return 'accent'
+  if (age <= 7 * DAY) return 'neutral'
+  return 'warning'
+}

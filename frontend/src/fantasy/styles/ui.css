@@ -421,3 +421,47 @@
   color: var(--ink-2);
   background: var(--surface);
 }
+
+/* drawer (components/ui/Drawer.tsx); the panel itself is `.drawer` in base.css */
+.drawer:focus {
+  outline: none;
+}
+.drawer.drawer-lg {
+  width: min(640px, 100vw);
+}
+.drawer-head-main {
+  min-width: 0;
+}
+.drawer-kicker {
+  margin: 0 0 var(--s-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* freshness (components/ui/Freshness.tsx): label · relative time, dot toned by age */
+.freshness {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-sm);
+  color: var(--ink-2);
+}
+.freshness-dot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: var(--r-pill);
+  background: var(--ink-2);
+}
+.freshness.accent .freshness-dot {
+  background: var(--teal);
+}
+.freshness.warning .freshness-dot {
+  background: var(--amber);
+}
+.freshness-detail {
+  color: var(--ink-3);
+}

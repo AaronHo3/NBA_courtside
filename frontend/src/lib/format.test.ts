@@ -1,4 +1,4 @@
-import { formatMetric, formatPct, formatSigned, inchesToFtIn, metricLabelWithNorm } from './format'
+import { formatMetric, formatPct, formatSigned, freshnessTone, inchesToFtIn, metricLabelWithNorm, relativeTime } from './format'
 import type { Metric } from './types'
 
 const pct: Metric = { key: 'ts_pct', label: 'TS%', kind: 'pct', definition: '', formula: null, higher_is_better: true, unit: null, source: '', decimals: 3 }
@@ -26,5 +26,24 @@ describe('format', () => {
     expect(metricLabelWithNorm(counting, 'pts', 'per_36')).toBe('Points / 36')
     expect(metricLabelWithNorm(pct, 'ts_pct', 'per_36')).toBe('TS%')
     expect(metricLabelWithNorm(counting, 'pts', 'totals')).toBe('Points')
+  })
+})
+
+describe('relative time and freshness tone', () => {
+  const now = Date.parse('2026-10-25T12:00:00Z')
+  it('describes age compactly and never invents a time', () => {
+    expect(relativeTime('2026-10-25T11:59:30Z', now)).toBe('just now')
+    expect(relativeTime('2026-10-25T11:15:00Z', now)).toBe('45m ago')
+    expect(relativeTime('2026-10-24T13:00:00Z', now)).toBe('23h ago')
+    expect(relativeTime('2026-10-20T12:00:00Z', now)).toBe('5d ago')
+    expect(relativeTime(null, now)).toBe('never')
+    expect(relativeTime('not a date', now)).toBe('never')
+    expect(relativeTime('2026-10-26T12:00:00Z', now)).toBe('just now')
+  })
+  it('tones by age: a day, a week, then a warning', () => {
+    expect(freshnessTone('2026-10-24T12:00:00Z', now)).toBe('accent')
+    expect(freshnessTone('2026-10-18T12:00:00Z', now)).toBe('neutral')
+    expect(freshnessTone('2026-10-17T11:00:00Z', now)).toBe('warning')
+    expect(freshnessTone(null, now)).toBe('warning')
   })
 })

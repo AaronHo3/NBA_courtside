@@ -240,6 +240,10 @@ body {
 .flash-once { animation: flash-once 900ms var(--ease) both; }
 @keyframes rise-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 .rise-in { animation: rise-in var(--dur-panel) var(--ease) both; }
+@keyframes drawer-in { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
+.drawer-in { animation: drawer-in var(--dur-panel) var(--ease) both; }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+.fade-in { animation: fade-in var(--dur) var(--ease) both; }
 @keyframes spin { to { transform: rotate(360deg); } }
 [aria-busy="true"] > .spin-when-busy, .spin-when-busy[aria-busy="true"], .is-spinning { animation: spin 900ms linear infinite; }
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }

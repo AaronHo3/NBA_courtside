@@ -1,8 +1,7 @@
-import { useEffect } from 'react'
 import type { CategoryDef, PerformerRow } from '../../api/types'
 import { fmtNum, fmtSigned } from '../../lib/format'
 import { Badge } from '../common/Badge'
-import { Icon } from '../ui/Icon'
+import { Drawer } from '../ui/Drawer'
 import { NbaProfileLink } from './FeatureCards'
 import { PlayerIdentity } from '../ui/PlayerIdentity'
 import { StatCard, StatRow } from '../ui/StatCard'
@@ -36,20 +35,24 @@ export function PerformerDrawer({ row: r, onClose, categories }: PerformerDrawer
   const scored = categories ? new Set(categories.map((c) => c.key)) : null
   const isScored = (key: string) => scored === null || scored.has(key)
   const scoresTov = isScored('TOV')
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
   const hasBaseline = r.expected !== null && r.expected_contribution !== null
+  // The dialog keeps its accessible name "<player> details"; only "Details" is shown, as the kicker.
+  const title = (
+    <>
+      <span className="visually-hidden">{r.player.name} </span>details
+    </>
+  )
   return (
-    <aside className="drawer performer-drawer" role="dialog" aria-label={`${r.player.name} details`} data-testid="performer-detail">
-      <div className="drawer-head">
-        <PlayerIdentity name={r.player.name} team={r.player.team} positions={r.player.eligible_positions} espnId={r.player.espn_id} size={56} meta={<>{`${r.games} GP · ${fmtNum(r.minutes, 0)} MIN`} <NbaProfileLink nbaId={r.player.nba_id} /></>} />
-        <button type="button" onClick={onClose} aria-label="Close details">
-          <Icon name="close" size={14} /> Close
-        </button>
-      </div>
+    <Drawer
+      open
+      onClose={onClose}
+      title={title}
+      width="lg"
+      className="performer-drawer"
+      closeLabel="Close details"
+      testId="performer-detail"
+      head={<PlayerIdentity name={r.player.name} team={r.player.team} positions={r.player.eligible_positions} espnId={r.player.espn_id} size={56} meta={<>{`${r.games} GP · ${fmtNum(r.minutes, 0)} MIN`} <NbaProfileLink nbaId={r.player.nba_id} /></>} />}
+    >
       {r.flags.length > 0 && (
         <div className="row" style={{ marginBottom: 12 }}>
           {r.flags.map((f) => (
@@ -168,6 +171,6 @@ export function PerformerDrawer({ row: r, onClose, categories }: PerformerDrawer
         One unit is one standard deviation of per-game production across the league pool. FG% and FT% are shooting impact on the player's own attempts against the pool rate.{' '}
         {scoresTov ? 'Turnovers count against.' : 'Turnovers are not scored in this league and are not part of contribution.'}
       </p>
-    </aside>
+    </Drawer>
   )
 }
