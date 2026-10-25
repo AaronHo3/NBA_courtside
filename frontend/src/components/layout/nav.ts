@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
+import type { Crumb } from '@/store/crumb'
 import {
   Activity,
   BarChart3,
@@ -62,8 +63,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: 'draft', label: 'Draft', hint: 'Recommendations and board', icon: ClipboardList, to: '#/draft', fantasy: true },
       { id: 'recap', label: 'Recap', hint: 'Final rosters and profile', icon: Trophy, to: '#/recap', fantasy: true },
-      { id: 'season', label: 'My league', hint: 'Power, free agents, results', icon: Users, to: '#/season', fantasy: true, afterDraft: true },
-      { id: 'league-matchups', label: 'League matchups', hint: 'This week, by category', icon: Swords, to: '#/season?tab=matchups', fantasy: true, afterDraft: true },
+      { id: 'season', label: 'My league', hint: 'Matchups, power, free agents, results', icon: Users, to: '#/season', fantasy: true, afterDraft: true },
       { id: 'performers', label: 'Performers', hint: 'Who carried your team', icon: BarChart3, to: '#/performers', fantasy: true, afterDraft: true },
       { id: 'setup', label: 'Setup', hint: 'Sessions, league, imports', icon: Settings, to: '#/setup', fantasy: true },
     ],
@@ -78,6 +78,22 @@ export const NAV_GROUPS: NavGroup[] = [
   },
 ]
 
+export type SeasonTabId = 'matchups' | 'power' | 'free-agents' | 'results' | 'predictions'
+
+/** The "My league" views: sidebar sub-items, the SeasonScreen tabs and the breadcrumb all read this. */
+export const SEASON_TABS: Array<{ id: SeasonTabId; label: string }> = [
+  { id: 'matchups', label: 'Matchups' },
+  { id: 'power', label: 'Power rankings' },
+  { id: 'free-agents', label: 'Free agents' },
+  { id: 'results', label: 'Results' },
+  { id: 'predictions', label: 'Track record' },
+]
+
+/** A `tab` query value as a season tab, falling back to the first (matchups). */
+export function seasonTabFrom(raw: string | null | undefined): SeasonTabId {
+  return SEASON_TABS.find((t) => t.id === raw)?.id ?? SEASON_TABS[0].id
+}
+
 export const ALL_NAV_ITEMS: NavItem[] = NAV_GROUPS.flatMap((g) => g.items)
 
 /** Full href for an item; fantasy items carry the active session id in the query string. */
@@ -87,13 +103,13 @@ export function navHref(item: NavItem, sessionId: string | null): string {
   return `/fantasy${q}${item.to}`
 }
 
-/** Which item is active for a location. Fantasy routes compare the hash route (and `tab` for league matchups). */
+const fantasyRoute = (hash: string) => hash.replace(/^#\/?/, '').split('?')[0] || 'draft'
+
+/** Which item is active for a location. Fantasy routes compare the hash route; season tabs all belong to "My league". */
 export function activeNavId(pathname: string, hash: string): string | null {
   if (pathname.startsWith('/fantasy')) {
-    const route = hash.replace(/^#\/?/, '').split('?')[0] || 'draft'
-    const query = new URLSearchParams(hash.split('?')[1] ?? '')
-    if (route === 'season' && query.get('tab') === 'matchups') return 'league-matchups'
-    const hit = ALL_NAV_ITEMS.find((i) => i.fantasy && i.to.replace(/^#\//, '').split('?')[0] === route && !i.to.includes('?'))
+    const route = fantasyRoute(hash)
+    const hit = ALL_NAV_ITEMS.find((i) => i.fantasy && i.to.replace(/^#\//, '').split('?')[0] === route)
     return hit?.id ?? null
   }
   if (pathname === '/') return 'overview'
@@ -110,4 +126,39 @@ export function navItemById(id: string | null): NavItem | undefined {
 
 export function navGroupOf(id: string | null): NavGroup | undefined {
   return id ? NAV_GROUPS.find((g) => g.items.some((i) => i.id === id)) : undefined
+}
+
+/** Breadcrumb labels below the group for a fantasy hash: `['My league', 'Matchups']`, `['Performers']`. */
+export function fantasyCrumbs(hash: string): string[] {
+  const item = navItemById(activeNavId('/fantasy', hash))
+  if (!item) return []
+  if (item.id !== 'season') return [item.label]
+  const tab = seasonTabFrom(new URLSearchParams(hash.split('?')[1] ?? '').get('tab'))
+  return [item.label, SEASON_TABS.find((t) => t.id === tab)!.label]
+}
+
+/** Breadcrumb segment as the shell renders it; `href` only on segments that lead somewhere else. */
+export type ShellCrumb = { label: string; href?: string; fantasy?: boolean }
+
+/**
+ * The shell's breadcrumb: group label › item label › page parts. Fantasy routes take their tail from
+ * the hash (the season tab); research detail pages supply theirs (`Players › LeBron James`), which
+ * then stands in for the item label. `title` is the last segment, or null when nothing matched.
+ */
+export function buildBreadcrumb(pathname: string, hash: string, parts: Crumb[], sessionId: string | null): { crumbs: ShellCrumb[]; title: string | null } {
+  const activeId = activeNavId(pathname, hash)
+  const item = navItemById(activeId)
+  const group = navGroupOf(activeId)
+  const head: ShellCrumb[] = group?.label ? [{ label: group.label }] : []
+  let tail: ShellCrumb[]
+  if (pathname.startsWith('/fantasy')) {
+    const labels = fantasyCrumbs(hash)
+    tail = labels.map((label, i) => (i === 0 && labels.length > 1 && item ? { label, href: navHref(item, sessionId), fantasy: true } : { label }))
+  } else if (parts.length) {
+    tail = parts.map((p) => ({ label: p.label, href: p.to }))
+  } else {
+    tail = item ? [{ label: item.label }] : []
+  }
+  if (!tail.length) return { crumbs: [...head, { label: 'Courtside' }], title: null }
+  return { crumbs: [...head, ...tail], title: tail[tail.length - 1].label }
 }

@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { useSetCrumb } from '@/store/crumb'
 import { EmptyState, ErrorState, Loading, Panel, Refetching, Select, Toggle } from '@/components/ui'
 import { useGame, useGameEvents, useTeams } from '@/hooks/useApi'
 import { useBoolParam, useNumberParam, useParam } from '@/lib/urlState'
@@ -27,11 +28,13 @@ export default function GameDetail() {
   const events = useGameEvents(gameId || null, params)
   const list = events.data?.data ?? []
 
+  const g = game.data?.data
+  const title = g ? `${teamLabel(teams.data?.data, g.game.away_team_id)} ${g.game.neutral_site ? 'vs' : 'at'} ${teamLabel(teams.data?.data, g.game.home_team_id)}` : null
+  useSetCrumb(title ? [{ label: 'Games', to: '/games' }, { label: title }] : null)
+
   if (game.isLoading) return <Loading label="Loading game" />
   if (game.error) return <ErrorState error={game.error} retry={() => game.refetch()} />
-  const g = game.data?.data
-  if (!g) return <EmptyState title={`Game ${gameId} not found`} body="Games come from the ingested team game logs; check the season on the Data & methods page." />
-  const title = `${teamLabel(teams.data?.data, g.game.away_team_id)} ${g.game.neutral_site ? 'vs' : 'at'} ${teamLabel(teams.data?.data, g.game.home_team_id)}`
+  if (!g || !title) return <EmptyState title={`Game ${gameId} not found`} body="Games come from the ingested team game logs; check the season on the Data & methods page." />
 
   return (
     <>

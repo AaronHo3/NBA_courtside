@@ -15,7 +15,7 @@ import { Segmented } from '../components/ui/Segmented'
 import { StatCard, StatRow } from '../components/ui/StatCard'
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/States'
 import { categoryLabel, fmtNum, fmtSigned } from '../lib/format'
-import { readHashQuery, replaceHashQuery } from '../lib/hashQuery'
+import { readHashQuery, setHashQuery } from '../lib/hashQuery'
 import { buildUrl } from '../lib/router'
 import { teamColor } from '../lib/teamColors'
 import { useDraftStore } from '../store/draftStore'
@@ -32,7 +32,6 @@ const OVER_TIP = 'Biggest overperformers: contribution minus expected, where exp
 export function PerformersScreen() {
   const sessionId = useDraftStore((s) => s.sessionId)
   const state = useDraftStore((s) => s.state)
-  const isDemo = useDraftStore((s) => s.snapshot?.is_demo ?? false)
   const initial = readHashQuery(window.location.hash)
   const [manager, setManager] = useState<string | null>(initial.team ?? null)
   const [scope, setScope] = useState<Scope>(initial.scope === 'season' ? 'season' : 'week')
@@ -80,7 +79,7 @@ export function PerformersScreen() {
   }, [sessionId, scope, period, loadMoves, state?.is_complete])
 
   useEffect(() => {
-    replaceHashQuery({ team: manager, scope: scope === 'season' ? 'season' : null, week: scope === 'week' && period !== null ? String(period) : null })
+    setHashQuery({ team: manager, scope: scope === 'season' ? 'season' : null, week: scope === 'week' && period !== null ? String(period) : null })
   }, [manager, scope, period])
 
   if (!sessionId || !state) {
@@ -115,9 +114,7 @@ export function PerformersScreen() {
   }
   const nMoves = Object.values(moveTags).reduce((a, t) => a + t.length, 0)
   const chips: ContextChip[] = [{ label: 'Team', value: teamName, tone: managerId === state.league.user_manager_id ? 'amber' : 'neutral' }]
-  if (data) chips.push({ label: scope === 'week' ? 'Week' : 'Scope', value: scope === 'week' ? data.period ?? '—' : `season · ${periods.length} wk` })
   if (data) chips.push({ label: 'Scoring', value: `${data.categories.length}-cat${data.categories.some((c) => c.key === 'TOV') ? '' : ', no TOV'}`, title: data.categories.map((c) => c.label).join(', ') })
-  if (isDemo) chips.push({ label: 'Data', value: 'demo', tone: 'demo' })
 
   return (
     <div className="stack performers-screen" data-testid="performers">

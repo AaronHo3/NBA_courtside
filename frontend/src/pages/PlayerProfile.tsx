@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { useSetCrumb } from '@/store/crumb'
 import { PlayerSearch } from '@/components/PlayerSearch'
 import { EmptyState, ErrorState, Skeleton, Tabs } from '@/components/ui'
 import { useRecent } from '@/store/recent'
@@ -74,6 +75,8 @@ export default function PlayerProfile() {
     const stint = profile.timeline.filter((t) => t.season === focusSeason)[0] ?? profile.timeline[profile.timeline.length - 1]
     touch({ player_id: profile.bio.player_id, full_name: profile.bio.full_name, team_abbreviation: stint?.team_abbreviation ?? null, position: profile.bio.position })
   }, [profile, focusSeason, touch])
+
+  useSetCrumb(profile ? [{ label: 'Players', to: '/explorer' }, { label: profile.bio.full_name }] : null)
 
   if (!validId) return <NotFoundPlayer id={rawId} />
   if (q.error instanceof ApiError && q.error.status === 404) return <NotFoundPlayer id={rawId} />

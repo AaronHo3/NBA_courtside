@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { PlayerSearch } from '@/components/PlayerSearch'
+import { CompareTray } from '@/components/CompareTray'
 import { useChartTheme } from '@/components/charts/Plot'
 import { EmptyState, Panel, Refetching, Toggle } from '@/components/ui'
 import { useSeason } from '@/hooks/useSeason'
@@ -126,6 +127,7 @@ export default function Compare() {
           action={
             <div className="flex flex-wrap items-center gap-3">
               <div className="w-64"><PlayerSearch placeholder="Search players to add" onSelect={onAdd} /></div>
+              <CompareTray />
               <Link to="/" className="text-sm font-medium text-accent hover:underline">Open the League explorer</Link>
             </div>
           }

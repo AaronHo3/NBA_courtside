@@ -1,18 +1,19 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Outlet, useLocation } from 'react-router-dom'
 import { clsx } from 'clsx'
 import { Menu, Moon, Search, Sun, X } from 'lucide-react'
 import { useStatus } from '@/hooks/useApi'
 import { useTheme } from '@/store/theme'
 import { useCompare } from '@/store/compare'
 import { useShortlist } from '@/store/shortlist'
-import { useFantasyContext, useFantasySessions } from '@/lib/fantasyBridge'
-import { PlayerSearch } from '../PlayerSearch'
-import { SeasonPicker } from '../SeasonPicker'
-import { CompareTray } from '../CompareTray'
+import { useFantasyContext } from '@/lib/fantasyBridge'
+import { onLocationChange, readHashQuery } from '@/fantasy/lib/hashQuery'
+import { useCrumb } from '@/store/crumb'
 import { CommandPalette } from '../CommandPalette'
-import { Badge, Button } from '../ui'
-import { NAV_GROUPS, activeNavId, navGroupOf, navHref, navItemById, type NavItem } from './nav'
+import { Button } from '../ui'
+import { NAV_GROUPS, SEASON_TABS, activeNavId, buildBreadcrumb, navHref, seasonTabFrom, type NavItem, type SeasonTabId, type ShellCrumb } from './nav'
+import { FantasyContextBar, ResearchContextBar } from './ShellContext'
+import { useDocumentTitle } from './useDocumentTitle'
 
 /** Kept for existing imports; the grouped structure lives in ./nav.ts. */
 export const NAV = NAV_GROUPS.flatMap((g) => g.items)
@@ -38,7 +39,43 @@ function Brand() {
   )
 }
 
-function SideNav({ activeId, sessionId, isComplete, onNavigate }: { activeId: string | null; sessionId: string | null; isComplete: boolean; onNavigate?: () => void }) {
+/** `window.location.hash`, kept current across hash edits, back/forward and in-app hash-query writes. */
+function useLocationHash(): string {
+  const [hash, setHash] = useState(() => window.location.hash)
+  useEffect(() => {
+    const update = () => setHash(window.location.hash)
+    update()
+    return onLocationChange(update)
+  }, [])
+  return hash
+}
+
+const NAV_LINK = 't-fast relative z-10 flex items-center gap-2.5 rounded-[var(--radius-control)] px-2 py-[7px] text-[13px] leading-4'
+
+/** "My league" sub-items: the season tabs, shown only while the league is the active page. */
+function SeasonSubNav({ item, sessionId, activeTab, onNavigate }: { item: NavItem; sessionId: string | null; activeTab: SeasonTabId; onNavigate?: () => void }) {
+  return (
+    <ul aria-label="My league views" className="relative flex flex-col gap-px pb-1">
+      {SEASON_TABS.map((t) => {
+        const active = t.id === activeTab
+        return (
+          <li key={t.id}>
+            <a
+              href={`${navHref(item, sessionId)}?tab=${t.id}`}
+              aria-current={active ? 'page' : undefined}
+              onClick={onNavigate}
+              className={clsx(NAV_LINK, 'py-[5px] pl-[34px] text-xs', active ? 'font-medium text-ink' : 'text-ink-2 hover:bg-raised hover:text-ink')}
+            >
+              <span className="truncate">{t.label}</span>
+            </a>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
+function SideNav({ activeId, activeTab, sessionId, isComplete, onNavigate }: { activeId: string | null; activeTab: SeasonTabId | null; sessionId: string | null; isComplete: boolean; onNavigate?: () => void }) {
   const navRef = useRef<HTMLElement>(null)
   const [pill, setPill] = useState<{ top: number; height: number } | null>(null)
   const measure = useCallback(() => {
@@ -48,7 +85,7 @@ function SideNav({ activeId, sessionId, isComplete, onNavigate }: { activeId: st
     const a = el.getBoundingClientRect(), b = nav.getBoundingClientRect()
     setPill({ top: a.top - b.top + nav.scrollTop, height: a.height })
   }, [])
-  useLayoutEffect(measure, [activeId, isComplete, measure])
+  useLayoutEffect(measure, [activeId, activeTab, isComplete, measure])
   useEffect(() => { window.addEventListener('resize', measure); return () => window.removeEventListener('resize', measure) }, [measure])
   const visible = (i: NavItem) => !i.afterDraft || isComplete
   return (
@@ -60,18 +97,22 @@ function SideNav({ activeId, sessionId, isComplete, onNavigate }: { activeId: st
           {g.items.filter(visible).map((i) => {
             const Icon = i.icon
             const active = i.id === activeId
+            // With a season tab open the tab is the page; the league item is its parent.
+            const sub = active && activeTab !== null
             return (
-              <a
-                key={i.id}
-                href={navHref(i, sessionId)}
-                aria-current={active ? 'page' : undefined}
-                onClick={onNavigate}
-                className={clsx('t-fast relative z-10 flex items-center gap-2.5 rounded-[var(--radius-control)] px-2 py-[7px] text-[13px] leading-4', active ? 'font-medium text-ink' : 'text-ink-2 hover:bg-raised hover:text-ink')}
-                title={i.hint}
-              >
-                <Icon size={15} strokeWidth={1.75} className={clsx('shrink-0', active ? 'text-accent' : 'text-ink-3')} aria-hidden="true" />
-                <span className="truncate">{i.label}</span>
-              </a>
+              <div key={i.id} className="contents">
+                <a
+                  href={navHref(i, sessionId)}
+                  aria-current={sub ? 'true' : active ? 'page' : undefined}
+                  onClick={onNavigate}
+                  className={clsx(NAV_LINK, active ? 'font-medium text-ink' : 'text-ink-2 hover:bg-raised hover:text-ink')}
+                  title={i.hint}
+                >
+                  <Icon size={15} strokeWidth={1.75} className={clsx('shrink-0', active ? 'text-accent' : 'text-ink-3')} aria-hidden="true" />
+                  <span className="truncate">{i.label}</span>
+                </a>
+                {sub && <SeasonSubNav item={i} sessionId={sessionId} activeTab={activeTab} onNavigate={onNavigate} />}
+              </div>
             )
           })}
         </div>
@@ -80,36 +121,26 @@ function SideNav({ activeId, sessionId, isComplete, onNavigate }: { activeId: st
   )
 }
 
-function FantasyContext() {
-  const ctx = useFantasyContext()
-  const sessions = useFantasySessions()
-  const navigate = useNavigate()
-  const list = sessions.data ?? []
-  const onPick = (id: string) => {
-    const hash = window.location.hash || '#/draft'
-    navigate(`/fantasy?session=${encodeURIComponent(id)}${hash}`)
-    window.dispatchEvent(new Event('locationchange'))
-  }
+function Breadcrumb({ crumbs }: { crumbs: ShellCrumb[] }) {
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-2" aria-label="Fantasy context">
-      <label className="flex items-center gap-1.5 text-xs text-ink-3">
-        <span className="sr-only">Session</span>
-        <select aria-label="Session" className="control max-w-[220px] truncate text-[13px] text-ink" value={ctx.sessionId ?? ''} onChange={(e) => e.target.value && onPick(e.target.value)}>
-          {!ctx.sessionId && <option value="">No session</option>}
-          {ctx.sessionId && !list.some((s) => s.id === ctx.sessionId) && <option value={ctx.sessionId}>{ctx.sessionName ?? ctx.sessionId}</option>}
-          {list.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-        </select>
-      </label>
-      {ctx.sessionId && (
-        <span className="hidden items-center gap-2 text-xs text-ink-2 sm:inline-flex">
-          <span aria-hidden="true" className="text-ink-3">·</span>
-          <span>{ctx.linked ? (ctx.leagueName ?? 'Linked to ESPN') : ctx.isComplete ? 'Not linked' : 'Draft in progress'}</span>
-          {ctx.period != null && <><span aria-hidden="true" className="text-ink-3">·</span><span className="tnum">Week {ctx.period}</span></>}
-          {ctx.syncedAt && <><span aria-hidden="true" className="text-ink-3">·</span><span title={ctx.syncedAt}>synced {new Date(ctx.syncedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span></>}
-        </span>
-      )}
-      {ctx.isDemo && <Badge tone="warning">Demo data</Badge>}
-    </div>
+    <nav aria-label="Breadcrumb" className="hidden min-w-0 items-center gap-1.5 text-[13px] sm:flex">
+      {crumbs.map((c, i) => {
+        const last = i === crumbs.length - 1
+        const body = last
+          ? <span aria-current="page" className="truncate font-medium text-ink">{c.label}</span>
+          : c.href
+            ? c.fantasy
+              ? <a href={c.href} className="t-fast truncate text-ink-2 hover:text-ink hover:underline">{c.label}</a>
+              : <Link to={c.href} className="t-fast truncate text-ink-2 hover:text-ink hover:underline">{c.label}</Link>
+            : <span className="truncate text-ink-3">{c.label}</span>
+        return (
+          <span key={`${i}:${c.label}`} className="flex min-w-0 items-center gap-1.5">
+            {body}
+            {!last && <span aria-hidden="true" className="text-ink-3">/</span>}
+          </span>
+        )
+      })}
+    </nav>
   )
 }
 
@@ -131,17 +162,13 @@ export function AppShell() {
   const isDemo = status.data?.data.is_demo
   const fantasy = useFantasyContext()
   const isFantasyRoute = loc.pathname.startsWith('/fantasy')
-  // The copilot's hash router changes the hash without a React Router navigation; follow it.
-  const [hash, setHash] = useState(() => window.location.hash)
-  useEffect(() => {
-    const update = () => setHash(window.location.hash)
-    update()
-    window.addEventListener('hashchange', update); window.addEventListener('popstate', update); window.addEventListener('locationchange', update)
-    return () => { window.removeEventListener('hashchange', update); window.removeEventListener('popstate', update); window.removeEventListener('locationchange', update) }
-  }, [loc])
+  // The copilot's hash router and hash-query writes change the hash without a React Router navigation; follow them.
+  const hash = useLocationHash()
   const activeId = activeNavId(loc.pathname, hash)
-  const activeItem = navItemById(activeId)
-  const group = navGroupOf(activeId)
+  const activeTab = isFantasyRoute && activeId === 'season' ? seasonTabFrom(readHashQuery(hash).tab) : null
+  const pageParts = useCrumb((s) => s.parts)
+  const { crumbs, title } = buildBreadcrumb(loc.pathname, hash, pageParts, fantasy.sessionId)
+  useDocumentTitle(title)
   useEffect(() => { setDrawerOpen(false) }, [loc.pathname, hash])
 
   const sidebar = (onNavigate?: () => void) => (
@@ -155,7 +182,7 @@ export function AppShell() {
           <Search size={13} aria-hidden="true" /><span className="flex-1 text-left">Search players, pages</span><kbd className="font-mono text-meta text-ink-3">⌘K</kbd>
         </button>
       </div>
-      <SideNav activeId={activeId} sessionId={fantasy.sessionId} isComplete={fantasy.isComplete} onNavigate={onNavigate} />
+      <SideNav activeId={activeId} activeTab={activeTab} sessionId={fantasy.sessionId} isComplete={fantasy.isComplete} onNavigate={onNavigate} />
       <div className="flex items-center justify-between gap-2 border-t border-line px-3 py-2.5 text-xs text-ink-3">
         <span className="truncate">{status.data ? <>NBA data: <span className="text-ink-2">{status.data.data.namespace}</span>{status.data.data.generated_at ? <span title={status.data.data.generated_at}> · {new Date(status.data.data.generated_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span> : null}</> : '…'}</span>
         <button type="button" onClick={toggle} aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'} className="t-fast press rounded p-1 text-ink-3 hover:bg-raised hover:text-ink">{theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}</button>
@@ -182,18 +209,9 @@ export function AppShell() {
         )}
         <header className="sticky top-0 z-20 flex min-h-12 flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-page/90 px-4 py-2 backdrop-blur">
           <button type="button" aria-label="Open navigation" onClick={() => setDrawerOpen(true)} className="t-fast rounded p-1 text-ink-2 hover:bg-raised lg:hidden"><Menu size={18} /></button>
-          <nav aria-label="Breadcrumb" className="hidden min-w-0 items-center gap-1.5 text-[13px] sm:flex">
-            {group?.label && <><span className="text-ink-3">{group.label}</span><span aria-hidden="true" className="text-ink-3">/</span></>}
-            <span className="truncate font-medium text-ink">{activeItem?.label ?? 'Courtside'}</span>
-          </nav>
+          <Breadcrumb crumbs={crumbs} />
           <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2">
-            {isFantasyRoute ? <FantasyContext /> : (
-              <>
-                <div className="hidden w-56 md:block"><PlayerSearch inputId="global-player-search" placeholder="Search players" /></div>
-                <SeasonPicker compact />
-                <CompareTray />
-              </>
-            )}
+            {isFantasyRoute ? <FantasyContextBar /> : <ResearchContextBar />}
             <Button size="sm" variant="ghost" onClick={() => setPaletteOpen(true)} aria-label="Open command palette" className="md:hidden"><Search size={14} /></Button>
           </div>
         </header>

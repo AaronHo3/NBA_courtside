@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { ActualsScope, FreeAgentView } from '../../api/types'
 import { categoryLabel, fmtDate, fmtNum, fmtSigned, PRIMITIVE_POSITIONS, positionsText } from '../../lib/format'
-import { readHashQuery, replaceHashQuery } from '../../lib/hashQuery'
+import { readHashQuery, setHashQuery } from '../../lib/hashQuery'
 import { useDraftStore } from '../../store/draftStore'
 import { useSeasonStore } from '../../store/seasonStore'
 import { Diverging } from '../charts/Diverging'
@@ -58,7 +58,7 @@ export function FreeAgentsTab({ sessionId }: { sessionId: string }) {
     void loadGameLogsMeta(sessionId)
   }, [sessionId, loadGameLogsMeta])
   useEffect(() => {
-    replaceHashQuery({ rank: rankBy === 'projection' ? null : rankBy })
+    setHashQuery({ rank: rankBy === 'projection' ? null : rankBy })
   }, [rankBy])
   const items = freeAgents?.items ?? []
   const actualMode = rankBy !== 'projection'

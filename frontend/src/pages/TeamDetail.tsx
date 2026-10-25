@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { useSetCrumb } from '@/store/crumb'
 import { EmptyState, ErrorState, Loading, Refetching } from '@/components/ui'
 import { useTeamLeague, useTeamSeason, useTeamSeasons } from '@/hooks/useApi'
 import { useSeason } from '@/hooks/useSeason'
@@ -36,6 +37,8 @@ export default function TeamDetail() {
   const league = useTeamLeague({ season })
   const data = detail.data?.data
   const tradedIds = useMemo(() => new Set((data?.roster ?? []).filter((r) => r.traded).map((r) => r.player_id)), [data])
+
+  useSetCrumb(data ? [{ label: 'Teams', to: '/teams' }, { label: data.team.full_name }] : null)
 
   if (!validId) return <NotFound teamId={teamId} />
   if (detail.error instanceof ApiError && detail.error.status === 404) return <NotFound teamId={teamId} />

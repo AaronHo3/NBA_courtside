@@ -37,8 +37,9 @@ test.describe('core research workflow', () => {
     await expect(addButtons.first()).toBeVisible()
     await addButtons.nth(0).click()
     await addButtons.nth(0).click() // after the first add, nth(0) is the next un-added row
-    await expect(page.getByRole('link', { name: /Compare 2/ })).toBeVisible()
-    await page.getByRole('link', { name: /Compare 2/ }).click()
+    await expect(page.getByRole('button', { name: 'Compare · 2/6' })).toBeVisible()
+    await page.getByRole('button', { name: 'Compare · 2/6' }).click()
+    await page.getByRole('dialog', { name: 'Comparison group' }).getByRole('link', { name: 'Open comparison' }).click()
     await expect(page).toHaveURL(/\/compare\?ids=\d+,\d+/)
     await expect(page.getByRole('heading', { name: 'How do these players stack up?' })).toBeVisible()
     await expect(page.getByLabel('Players in this comparison').getByRole('button', { name: /Remove .* from comparison/ })).toHaveCount(2)
