@@ -51,7 +51,7 @@
   --c-overlay: #26272b;
   --c-line: rgba(255, 255, 255, 0.08);
   --c-line-strong: rgba(255, 255, 255, 0.22);
-  --c-control-line: rgba(255, 255, 255, 0.28); /* input/select borders */
+  --c-control-line: rgba(255, 255, 255, 0.36); /* input/select borders */
   --c-mix: #121314;              /* what tinted borders are mixed against */
   --c-hatch: rgba(255, 255, 255, 0.18);
   --c-hatch-faint: rgba(255, 255, 255, 0.05);
@@ -72,7 +72,8 @@
   --c-neg-soft: rgba(239, 106, 90, 0.16);
   /* status */
   --c-amber: #e0a63a;
-  --c-amber-fill: #e0a63a;       /* badge backgrounds only, with --c-accent-ink text */
+  --c-amber-fill: #e0a63a;       /* badge backgrounds only, with --c-on-fill text */
+  --c-on-fill: #15110d;          /* text on bright fills (amber badge); same in both themes */
   --c-amber-soft: rgba(224, 166, 58, 0.14);
   --c-focus: #ffb27a;
   /* chart scaffolding */
@@ -118,6 +119,7 @@
   --critical: var(--c-neg);
   --demo: var(--c-amber);
   --amber-fill: var(--c-amber-fill);
+  --on-fill: var(--c-on-fill);
   --grid: var(--c-grid);
   --axis: var(--c-axis);
   --focus: var(--c-focus);
@@ -130,7 +132,7 @@
   --c-overlay: #ece9e3;
   --c-line: rgba(20, 18, 14, 0.09);
   --c-line-strong: rgba(20, 18, 14, 0.28);
-  --c-control-line: rgba(20, 18, 14, 0.34);
+  --c-control-line: rgba(20, 18, 14, 0.42);
   --c-mix: #ffffff;
   --c-hatch: rgba(26, 29, 33, 0.18);
   --c-hatch-faint: rgba(26, 29, 33, 0.04);
@@ -138,11 +140,11 @@
   --c-ink-2: #4b4842;
   --c-ink-3: #66615a;
   --c-ink-4: #8f8a82;
-  --c-accent: #b8500f;
+  --c-accent: #b14c0e;
   --c-accent-hover: #d4621a;
   --c-accent-ink: #ffffff;
   --c-accent-soft: rgba(212, 98, 26, 0.12);
-  --c-pos: #0f7d70;
+  --c-pos: #0d7569;
   --c-pos-soft: rgba(22, 138, 124, 0.12);
   --c-neg: #b53d31;
   --c-neg-soft: rgba(201, 71, 58, 0.12);
@@ -179,6 +181,7 @@
   --color-critical: var(--critical);
   --color-demo: var(--demo);
   --color-amber-fill: var(--amber-fill);
+  --color-on-fill: var(--on-fill);
   --font-sans: var(--font-sans);
   --font-display: var(--font-display);
   --font-mono: var(--font-mono);

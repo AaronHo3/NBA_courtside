@@ -41,7 +41,7 @@ export function AnchorEditor({ anchors, report, timeMs, onCreate, onReview, busy
           <li key={a.anchor_id} className="flex flex-wrap items-center gap-2 rounded-[var(--radius-control)] border border-line p-2 text-sm">
             <span className="tnum text-ink">{fmtMs(a.media_pts_ms)}</span>
             <span className="text-ink-2">Q{a.period} {fmtMs(a.clock_ms)}</span>
-            <span className="text-[11px] text-ink-3">{a.method}{a.error_ms !== null ? ` ±${a.error_ms} ms` : ''}</span>
+            <span className="text-meta text-ink-3">{a.method}{a.error_ms !== null ? ` ±${a.error_ms} ms` : ''}</span>
             <Badge tone={a.review_status === 'reviewed_ok' ? 'good' : a.review_status === 'rejected' ? 'critical' : 'neutral'}>{REVIEW_LABEL[a.review_status]}</Badge>
             <span className="ml-auto flex gap-1">
               <Button size="sm" onClick={() => onReview(a.anchor_id, 'reviewed_ok')} disabled={busy}>OK</Button>

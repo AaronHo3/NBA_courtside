@@ -46,7 +46,7 @@ export function Scoreboard() {
         <span className={state.is_complete ? 'live done' : 'live'} data-testid="top-mode">
           {state.is_complete ? 'DRAFT COMPLETE' : 'LIVE DRAFT'}
         </span>
-        <span className="muted" style={{ fontSize: 11 }}>
+        <span className="muted" style={{ fontSize: 'var(--fs-xs)' }}>
           {state.league.scoring_format.replace('h2h_', 'H2H ').replace('_', ' ')}{' '}
           <Badge tone={state.format_confirmed ? 'ok' : 'warn'} testId="top-format">
             {state.format_confirmed ? 'confirmed' : 'NOT confirmed'}
@@ -93,7 +93,7 @@ export function Scoreboard() {
             <Icon name="undo" size={13} /> Undo #{last.overall} {players[last.player_id]?.name ?? ''}
           </button>
         )}
-        <span className="muted" title={`${snapshot?.label ?? ''} · ${snapshot ? fmtDate(snapshot.created_at) : ''}`} style={{ fontSize: 11 }}>
+        <span className="muted" title={`${snapshot?.label ?? ''} · ${snapshot ? fmtDate(snapshot.created_at) : ''}`} style={{ fontSize: 'var(--fs-xs)' }}>
           data {snapshot ? fmtDate(snapshot.created_at).slice(0, 10) : '…'}
           {snapshot?.is_demo && (
             <>

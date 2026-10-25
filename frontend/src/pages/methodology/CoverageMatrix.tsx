@@ -81,7 +81,7 @@ function Chip({ status, note, label }: { status: CoverageStatus | 'unknown'; not
       tabIndex={title ? 0 : -1}
       title={title}
       aria-label={title}
-      className={clsx('inline-flex min-w-12 items-center justify-center rounded-full border px-1.5 py-0.5 text-[11px] font-medium leading-4', c.className, note && 'underline decoration-dotted underline-offset-2')}
+      className={clsx('inline-flex min-w-12 items-center justify-center rounded-full border px-1.5 py-0.5 text-meta font-medium', c.className, note && 'underline decoration-dotted underline-offset-2')}
     >
       {c.label}
     </span>

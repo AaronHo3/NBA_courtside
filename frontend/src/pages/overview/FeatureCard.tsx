@@ -10,7 +10,7 @@ export function FeatureCard({ title, row, metric, href, perGame = false }: { tit
   return (
     <section className="rise-in flex flex-col gap-3 rounded-[var(--radius-panel)] border border-line bg-surface p-4">
       <header className="flex items-center justify-between">
-        <h2 className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">{title}</h2>
+        <h2 className="text-meta font-semibold uppercase tracking-wide text-ink-3">{title}</h2>
         <Link to={href} className="text-xs text-accent hover:underline">All performers →</Link>
       </header>
       {!row ? (

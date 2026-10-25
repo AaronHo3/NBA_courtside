@@ -21,10 +21,10 @@ export function Tabs<T extends string>({ value, onChange, options, ariaLabel, cl
           aria-selected={value === o.value}
           data-testid={o.testId}
           onClick={() => onChange(o.value)}
-          className={clsx('t-fast -mb-px inline-flex items-center gap-1.5 rounded-t-[var(--radius-control)] px-2.5 font-medium hover:text-ink', size === 'sm' ? 'py-1.5 text-xs' : 'py-2 text-[13px]', value === o.value ? 'text-ink' : 'text-ink-3')}
+          className={clsx('t-fast -mb-px inline-flex items-center gap-1.5 rounded-t-[var(--radius-control)] px-2.5 font-medium hover:text-ink', size === 'sm' ? 'min-h-8 py-1.5 text-xs' : 'min-h-9 py-2 text-xs', value === o.value ? 'text-ink' : 'text-ink-3')}
         >
           {o.label}
-          {o.count != null && <span className="rounded-full bg-raised px-1.5 text-[10px] text-ink-3 tnum">{o.count}</span>}
+          {o.count != null && <span className="rounded-full bg-raised px-1.5 text-meta text-ink-3 tnum">{o.count}</span>}
         </button>
       ))}
       <span aria-hidden="true" className="absolute bottom-[-1px] h-0.5 rounded-full bg-accent transition-[left,width] duration-[var(--dur-panel)] ease-[var(--ease)]" style={indicator ? { left: indicator.left, width: indicator.width } : { width: 0 }} />

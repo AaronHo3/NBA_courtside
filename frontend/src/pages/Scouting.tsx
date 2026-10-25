@@ -61,7 +61,7 @@ export default function Scouting() {
               )}
             </Refetching>
             {meta?.notes.length ? <p className="mt-2 text-xs text-ink-3">{meta.notes.join(' · ')}</p> : null}
-            {meta && <p className="mt-2 max-w-prose text-[11px] text-ink-3">{meta.disclaimer} Template {meta.template.role_id} v{meta.template.version}, registry v{meta.trait_registry_version}, data {meta.data_fingerprint}.</p>}
+            {meta && <p className="mt-2 max-w-prose text-xs text-ink-3">{meta.disclaimer} Template {meta.template.role_id} v{meta.template.version}, registry v{meta.trait_registry_version}, data {meta.data_fingerprint}.</p>}
           </Panel>
         </div>
         <aside className="min-w-0">

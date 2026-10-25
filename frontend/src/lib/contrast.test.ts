@@ -13,7 +13,7 @@ const PAIRS: Array<[fg: string, bg: string, min: number]> = [
   ['--c-accent-ink', '--c-accent', 4.5],
   ['--c-pos', '--c-page', 4.5], ['--c-pos', '--c-surface', 4.5], ['--c-neg', '--c-page', 4.5], ['--c-neg', '--c-surface', 4.5],
   ['--c-amber', '--c-page', 4.5], ['--c-amber', '--c-surface', 4.5],
-  ['--c-accent-ink', '--c-amber-fill', 4.5],
+  ['--c-on-fill', '--c-amber-fill', 4.5],
   ['--c-control-line', '--c-surface', 2.5],
 ]
 

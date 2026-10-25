@@ -27,7 +27,7 @@ function FantasyStatus({ playerId }: { playerId: number }) {
         <Badge tone={owned ? 'accent' : 'good'}>{owned ? `Drafted #${player.drafted_overall}` : 'Undrafted'}</Badge>
         {player.injury_status && <Badge tone="warning">{player.injury_status}</Badge>}
         {player.eligible_positions.map((p) => <Badge key={p}>{p}</Badge>)}
-        <span className="text-ink-4">ESPN eligibility{player.eligibility_verified ? '' : ' (unverified)'}</span>
+        <span className="text-ink-3">ESPN eligibility{player.eligibility_verified ? '' : ' (unverified)'}</span>
       </div>
       <p className="text-ink-3 tnum">
         {player.adp != null && <>ADP {player.adp.toFixed(1)} · </>}

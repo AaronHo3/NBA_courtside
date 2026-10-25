@@ -60,7 +60,7 @@ export function DataTable<T>({ data, columns, rowKey, onRowClick, onRowHover, is
                       key={h.id}
                       scope="col"
                       aria-sort={sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : 'none'}
-                      className={clsx('t-fast whitespace-nowrap border-b border-line px-2 py-1.5 text-[11px] font-medium uppercase tracking-wide text-ink-3 select-none', numeric ? 'text-right' : 'text-left', h.column.getCanSort() && 'cursor-pointer hover:text-ink')}
+                      className={clsx('t-fast whitespace-nowrap border-b border-line px-2 py-1.5 text-xs font-medium uppercase tracking-wide text-ink-3 select-none', numeric ? 'text-right' : 'text-left', h.column.getCanSort() && 'cursor-pointer hover:text-ink')}
                       onClick={h.column.getToggleSortingHandler()}
                       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); h.column.toggleSorting() } }}
                       tabIndex={h.column.getCanSort() ? 0 : -1}

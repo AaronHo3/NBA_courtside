@@ -74,7 +74,7 @@ export function UploadDialog({ ffmpegAvailable, maxBytes, onSubmit, busy }: { ff
       </div>
       <div className="flex items-center gap-3">
         <Button variant="primary" onClick={submit} disabled={!can}>Upload</Button>
-        <span className="text-[11px] text-ink-3">Files are hashed, probed with ffprobe and kept under data/&lt;namespace&gt;/media. Provider clips are never downloaded.</span>
+        <span className="text-xs text-ink-3">Files are hashed, probed with ffprobe and kept under data/&lt;namespace&gt;/media. Provider clips are never downloaded.</span>
       </div>
     </div>
   )

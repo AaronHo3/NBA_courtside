@@ -82,13 +82,13 @@ button {
   padding: 5px 11px;
   cursor: pointer;
   line-height: 1.25;
-  min-height: 30px;
+  min-height: 34px;
   font-weight: 500;
   color: var(--ink);
 }
 button:hover:not(:disabled) {
   background: var(--surface-2);
-  border-color: var(--ink-4);
+  border-color: var(--teal);
 }
 button:disabled {
   cursor: not-allowed;
@@ -111,7 +111,7 @@ button.danger {
 button.small {
   padding: 2px 8px;
   font-size: var(--fs-sm);
-  min-height: 24px;
+  min-height: 28px;
 }
 button.ghost {
   border-color: transparent;
@@ -159,12 +159,12 @@ textarea {
   background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: var(--r-sm);
-  padding: 5px 8px;
-  min-height: 30px;
+  padding: 6px 10px;
+  min-height: 34px;
 }
 input:hover,
 select:hover {
-  border-color: var(--ink-4);
+  border-color: var(--teal);
 }
 input[type='number'] {
   width: 5.5em;
@@ -333,7 +333,7 @@ label {
   color: var(--teal-ink);
   background: var(--amber);
   border-color: var(--amber);
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.02em;
 }
 .callout {
@@ -470,7 +470,7 @@ th.sortable:hover {
   color: var(--teal);
 }
 th.sortable .dir {
-  font-size: 9px;
+  font-size: var(--fs-xs);
   margin-left: 2px;
 }
 th .sort {

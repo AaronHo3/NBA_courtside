@@ -104,7 +104,7 @@ export default function EvidenceAsset() {
             selectedSegment={seg || null} selectedAnnotation={ann || null}
             onSeek={seek} onSelectSegment={(id) => setSeg(id)} onSelectAnnotation={(id) => setAnn(id)}
           />
-          <p className="text-[11px] text-ink-3">Shortcuts: space play/pause · ← → ±1 s (shift ±5 s) · [ set window start · ] set window end{windowMs ? ` · window ${fmtMs(windowMs[0])}–${fmtMs(windowMs[1])}` : ''}{windowMs && <Button size="sm" variant="ghost" className="ml-2" onClick={() => writeParams({ in: null, out: null })}>clear</Button>}</p>
+          <p className="text-xs text-ink-3">Shortcuts: space play/pause · ← → ±1 s (shift ±5 s) · [ set window start · ] set window end{windowMs ? ` · window ${fmtMs(windowMs[0])}–${fmtMs(windowMs[1])}` : ''}{windowMs && <Button size="sm" variant="ghost" className="ml-2" onClick={() => writeParams({ in: null, out: null })}>clear</Button>}</p>
           {m.retryProbe.error ? <p className="text-xs text-critical" role="alert">{m.retryProbe.error.message}</p> : null}
         </div>
         <Panel question="Review" method="Segments first, then clock anchors inside live segments, then events and annotations. Every action is saved with its reviewer and kept in history." actions={<Badge>{d.asset.status}</Badge>}>

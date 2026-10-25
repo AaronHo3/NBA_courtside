@@ -40,7 +40,7 @@ export function Timeline({ durationMs, timeMs, windowMs, segments, anchors, anno
         {windowMs && <rect x={x(windowMs[0])} y={4} width={Math.max(1, x(windowMs[1]) - x(windowMs[0]))} height={8} fill="var(--color-ink-2, #555)" opacity={0.6} />}
         <line x1={x(timeMs)} x2={x(timeMs)} y1={0} y2={64} stroke="var(--color-critical, #d33)" strokeWidth={2} />
       </svg>
-      <div className="flex justify-between text-[11px] text-ink-3"><span>0:00.0</span><span>playhead {fmtMs(timeMs)}</span><span>{fmtMs(durationMs)}</span></div>
+      <div className="flex justify-between text-xs text-ink-3"><span>0:00.0</span><span>playhead {fmtMs(timeMs)}</span><span>{fmtMs(durationMs)}</span></div>
     </div>
   )
 }

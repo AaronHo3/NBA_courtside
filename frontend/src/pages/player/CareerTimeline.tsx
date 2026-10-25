@@ -31,7 +31,7 @@ export function CareerTimeline({ seasons, teams, focusSeason, onFocus }: Props) 
                   >
                     <span className="flex items-center justify-between gap-2">
                       <span className={clsx('tnum font-medium', focused ? 'text-ink' : 'text-ink-2')}>{s.season}</span>
-                      {s.traded && <Badge tone="warning" className="!px-1.5 !text-[10px]">Traded</Badge>}
+                      {s.traded && <Badge tone="warning" className="!px-1.5">Traded</Badge>}
                     </span>
                     {s.stints.map((st) => (
                       <span key={`${st.team_id}-${st.team_abbreviation}`} className="flex items-center gap-1.5" title={st.team_name ?? st.team_abbreviation}>

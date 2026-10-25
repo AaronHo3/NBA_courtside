@@ -38,7 +38,7 @@ export function DataStatus() {
           </div>
           {st.banner && (
             <p className="flex items-start gap-2 rounded-[var(--radius-control)] border border-demo/60 bg-demo/10 px-3 py-2 text-sm text-ink">
-              <span className="shrink-0 rounded-sm bg-demo px-1.5 py-0.5 text-[11px] font-semibold text-[#0b1424]">Banner</span>
+              <span className="shrink-0 rounded-sm bg-amber-fill px-1.5 py-0.5 text-meta font-semibold text-on-fill">Banner</span>
               <span>{st.banner}</span>
             </p>
           )}

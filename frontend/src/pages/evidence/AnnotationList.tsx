@@ -20,7 +20,7 @@ export function AnnotationList({ annotations, selected, onSelect, onReview, onDe
             <Badge>{a.sampling_method}</Badge>
             <Badge>{a.visibility}</Badge>
             <Badge tone={a.review_status === 'reviewed_ok' ? 'good' : a.review_status === 'rejected' ? 'critical' : a.review_status === 'reviewed_corrected' ? 'warning' : 'neutral'}>{REVIEW_LABEL[a.review_status]}</Badge>
-            <span className="text-[11px] text-ink-3">rev {a.revision}</span>
+            <span className="text-meta text-ink-3">rev {a.revision}</span>
             <span className="ml-auto flex gap-1" data-testid="review-bar">
               <Button size="sm" onClick={() => onReview(a.annotation_id, 'reviewed_ok')} disabled={busy}>OK</Button>
               <Button size="sm" onClick={() => onReview(a.annotation_id, 'reviewed_corrected')} disabled={busy}>Corrected</Button>

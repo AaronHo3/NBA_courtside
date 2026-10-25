@@ -25,7 +25,7 @@ export function ScoutingPanel({ playerId, season, seasonType }: { playerId: numb
               <TraitTable traits={p.traits.reviewed_observation} dense />
             </div>
             <p className="text-xs text-ink-3">Model estimates: {p.traits.model_estimate.length ? p.traits.model_estimate.length : 'none validated yet'}. Evidence items: <Link to={`/evidence?player_id=${playerId}`} className="text-accent hover:underline">{p.evidence_ids.length}</Link>.</p>
-            <ul className="list-disc pl-5 text-[11px] text-ink-3">{p.limits.map((l) => <li key={l}>{l}</li>)}</ul>
+            <ul className="list-disc pl-5 text-xs text-ink-3">{p.limits.map((l) => <li key={l}>{l}</li>)}</ul>
           </div>
         )}
       </Refetching>

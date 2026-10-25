@@ -164,11 +164,11 @@ button.div-row[aria-pressed='true'] {
   stroke-width: 1;
 }
 .scatter .tick {
-  font-size: 10px;
+  font-size: var(--fs-xs);
   fill: var(--ink-3);
 }
 .scatter .axis-label {
-  font-size: 11px;
+  font-size: var(--fs-xs);
   font-weight: 600;
   fill: var(--ink-2);
 }
@@ -198,7 +198,7 @@ button.div-row[aria-pressed='true'] {
   stroke-width: 3;
 }
 .scatter .pt-label {
-  font-size: 11px;
+  font-size: var(--fs-xs);
   font-weight: 600;
   fill: var(--ink);
   paint-order: stroke;
@@ -228,7 +228,7 @@ table.grid.heat .heat-cell.even {
   background: var(--surface);
 }
 table.grid.heat .heat-cell.missing {
-  color: var(--ink-4);
+  color: var(--ink-3);
 }
 .row-select {
   border: none;
@@ -292,7 +292,7 @@ table.grid.heat tbody tr:hover > .heat-cell {
   text-align: right;
 }
 .pair-row.missing .pair-num {
-  color: var(--ink-4);
+  color: var(--ink-3);
 }
 .pair-row {
   padding: 2px 2px;

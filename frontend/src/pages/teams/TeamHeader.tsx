@@ -30,7 +30,7 @@ export function TeamHeader({ team, league, season, seasons, setSeason }: { team:
               <span className="tnum font-medium text-ink">{wl(team)}</span>
               <span>· {Math.round(team.gp)} games · {team.conference} / {team.division}</span>
               <Badge>{team.abbreviation}</Badge>
-              <span className="text-ink-4">NBA team</span>
+              <span className="text-ink-3">NBA team</span>
             </p>
           </div>
           <div className="flex flex-wrap items-end gap-2">

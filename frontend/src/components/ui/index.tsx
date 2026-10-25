@@ -8,7 +8,7 @@ export function Button({ className, variant = 'default', size = 'md', ...props }
       {...props}
       className={clsx(
         't-fast press inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:active:transform-none',
-        size === 'sm' ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm',
+        size === 'sm' ? 'min-h-7 px-2 py-1 text-xs' : 'min-h-[34px] px-3 py-1.5 text-sm',
         variant === 'primary' && 'bg-accent text-accent-ink border-accent hover:bg-[var(--c-accent-hover)] hover:border-[var(--c-accent-hover)]',
         variant === 'default' && 'bg-surface border-line-strong hover:border-accent text-ink',
         variant === 'ghost' && 'bg-transparent border-transparent hover:bg-accent-soft text-ink-2',
@@ -74,7 +74,7 @@ export function Info({ text, children }: { text: string; children?: ReactNode })
   const [open, setOpen] = useState(false)
   return (
     <span className="relative inline-flex" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)} onFocus={() => setOpen(true)} onBlur={() => setOpen(false)}>
-      <button type="button" aria-label={text} className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-line-strong text-[10px] text-ink-3 hover:text-ink hover:border-accent leading-none">
+      <button type="button" aria-label={text} className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-line-strong text-meta text-ink-3 hover:text-ink hover:border-accent leading-none">
         {children ?? 'i'}
       </button>
       {open && (
@@ -90,7 +90,7 @@ export function Badge({ children, tone = 'neutral', className }: { children: Rea
   return (
     <span
       className={clsx(
-        'inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium leading-4',
+        'inline-flex items-center rounded-full border px-2 py-0.5 text-meta font-medium',
         tone === 'neutral' && 'border-line-strong text-ink-2',
         tone === 'accent' && 'border-accent text-accent',
         tone === 'warning' && 'border-warning text-warning',

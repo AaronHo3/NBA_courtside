@@ -56,7 +56,7 @@ function SideNav({ activeId, sessionId, isComplete, onNavigate }: { activeId: st
       {pill && <span aria-hidden="true" className="pointer-events-none absolute left-2 right-2 rounded-[var(--radius-control)] bg-accent-soft transition-[top,height] duration-[var(--dur-panel)] ease-[var(--ease)]" style={{ top: pill.top, height: pill.height }} />}
       {NAV_GROUPS.map((g) => (
         <div key={g.id} className="relative flex flex-col gap-px">
-          {g.label && <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-4">{g.label}</p>}
+          {g.label && <p className="px-2 pb-1 text-meta font-semibold uppercase tracking-[0.1em] text-ink-3">{g.label}</p>}
           {g.items.filter(visible).map((i) => {
             const Icon = i.icon
             const active = i.id === activeId
@@ -102,10 +102,10 @@ function FantasyContext() {
       </label>
       {ctx.sessionId && (
         <span className="hidden items-center gap-2 text-xs text-ink-2 sm:inline-flex">
-          <span className="text-ink-4">·</span>
+          <span aria-hidden="true" className="text-ink-3">·</span>
           <span>{ctx.linked ? (ctx.leagueName ?? 'Linked to ESPN') : ctx.isComplete ? 'Not linked' : 'Draft in progress'}</span>
-          {ctx.period != null && <><span className="text-ink-4">·</span><span className="tnum">Week {ctx.period}</span></>}
-          {ctx.syncedAt && <><span className="text-ink-4">·</span><span title={ctx.syncedAt}>synced {new Date(ctx.syncedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span></>}
+          {ctx.period != null && <><span aria-hidden="true" className="text-ink-3">·</span><span className="tnum">Week {ctx.period}</span></>}
+          {ctx.syncedAt && <><span aria-hidden="true" className="text-ink-3">·</span><span title={ctx.syncedAt}>synced {new Date(ctx.syncedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span></>}
         </span>
       )}
       {ctx.isDemo && <Badge tone="warning">Demo data</Badge>}
@@ -152,11 +152,11 @@ export function AppShell() {
       </div>
       <div className="px-3 pb-2">
         <button type="button" onClick={() => setPaletteOpen(true)} className="t-fast flex w-full items-center gap-2 rounded-[var(--radius-control)] border border-line bg-raised/60 px-2 py-1.5 text-xs text-ink-3 hover:border-line-strong hover:text-ink-2">
-          <Search size={13} aria-hidden="true" /><span className="flex-1 text-left">Search players, pages</span><kbd className="font-mono text-[10px] text-ink-4">⌘K</kbd>
+          <Search size={13} aria-hidden="true" /><span className="flex-1 text-left">Search players, pages</span><kbd className="font-mono text-meta text-ink-3">⌘K</kbd>
         </button>
       </div>
       <SideNav activeId={activeId} sessionId={fantasy.sessionId} isComplete={fantasy.isComplete} onNavigate={onNavigate} />
-      <div className="flex items-center justify-between gap-2 border-t border-line px-3 py-2.5 text-[11px] text-ink-3">
+      <div className="flex items-center justify-between gap-2 border-t border-line px-3 py-2.5 text-xs text-ink-3">
         <span className="truncate">{status.data ? <>NBA data: <span className="text-ink-2">{status.data.data.namespace}</span>{status.data.data.generated_at ? <span title={status.data.data.generated_at}> · {new Date(status.data.data.generated_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span> : null}</> : '…'}</span>
         <button type="button" onClick={toggle} aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'} className="t-fast press rounded p-1 text-ink-3 hover:bg-raised hover:text-ink">{theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}</button>
       </div>
@@ -175,7 +175,7 @@ export function AppShell() {
       <div className="flex min-w-0 flex-1 flex-col">
         {isDemo && (
           <div role="status" className="flex items-center gap-3 border-b border-line bg-demo/10 px-4 py-1 text-xs text-ink">
-            <span className="rounded-sm bg-demo px-1.5 py-0.5 font-semibold text-[#15110d]">Demo data</span>
+            <span className="rounded-sm bg-amber-fill px-1.5 py-0.5 font-semibold text-on-fill">Demo data</span>
             <span className="text-ink-2">{banner ?? 'Synthetic dataset: fictional teams, players and statistics.'}</span>
             <Link to="/methodology" className="ml-auto whitespace-nowrap text-accent hover:underline">How to load real data</Link>
           </div>
@@ -183,7 +183,7 @@ export function AppShell() {
         <header className="sticky top-0 z-20 flex min-h-12 flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-page/90 px-4 py-2 backdrop-blur">
           <button type="button" aria-label="Open navigation" onClick={() => setDrawerOpen(true)} className="t-fast rounded p-1 text-ink-2 hover:bg-raised lg:hidden"><Menu size={18} /></button>
           <nav aria-label="Breadcrumb" className="hidden min-w-0 items-center gap-1.5 text-[13px] sm:flex">
-            {group?.label && <><span className="text-ink-3">{group.label}</span><span className="text-ink-4">/</span></>}
+            {group?.label && <><span className="text-ink-3">{group.label}</span><span aria-hidden="true" className="text-ink-3">/</span></>}
             <span className="truncate font-medium text-ink">{activeItem?.label ?? 'Courtside'}</span>
           </nav>
           <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2">

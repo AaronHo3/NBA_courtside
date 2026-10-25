@@ -15,7 +15,7 @@ export function MatchupSummary({ odds, me, categories, names, href }: { odds: Ma
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[11px] uppercase tracking-wide text-ink-3">Week {odds.period} · projected</p>
+          <p className="text-meta uppercase tracking-wide text-ink-3">Week {odds.period} · projected</p>
           <p className="display text-[22px] font-semibold text-ink">{names[me] ?? me} <span className="text-ink-3">vs</span> {names[them] ?? them}</p>
         </div>
         <Link to={href} className="text-xs font-medium text-accent hover:underline">Full matchup →</Link>
@@ -31,7 +31,7 @@ export function MatchupSummary({ odds, me, categories, names, href }: { odds: Ma
           const p = pa == null ? null : amUser ? pa : 1 - pa
           return (
             <li key={c.key} className="flex items-center gap-2 text-xs">
-              <span className="w-28 shrink-0 text-ink-2">{c.label}{c.higher_is_better ? '' : <span className="text-ink-4"> ↓</span>}</span>
+              <span className="w-28 shrink-0 text-ink-2">{c.label}{c.higher_is_better ? '' : <span className="text-ink-3"> ↓</span>}</span>
               <span className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-raised" aria-hidden="true">
                 {p != null && <span className={p >= 0.5 ? 'absolute inset-y-0 left-0 rounded-full bg-pos' : 'absolute inset-y-0 left-0 rounded-full bg-neg'} style={{ width: `${p * 100}%` }} />}
               </span>
@@ -40,7 +40,7 @@ export function MatchupSummary({ odds, me, categories, names, href }: { odds: Ma
           )
         })}
       </ul>
-      {odds.notes.length > 0 && <ul className="list-disc pl-4 text-[11px] text-ink-3">{odds.notes.slice(0, 3).map((n) => <li key={n}>{n}</li>)}</ul>}
+      {odds.notes.length > 0 && <ul className="list-disc pl-4 text-xs text-ink-3">{odds.notes.slice(0, 3).map((n) => <li key={n}>{n}</li>)}</ul>}
     </div>
   )
 }

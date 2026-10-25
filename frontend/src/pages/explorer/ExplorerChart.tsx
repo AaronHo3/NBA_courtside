@@ -272,7 +272,7 @@ export function ExplorerChart(props: ExplorerChartProps) {
           <Plot data={data} layout={layout} onClick={handleClick} onSelected={handleSelected} onHover={(e) => { const id = Number(e.points[0]?.customdata); if (Number.isFinite(id)) onPointHover?.(id) }} onUnhover={() => onPointHover?.(null)} />
         )}
       </div>
-      <p className="text-[11px] text-ink-3">Click a marker to open the player. Use the box or lasso tool in the chart toolbar to add players to the comparison group. Hover any marker for its values.</p>
+      <p className="text-xs text-ink-3">Click a marker to open the player. Use the box or lasso tool in the chart toolbar to add players to the comparison group. Hover any marker for its values.</p>
     </div>
   )
 }

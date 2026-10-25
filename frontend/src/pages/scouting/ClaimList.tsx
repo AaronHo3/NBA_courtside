@@ -17,11 +17,11 @@ export function ClaimList({ claims }: { claims: ReportClaim[] }) {
               <span className={c.validation_status === 'dropped' ? 'text-sm text-ink-3 line-through' : 'text-sm text-ink'}>{c.claim_text}</span>
             </div>
             {c.evidence_ids.length > 0 && (
-              <div className="flex flex-wrap gap-2 text-[11px]">
+              <div className="flex flex-wrap gap-2 text-xs">
                 {c.evidence_ids.map((id) => <Link key={id} to={`/evidence?id=${id}`} className="text-accent hover:underline">{id}</Link>)}
               </div>
             )}
-            {c.notes.length > 0 && <p className="text-[11px] text-ink-3">{c.notes.join(' · ')}</p>}
+            {c.notes.length > 0 && <p className="text-xs text-ink-3">{c.notes.join(' · ')}</p>}
           </li>
         )
       })}

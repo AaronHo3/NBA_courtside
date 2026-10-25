@@ -45,7 +45,7 @@ export function Portrait({ name, src, team, size = 'md', className, ring = true 
 export function TeamMark({ abbreviation, teamId, size = 20, className }: { abbreviation: string | null | undefined; teamId?: number | null; size?: number; className?: string }) {
   const [failed, setFailed] = useState(false)
   if (!teamId || failed) {
-    return <span className={clsx('inline-flex items-center rounded-sm px-1 font-mono text-[10px] font-medium text-ink-2', className)} style={{ boxShadow: `inset 0 -2px 0 ${teamColour(abbreviation)}` }}>{abbreviation ?? '—'}</span>
+    return <span className={clsx('inline-flex items-center rounded-sm px-1 font-mono text-meta font-medium text-ink-2', className)} style={{ boxShadow: `inset 0 -2px 0 ${teamColour(abbreviation)}` }}>{abbreviation ?? '—'}</span>
   }
   return <img src={nbaLogoUrl(teamId)} alt={abbreviation ?? ''} width={size} height={size} loading="lazy" className={clsx('inline-block', className)} onError={() => setFailed(true)} />
 }
@@ -76,7 +76,7 @@ export function PlayerIdentity({ playerId, name, team, teamId, position, meta, s
       <Portrait name={name} src={headshot} team={team} size={size} ring={size !== 'xs'} />
       <span className="flex min-w-0 flex-col leading-tight">
         <span className={clsx('truncate font-medium', size === 'lg' || size === 'xl' ? 'text-base' : 'text-[13px]')}>{nameEl}</span>
-        <span className="flex items-center gap-1.5 text-[11px] text-ink-3">
+        <span className="flex items-center gap-1.5 text-meta text-ink-3">
           {(team || teamId) && <TeamMark abbreviation={team} teamId={teamId} size={14} />}
           {position && <span>{position}</span>}
           {meta}

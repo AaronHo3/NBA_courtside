@@ -21,7 +21,7 @@ export type StatTone = 'neutral' | 'accent' | 'pos' | 'neg' | 'warning'
 export function StatTile({ label, value, sub, tone = 'neutral', size = 'md', className, title, testId }: { label: ReactNode; value: ReactNode; sub?: ReactNode; tone?: StatTone; size?: 'md' | 'lg'; className?: string; title?: string; testId?: string }) {
   return (
     <div className={clsx('flex min-w-0 flex-col gap-0.5', className)} title={title} data-testid={testId}>
-      <span className="text-[11px] uppercase tracking-wide text-ink-3">{label}</span>
+      <span className="text-meta uppercase tracking-wide text-ink-3">{label}</span>
       <span className={clsx('display font-semibold leading-none tnum', size === 'lg' ? 'text-[34px]' : 'text-[26px]', tone === 'accent' && 'text-accent', tone === 'pos' && 'text-pos', tone === 'neg' && 'text-neg', tone === 'warning' && 'text-warning', tone === 'neutral' && 'text-ink')}>{value}</span>
       {sub && <span className="text-xs text-ink-2">{sub}</span>}
     </div>

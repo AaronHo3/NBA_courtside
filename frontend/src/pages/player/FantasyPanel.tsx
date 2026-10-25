@@ -19,17 +19,17 @@ export function FantasyPanel({ playerId }: { playerId: number }) {
   return (
     <Panel question="What does the copilot project per game?" method={`Projection (copilot snapshot · ${player.projection_source}); ± is one standard deviation where the model has one. ESPN eligibility: ${player.eligible_positions.join('/') || '—'}.`} tone="plain" actions={<Link to={fantasyHref('draft', sessionId)} className="text-xs font-medium text-accent hover:underline">Open in fantasy →</Link>}>
       <table className="w-full max-w-lg text-sm">
-        <thead><tr className="text-[11px] uppercase tracking-wide text-ink-3"><th className="py-1 text-left font-medium">Category</th><th className="py-1 text-right font-medium">Per game</th><th className="py-1 text-right font-medium">± sd</th></tr></thead>
+        <thead><tr className="text-xs uppercase tracking-wide text-ink-3"><th className="py-1 text-left font-medium">Category</th><th className="py-1 text-right font-medium">Per game</th><th className="py-1 text-right font-medium">± sd</th></tr></thead>
         <tbody>
           {ROWS.filter((r) => pg[r.key] != null).map((r) => (
             <tr key={r.key} className="border-t border-line">
-              <td className="py-1 text-ink-2">{r.label}{r.lower ? <span className="text-ink-4"> · lower is better</span> : null}</td>
+              <td className="py-1 text-ink-2">{r.label}{r.lower ? <span className="text-ink-3"> · lower is better</span> : null}</td>
               <td className="py-1 text-right tnum text-ink">{pg[r.key].toFixed(r.digits ?? 1)}</td>
               <td className="py-1 text-right tnum text-ink-3">{sd[r.key] != null && sd[r.key] > 0 ? `± ${sd[r.key].toFixed(r.digits ?? 1)}` : '—'}</td>
             </tr>
           ))}
-          {fg != null && <tr className="border-t border-line"><td className="py-1 text-ink-2">FG% <span className="text-ink-4">({pg.FGM.toFixed(1)} / {pg.FGA.toFixed(1)})</span></td><td className="py-1 text-right tnum text-ink">{(fg * 100).toFixed(1)}%</td><td className="py-1 text-right text-ink-3">—</td></tr>}
-          {ft != null && <tr className="border-t border-line"><td className="py-1 text-ink-2">FT% <span className="text-ink-4">({pg.FTM.toFixed(1)} / {pg.FTA.toFixed(1)})</span></td><td className="py-1 text-right tnum text-ink">{(ft * 100).toFixed(1)}%</td><td className="py-1 text-right text-ink-3">—</td></tr>}
+          {fg != null && <tr className="border-t border-line"><td className="py-1 text-ink-2">FG% <span className="text-ink-3">({pg.FGM.toFixed(1)} / {pg.FGA.toFixed(1)})</span></td><td className="py-1 text-right tnum text-ink">{(fg * 100).toFixed(1)}%</td><td className="py-1 text-right text-ink-3">—</td></tr>}
+          {ft != null && <tr className="border-t border-line"><td className="py-1 text-ink-2">FT% <span className="text-ink-3">({pg.FTM.toFixed(1)} / {pg.FTA.toFixed(1)})</span></td><td className="py-1 text-right tnum text-ink">{(ft * 100).toFixed(1)}%</td><td className="py-1 text-right text-ink-3">—</td></tr>}
         </tbody>
       </table>
     </Panel>

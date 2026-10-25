@@ -72,7 +72,7 @@ export function DefenseDashPanel({ playerId, playerName, season, seasonType }: P
                   <tbody>
                     {rows.map((r) => (
                       <tr key={r.defense_category} className="border-t border-line">
-                        <td className={CELL}>{r.defense_category}{(r.d_fga ?? 0) < LOW_DFGA && <span className="ml-1 text-[11px] text-warning">low sample</span>}</td>
+                        <td className={CELL}>{r.defense_category}{(r.d_fga ?? 0) < LOW_DFGA && <span className="ml-1 text-meta text-warning">low sample</span>}</td>
                         <td className={`${CELL} text-right tnum`}>{formatPct(r.freq, 0)}</td>
                         <td className={`${CELL} text-right tnum`}>{formatNumber(r.d_fga, 0)}</td>
                         <td className={`${CELL} text-right tnum`}>{formatNumber(r.d_fgm, 0)}</td>

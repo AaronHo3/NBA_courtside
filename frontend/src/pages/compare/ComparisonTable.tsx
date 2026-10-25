@@ -55,7 +55,7 @@ export function ComparisonTable({ model, players, colors, norm, populationKind, 
                 {r.cells.map((c, i) => (
                   <td key={players[i].id} className={clsx('whitespace-nowrap px-2 py-1 text-right align-top tnum', i === r.best && 'bg-accent-soft')} title={percentileText(c, populationKind, players[i].position)}>
                     <span className={clsx('block text-ink', i === r.best && 'font-semibold', c.belowThreshold && 'italic')}>{formatCellValue(r.spec, c.value, norm, { long: true })}</span>
-                    <span className="block text-[11px] text-ink-3">{c.percentile === null ? '–' : `${Math.round(c.percentile)}th · n=${c.cohortSize}`}</span>
+                    <span className="block text-xs text-ink-3">{c.percentile === null ? '–' : `${Math.round(c.percentile)}th · n=${c.cohortSize}`}</span>
                   </td>
                 ))}
               </tr>

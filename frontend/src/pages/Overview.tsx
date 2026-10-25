@@ -13,7 +13,7 @@ function Section({ title, children, aside }: { title: string; children: React.Re
   return (
     <section className="rise-in border-t border-line pt-4">
       <header className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">{title}</h2>
+        <h2 className="text-meta font-semibold uppercase tracking-wide text-ink-3">{title}</h2>
         {aside}
       </header>
       {children}
@@ -41,7 +41,7 @@ export default function Overview() {
       <PageHeader
         title="Overview"
         lede={lede}
-        chips={<>{ctx.isDemo && <Badge tone="warning">Demo data</Badge>}{freshness && <span className="text-[11px] text-ink-3">NBA data: {freshness.namespace}{freshness.generated_at ? ` · updated ${new Date(freshness.generated_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}` : ''}</span>}</>}
+        chips={<>{ctx.isDemo && <Badge tone="warning">Demo data</Badge>}{freshness && <span className="text-xs text-ink-3">NBA data: {freshness.namespace}{freshness.generated_at ? ` · updated ${new Date(freshness.generated_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}` : ''}</span>}</>}
         actions={sid ? <Link to={fantasyHref(ctx.isComplete ? 'season' : 'draft', sid)} className="t-fast rounded-[var(--radius-control)] bg-accent px-3 py-1.5 text-sm font-medium text-accent-ink hover:bg-[var(--c-accent-hover)]">{ctx.isComplete ? 'Open my league' : 'Continue draft'}</Link> : undefined}
       />
 
@@ -93,14 +93,14 @@ export default function Overview() {
                 <FeatureCard title="Biggest overperformer this week" row={performers.data.overperformers[0]} metric="over_expected" href={fantasyHref('performers', sid, { team: userId, week: String(performers.data.period ?? ov.current_period) })} />
               </>
             )}
-            {performers.data && <p className="text-[11px] text-ink-3 sm:col-span-2">Contribution is in copilot units (category standard deviations × games) from ESPN-counted box scores; "expected" is the frozen projection × games played. Source: {performers.data.source}.</p>}
+            {performers.data && <p className="text-xs text-ink-3 sm:col-span-2">Contribution is in copilot units (category standard deviations × games) from ESPN-counted box scores; "expected" is the frozen projection × games played. Source: {performers.data.source}.</p>}
           </div>
         </div>
       )}
 
       <Section title="Recently viewed players" aside={recent.length ? <Link to="/explorer" className="text-xs text-accent hover:underline">Explore all →</Link> : undefined}>
         {recent.length === 0 ? (
-          <p className="text-sm text-ink-3">Profiles you open will appear here. <Link to="/explorer" className="text-accent hover:underline">Start in the explorer</Link> or press <kbd className="rounded border border-line-strong px-1 font-mono text-[10px]">⌘K</kbd>.</p>
+          <p className="text-sm text-ink-3">Profiles you open will appear here. <Link to="/explorer" className="text-accent hover:underline">Start in the explorer</Link> or press <kbd className="rounded border border-line-strong px-1 font-mono text-meta">⌘K</kbd>.</p>
         ) : (
           <ul className="flex flex-wrap gap-x-6 gap-y-3">
             {recent.map((p) => <li key={p.player_id}><PlayerIdentity playerId={p.player_id} name={p.full_name} team={p.team_abbreviation} position={p.position} size="sm" /></li>)}

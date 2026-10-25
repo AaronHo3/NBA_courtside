@@ -111,7 +111,7 @@ export function StrategyPanel() {
       </div>
       </details>
       <PuntAdvisor />
-      <p className="muted" style={{ fontSize: 11, marginTop: 6 }}>
+      <p className="muted" style={{ fontSize: 'var(--fs-xs)', marginTop: 6 }}>
         Fixed punt: the category counts nothing in the fast ranking. Soft punt: it counts at the soft weight. Punted categories still score in the weekly simulation.
       </p>
     </section>

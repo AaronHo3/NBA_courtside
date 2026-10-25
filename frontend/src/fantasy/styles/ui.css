@@ -158,7 +158,7 @@
   z-index: 45;
   padding: 6px 9px;
   background: var(--nav-bg);
-  color: #fff;
+  color: var(--ink);
   border-radius: var(--r-sm);
   font-size: var(--fs-xs);
   line-height: 1.35;
@@ -348,7 +348,7 @@
 }
 .how-detail {
   margin: 0;
-  font-size: 10.5px;
+  font-size: var(--fs-xs);
   line-height: 1.25;
   color: var(--ink-2);
   font-family: var(--font-body);
@@ -413,7 +413,7 @@
 .pos-chip {
   display: inline-block;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--fs-xs);
   border: 1px solid var(--border);
   border-radius: 3px;
   padding: 0 3px;

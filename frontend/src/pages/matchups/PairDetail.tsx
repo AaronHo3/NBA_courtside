@@ -14,7 +14,7 @@ const CELL = 'px-2 py-1 whitespace-nowrap'
 function SeasonRow({ r, total }: { r: MatchupRow; total?: boolean }) {
   return (
     <tr className={total ? 'border-t border-line-strong font-medium' : 'border-t border-line'}>
-      <td className={CELL}>{total ? 'All seasons' : r.season}{isLowSample(r) && <span className="ml-1 text-[11px] text-warning">low sample</span>}</td>
+      <td className={CELL}>{total ? 'All seasons' : r.season}{isLowSample(r) && <span className="ml-1 text-meta text-warning">low sample</span>}</td>
       <td className={`${CELL} text-right tnum`}>{r.gp}</td>
       <td className={`${CELL} text-right tnum`}>{formatNumber(r.partial_poss, 0)}</td>
       <td className={`${CELL} text-right tnum`}>{formatNumber(r.player_pts, 0)}</td>

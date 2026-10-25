@@ -40,7 +40,7 @@ export function SegmentList({ segments, selected, windowMs, canDetect, onSelect,
               {CLASSES.map((c) => <option key={c} value={c}>{CLASSIFICATION_LABEL[c]}</option>)}
             </Select>
             <Badge tone={s.review_status === 'reviewed_ok' ? 'good' : s.review_status === 'rejected' ? 'critical' : 'neutral'}>{REVIEW_LABEL[s.review_status]}</Badge>
-            <span className="text-[11px] text-ink-3">{s.origin}{s.model_version ? ` ${s.model_version}` : ''}</span>
+            <span className="text-meta text-ink-3">{s.origin}{s.model_version ? ` ${s.model_version}` : ''}</span>
             <span className="ml-auto flex gap-1">
               <Button size="sm" onClick={() => onPatch(s.segment_id, { review_status: 'reviewed_ok', reviewer: 'user' })} disabled={busy}>OK</Button>
               <Button size="sm" variant="ghost" onClick={() => onPatch(s.segment_id, { review_status: 'rejected', reviewer: 'user' })} disabled={busy}>Reject</Button>

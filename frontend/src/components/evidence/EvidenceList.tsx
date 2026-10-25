@@ -24,7 +24,7 @@ export function EvidenceList({ items, emptyText = 'No evidence recorded.' }: { i
             <span className="text-sm text-ink">{it.summary}</span>
           </div>
           {it.reference && <ExternalReferenceButton url={it.reference.external_url} availability={it.reference.availability} checkedAt={it.reference.availability_checked_at} metadata={it.reference.metadata} />}
-          <div className="flex flex-wrap gap-x-3 text-[11px] text-ink-3">
+          <div className="flex flex-wrap gap-x-3 text-xs text-ink-3">
             <span>id {it.evidence_id}</span>
             {it.player_ids?.map((p) => <Link key={p} to={`/players/${p}`} className="text-accent hover:underline">player {p}</Link>)}
           </div>

@@ -62,7 +62,7 @@ export function CommandPalette({ open, onClose, sessionId }: { open: boolean; on
               if (e.key === 'Enter' && items[active]) { e.preventDefault(); go(items[active]) }
             }}
           />
-          <kbd className="rounded border border-line-strong px-1.5 py-0.5 font-mono text-[10px] text-ink-3">esc</kbd>
+          <kbd className="rounded border border-line-strong px-1.5 py-0.5 font-mono text-meta text-ink-3">esc</kbd>
         </div>
         <ul id="palette-list" role="listbox" className="max-h-[60vh] overflow-auto py-1">
           {res.isLoading && debounced && <li className="px-3 py-2 text-xs text-ink-3">Searching players…</li>}
@@ -75,7 +75,7 @@ export function CommandPalette({ open, onClose, sessionId }: { open: boolean; on
               onMouseDown={(e) => { e.preventDefault(); go(it) }}
               className={clsx('flex cursor-pointer items-center gap-3 px-3 py-2 text-sm', i === active ? 'bg-accent-soft text-ink' : 'text-ink-2')}
             >
-              {it.kind === 'player' ? <Portrait name={it.label} src={it.playerId != null ? nbaHeadshotUrl(it.playerId) : null} team={it.team} size="xs" ring={false} /> : <span className="inline-flex h-6 w-6 items-center justify-center rounded-sm bg-raised text-[10px] text-ink-3">↗</span>}
+              {it.kind === 'player' ? <Portrait name={it.label} src={it.playerId != null ? nbaHeadshotUrl(it.playerId) : null} team={it.team} size="xs" ring={false} /> : <span className="inline-flex h-6 w-6 items-center justify-center rounded-sm bg-raised text-meta text-ink-3">↗</span>}
               <span className="min-w-0 flex-1 truncate text-ink">{it.label}</span>
               <span className="truncate text-xs text-ink-3">{it.detail}</span>
             </li>
