@@ -174,3 +174,39 @@ test('player profile breadcrumb names the player', async ({ page }) => {
   await expect(page).toHaveTitle(`${hit.full_name} · Courtside`)
   await expect(sidebar(page).getByRole('link', { name: 'Explorer' })).toHaveAttribute('aria-current', 'page')
 })
+
+test('command palette navigation from a research page into fantasy keeps breadcrumb, sidebar and title in step', async ({ page }) => {
+  const sid = await linkedSession(page)
+  await page.goto(`/fantasy?session=${sid}#/season`) // remembers the session for the shell
+  await page.reload()
+  await expect(page.getByTestId('season')).toBeVisible()
+
+  const viaPalette = async (query: string, option: RegExp) => {
+    await page.keyboard.press('ControlOrMeta+k')
+    const palette = page.getByRole('dialog', { name: 'Search players and pages' })
+    await expect(palette).toBeVisible()
+    await palette.getByRole('combobox', { name: 'Search players and pages' }).fill(query)
+    await palette.getByRole('option', { name: option }).first().click()
+  }
+
+  // React Router pushState: no hashchange/popstate fires, the shell must still follow the new hash
+  await page.goto('/explorer')
+  await expect(sidebar(page).getByRole('link', { name: 'Explorer' })).toHaveAttribute('aria-current', 'page')
+  await viaPalette('My league', /^↗?\s*My league/)
+  await expect(page).toHaveURL(new RegExp(`/fantasy\\?session=${sid}#/season`))
+  await expect(page.getByTestId('season-tab-matchups')).toHaveAttribute('aria-selected', 'true')
+  await expect(breadcrumb(page)).toContainText('My league')
+  await expect(breadcrumb(page)).toContainText('Matchups')
+  await expect(breadcrumb(page)).not.toContainText('Draft')
+  await expect(page).toHaveTitle('Matchups · Courtside')
+  await expect(leagueViews(page).getByRole('link', { name: 'Matchups', exact: true })).toHaveAttribute('aria-current', 'page')
+
+  await page.goto('/explorer')
+  await viaPalette('Performers', /^↗?\s*Performers/)
+  await expect(page).toHaveURL(new RegExp(`/fantasy\\?session=${sid}#/performers`))
+  await expect(page.getByTestId('performers')).toBeVisible()
+  await expect(breadcrumb(page)).toContainText('Performers')
+  await expect(page).toHaveTitle('Performers · Courtside')
+  await expect(sidebar(page).getByRole('link', { name: 'Performers' })).toHaveAttribute('aria-current', 'page')
+  await page.unrouteAll({ behavior: 'ignoreErrors' })
+})

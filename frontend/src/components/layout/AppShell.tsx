@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { clsx } from 'clsx'
 import { Menu, Moon, Search, Sun, X } from 'lucide-react'
@@ -39,15 +39,13 @@ function Brand() {
   )
 }
 
-/** `window.location.hash`, kept current across hash edits, back/forward and in-app hash-query writes. */
+/**
+ * `window.location.hash`, kept current across hash edits, back/forward and in-app hash-query writes
+ * (subscribed events) and React Router navigations (pushState fires no event, but the shell re-renders
+ * on every router location change and the snapshot is re-read on each render).
+ */
 function useLocationHash(): string {
-  const [hash, setHash] = useState(() => window.location.hash)
-  useEffect(() => {
-    const update = () => setHash(window.location.hash)
-    update()
-    return onLocationChange(update)
-  }, [])
-  return hash
+  return useSyncExternalStore(onLocationChange, () => window.location.hash)
 }
 
 const NAV_LINK = 't-fast relative z-10 flex items-center gap-2.5 rounded-[var(--radius-control)] px-2 py-[7px] text-[13px] leading-4'
