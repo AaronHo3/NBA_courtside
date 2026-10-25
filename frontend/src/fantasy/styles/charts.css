@@ -423,3 +423,234 @@ table.grid.heat tbody tr:hover > .heat-cell {
   color: var(--ink-2);
 }
 /* end probability pair (Task 6) */
+
+/* ---- Task 7: power rankings ---- */
+/* heatmap rows: 36px, 14px numerals; headers sort; lead columns up to the row header stay pinned */
+.heatmap {
+  --pin-0-w: 44px;
+}
+table.grid.heat th,
+table.grid.heat td {
+  height: 36px;
+  padding: 0 10px;
+  font-size: var(--fs);
+}
+table.grid.heat thead th {
+  font-size: var(--fs-sm);
+}
+table.grid.heat th.num,
+table.grid.heat td.num {
+  text-align: right;
+}
+.heat-th {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+table.grid.heat thead th.num .heat-th {
+  justify-content: flex-end;
+  width: 100%;
+}
+.heat-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 28px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.heat-sort:hover {
+  background: none;
+  color: var(--teal);
+}
+.heat-sort-mark {
+  font-size: 9px;
+  opacity: 0;
+}
+th.sortable:hover .heat-sort-mark {
+  opacity: 0.45;
+}
+.heat-sort-mark.on {
+  opacity: 1;
+  color: var(--teal);
+}
+table.grid.heat thead th[aria-sort='ascending'],
+table.grid.heat thead th[aria-sort='descending'] {
+  color: var(--ink);
+}
+.heat-info {
+  min-height: 0;
+  padding: 2px;
+}
+table.grid.heat .pin {
+  position: sticky;
+  z-index: 1;
+  background: var(--surface);
+}
+table.grid.heat .pin-0 {
+  left: 0;
+}
+table.grid.heat.pinned .pin-0:not(.pin-last) {
+  width: var(--pin-0-w);
+  min-width: var(--pin-0-w);
+  max-width: var(--pin-0-w);
+}
+table.grid.heat .pin-1 {
+  left: var(--pin-0-w);
+}
+table.grid.heat .pin-last {
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 1px 0 0 var(--border-strong), 6px 0 8px -6px rgb(0 0 0 / 0.45);
+}
+table.grid.heat thead th.pin {
+  z-index: 3;
+  background: var(--surface-2);
+}
+table.grid.heat tbody tr:hover > .pin {
+  background: var(--surface-2);
+}
+table.grid.heat tbody tr.mine > .pin {
+  background: linear-gradient(var(--mine), var(--mine)), var(--surface);
+}
+table.grid.heat tbody tr.selected > .pin {
+  background: linear-gradient(var(--teal-soft), var(--teal-soft)), var(--surface);
+}
+/* my row keeps its amber when selected; the accent rail marks the selection */
+table.grid.heat tbody tr.mine.selected > td:not(.heat-cell),
+table.grid.heat tbody tr.mine.selected > th {
+  background: var(--mine);
+}
+table.grid.heat tbody tr.mine.selected > .pin {
+  background: linear-gradient(var(--mine), var(--mine)), var(--surface);
+}
+table.grid.heat tbody tr.selected > :first-child {
+  box-shadow: inset 3px 0 0 var(--teal);
+}
+table.grid.heat tbody tr.selected > .pin-last:first-child {
+  box-shadow: inset 3px 0 0 var(--teal), 1px 0 0 var(--border-strong), 6px 0 8px -6px rgb(0 0 0 / 0.45);
+}
+table.grid.heat .pin-last .row-select {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+/* paired diverging bars: two teams per category on one shared scale */
+.diverging-pair-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  margin-bottom: var(--s-2);
+  font-size: var(--fs-sm);
+  color: var(--ink-2);
+}
+.diverging-pair-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.diverging-pair-legend .pair-scale {
+  color: var(--ink-3);
+  font-size: var(--fs-xs);
+}
+.pair-key {
+  display: inline-block;
+  width: 14px;
+  height: 10px;
+  border-radius: 2px;
+}
+.pair-key.side-a {
+  background: var(--ink-2);
+}
+.pair-key.side-b {
+  background: repeating-linear-gradient(45deg, var(--ink-2) 0 2px, transparent 2px 5px);
+  box-shadow: inset 0 0 0 1px var(--ink-2);
+}
+.diverging-pair .pair-axis,
+.diverging-pair .pair-item {
+  display: grid;
+  grid-template-columns: minmax(96px, 150px) minmax(0, 96px) 1fr 52px;
+  column-gap: 10px;
+}
+.diverging-pair .pair-axis span {
+  grid-column: 3;
+}
+.diverging-pair .pair-item {
+  row-gap: 3px;
+  align-items: center;
+  padding: 5px 6px;
+  border-bottom: 1px solid var(--border);
+}
+.diverging-pair .pair-item:last-child {
+  border-bottom: none;
+}
+.diverging-pair .pair-item > .div-label {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+.diverging-pair .pair-lines,
+.diverging-pair .pair-line {
+  display: contents;
+}
+.pair-line-name {
+  grid-column: 2;
+  font-size: var(--fs-xs);
+  color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pair-line.side-a .pair-line-name {
+  color: var(--ink-2);
+  font-weight: 600;
+}
+.diverging-pair .div-track {
+  grid-column: 3;
+  height: 12px;
+}
+.diverging-pair .div-value {
+  grid-column: 4;
+}
+.div-bar.side-b.positive {
+  background: repeating-linear-gradient(45deg, var(--good) 0 2px, transparent 2px 5px);
+  box-shadow: inset 0 0 0 1.5px var(--good);
+}
+.div-bar.side-b.negative {
+  background: repeating-linear-gradient(45deg, var(--bad) 0 2px, transparent 2px 5px);
+  box-shadow: inset 0 0 0 1.5px var(--bad);
+}
+@media (max-width: 560px) {
+  .heatmap {
+    --pin-0-w: 36px;
+  }
+  table.grid.heat .pin-last {
+    max-width: 128px;
+  }
+  .diverging-pair .pair-axis,
+  .diverging-pair .pair-item {
+    grid-template-columns: 84px 1fr 44px;
+    column-gap: 8px;
+  }
+  /* names give way to the legend key (solid = first team, on top; hatched = second) */
+  .pair-line-name {
+    display: none;
+  }
+  .diverging-pair .pair-axis span,
+  .diverging-pair .div-track {
+    grid-column: 2;
+  }
+  .diverging-pair .div-value {
+    grid-column: 3;
+  }
+}
+/* ---- end Task 7 ---- */
