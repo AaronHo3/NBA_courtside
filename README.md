@@ -15,12 +15,17 @@ fallback when an image is unavailable).
 
 ## Demo
 
-![Courtside: league matchups, power rankings, free agents and performers](docs/media/courtside-demo.gif)
+<!-- Video player: paste the github.com/user-attachments/assets/... URL for docs/media/courtside-demo.mp4
+     on its own line here (see "Adding the video" below). GitHub renders a bare asset URL as a player. -->
 
-The clip above is the fantasy half running against a copy of my own ESPN league for the 2026-27
-season: real NBA players, the real schedule and this season's game logs, with every manager, team
-and league name replaced. The full 74-second tour, which also covers the research pages and a live
-draft, is [docs/media/courtside-demo.mp4](docs/media/courtside-demo.mp4).
+A 74-second tour: the research pages, a live draft with recommendations, then my league's matchups,
+power rankings, free agents and performers. It runs against a copy of my own ESPN league for the
+2026-27 season: real NBA players, the real schedule and this season's game logs, with every
+manager, team and league name replaced. Pause and scrub; each screen stays up for a few seconds.
+The same file is in the repo at [docs/media/courtside-demo.mp4](docs/media/courtside-demo.mp4), and
+a short loop of the fantasy half is below.
+
+![Courtside: league matchups, power rankings, free agents and performers](docs/media/courtside-demo.gif)
 
 | | |
 |---|---|
