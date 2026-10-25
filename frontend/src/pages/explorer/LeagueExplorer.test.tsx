@@ -107,4 +107,18 @@ describe('LeagueExplorer interaction', () => {
     expect(screen.getByTestId('explorer-encoding')).toHaveTextContent('Size: Points / game · Colour: none')
     expect(screen.getByText('Drag to box-select · lasso · reset')).toBeInTheDocument()
   })
+
+  it('keeps the population disclosure open while a filter is set and cleared', () => {
+    renderPage()
+    const details = screen.getByTestId('explorer-population') as HTMLDetailsElement
+    expect(details.open).toBe(false)
+    fireEvent.click(within(details).getByText(/^Population:/))
+    expect(details.open).toBe(true)
+    const position = within(details).getByRole('combobox', { name: 'Position' })
+    fireEvent.change(position, { target: { value: 'C' } })
+    expect(new URLSearchParams(location().split('?')[1]).get('pos')).toBe('C')
+    fireEvent.change(position, { target: { value: '' } })
+    expect(new URLSearchParams(location().split('?')[1]).get('pos')).toBeNull()
+    expect(details.open).toBe(true)
+  })
 })

@@ -84,6 +84,9 @@ export default function LeagueExplorer() {
 
   // Normalization lives with the chart controls, so it does not open the population filters.
   const filtersAtDefault = state.teamId === 0 && !state.position && !state.query && state.ageMin === 0 && state.ageMax === 0 && state.minGp === DEFAULTS.minGp && state.minMinutes === DEFAULTS.minMinutes
+  // Decided once on mount (a shared link with filters opens it); afterwards only the user opens or closes it,
+  // so clearing a filter back to its default never snaps the panel shut under the cursor.
+  const [populationOpen] = useState(() => !filtersAtDefault)
   const normLabel = NORMALIZATION_LABEL[state.normalization].toLowerCase()
   const activeMetrics = [state.x, state.y, state.size, state.color]
 
@@ -95,7 +98,7 @@ export default function LeagueExplorer() {
       />
       <Disclosure
         summary={populationSummary(population, hidden)}
-        defaultOpen={!filtersAtDefault}
+        defaultOpen={populationOpen}
         testId="explorer-population"
         className="mb-4 bg-surface"
       >
