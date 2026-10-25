@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { Badge, Button, Input, Panel, Refetching, Select } from '@/components/ui'
+import { Badge, Button, Input, Panel, Refetching, Select, Toolbar } from '@/components/ui'
 import { EvidenceList } from '@/components/evidence/EvidenceList'
 import { useCapabilities, useEvidence, useStatus } from '@/hooks/useApi'
 import { useEvidenceMutations, useMediaList, useSnapshots } from '@/hooks/useEvidenceApi'
@@ -32,7 +32,7 @@ export default function EvidenceLibrary() {
 
   return (
     <>
-      <PageHeader title="Evidence library" lede="Footage you are authorised to use, the segments and annotations on it, and every evidence item reports can cite." />
+      <PageHeader title="Evidence library" lede="Footage you are authorised to use, the segments and annotations on it, and every evidence item a report can cite." />
       <div className="flex flex-col gap-4">
         {c && (
           <div className="flex flex-wrap items-center gap-2 text-xs" data-testid="capability-banner">
@@ -71,12 +71,12 @@ export default function EvidenceLibrary() {
           method="One row per citable item. Class is shown on every item; references never count as observations. Superseded or deleted items stay listed with their status so old citations still resolve."
           actions={<span className="text-xs text-ink-3">{items.data?.meta.total ?? 0} items</span>}
         >
-          <div className="mb-3 flex flex-wrap items-end gap-2">
+          <Toolbar label="Filter evidence items">
             <Input label="Player id" value={playerId} onChange={(e) => setPlayerId(e.target.value)} inputMode="numeric" className="w-32" />
             <Input label="Game id" value={gameId} onChange={(e) => setGameId(e.target.value)} className="w-36" />
-            <Select label="Kind" value={kind} onChange={(e) => setKind(e.target.value)}>{KINDS.map((k) => <option key={k} value={k}>{k || 'any kind'}</option>)}</Select>
+            <Select label="Kind" value={kind} onChange={(e) => setKind(e.target.value)}>{KINDS.map((k) => <option key={k} value={k}>{k ? k.replace(/_/g, ' ') : 'any kind'}</option>)}</Select>
             <Select label="Status" value={itemStatus} onChange={(e) => setItemStatus(e.target.value)}>{STATUSES.map((s) => <option key={s} value={s}>{s || 'any status'}</option>)}</Select>
-          </div>
+          </Toolbar>
           <Refetching loading={items.isFetching} error={items.error} retry={() => { void items.refetch() }}>
             <EvidenceList items={items.data?.data ?? []} emptyText="No evidence items match. Link footage to events or annotate clips to create some." />
           </Refetching>

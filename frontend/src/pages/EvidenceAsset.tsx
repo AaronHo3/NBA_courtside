@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { Badge, Button, ErrorState, Loading, Panel, Refetching, Segmented } from '@/components/ui'
+import { Badge, Button, EmptyState, ErrorState, Loading, Panel, Refetching, Segmented } from '@/components/ui'
 import { useCapabilities } from '@/hooks/useApi'
 import { useAlignmentReport, useAnchors, useAnnotations, useEvidenceMutations, useMediaDetail, useRoster, useSegments, useVocabulary } from '@/hooks/useEvidenceApi'
 import { ApiError } from '@/lib/api'
@@ -76,7 +76,7 @@ export default function EvidenceAsset() {
   }, [timeMs, inMs, outMs, seek, writeParams])
   useEffect(() => { if (selectedAnnotation && !gameId && selectedAnnotation.game_id) setGameId(selectedAnnotation.game_id) }, [selectedAnnotation, gameId, setGameId])
 
-  if (detail.error instanceof ApiError && detail.error.status === 404) return <><PageHeader title="Footage not found" /><p className="text-sm text-ink-2">No asset {assetId} in this namespace, or it was deleted. <Button size="sm" onClick={() => nav('/evidence')}>Back to the library</Button></p></>
+  if (detail.error instanceof ApiError && detail.error.status === 404) return <><PageHeader title="Footage not found" /><EmptyState title="No such footage" body={`No asset ${assetId} in this namespace, or it was deleted.`} action={<Button size="sm" onClick={() => nav('/evidence')}>Back to the library</Button>} /></>
   if (detail.error) return <><PageHeader title="Footage" /><ErrorState error={detail.error} retry={() => { void detail.refetch() }} /></>
   if (!d || !state) return <><PageHeader title="Footage" /><Loading label="Loading asset" /></>
   const busy = Object.values(m).some((x) => x.isPending)
@@ -87,7 +87,14 @@ export default function EvidenceAsset() {
     <>
       <PageHeader
         title={d.asset.original_filename ?? d.asset.asset_id}
-        lede={`${fmtMs(d.asset.duration_ms)} · ${d.asset.width && d.asset.height ? `${d.asset.width}×${d.asset.height}` : 'size unknown'} · ${fmtBytes(d.asset.byte_size)} · ${d.asset.video_codec ?? 'codec unknown'} · ${permissionSummary(d.permissions)}`}
+        lede="Review workbench: mark segments, anchor the game clock, link events and annotate. Every action keeps its reviewer and history."
+        chips={<>
+          <Badge>{fmtMs(d.asset.duration_ms)}</Badge>
+          <Badge>{d.asset.width && d.asset.height ? `${d.asset.width}×${d.asset.height}` : 'size unknown'}</Badge>
+          <Badge>{fmtBytes(d.asset.byte_size)}</Badge>
+          <Badge>{d.asset.video_codec ?? 'codec unknown'}</Badge>
+          <span className="text-xs text-ink-2">{permissionSummary(d.permissions)}</span>
+        </>}
         actions={<div className="flex items-center gap-2"><JobStatusChip job={d.job} /><Button size="sm" variant="danger" onClick={() => { if (window.confirm('Soft-delete this asset? Files are purged after the retention window unless evidence cites them.')) m.deleteAsset.mutate(d.asset.asset_id, { onSuccess: () => nav('/evidence') }) }}>Delete</Button></div>}
       />
       <div className="grid gap-4 xl:grid-cols-[3fr_2fr]">

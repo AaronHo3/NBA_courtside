@@ -56,8 +56,10 @@ export function LeagueTable({ rows, season, caveat }: { rows: TeamSeason[]; seas
         onRowClick={(r) => navigate(`/teams/${r.team_id}?season=${encodeURIComponent(season)}`)}
         initialSort={[{ id: 'net_rating', desc: true }]}
         globalFilter={filter}
-        height={560}
+        maxHeight={560}
         dense
+        pinFirstColumn
+        focusable
         emptyMessage="No team seasons for this season."
       />
       <Note>n = {rows.length} teams. {caveat ?? 'Team ratings are provider/derived estimates; player ratings do not add up to them.'}</Note>

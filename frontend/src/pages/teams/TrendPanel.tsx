@@ -1,10 +1,11 @@
 import { useMemo } from 'react'
 import type { Data, Layout } from 'plotly.js'
+import { ChartFrame } from '@/components/charts/ChartFrame'
 import { Plot, useChartTheme } from '@/components/charts/Plot'
 import { EmptyState, Panel } from '@/components/ui'
 import type { TeamSeason } from '@/lib/types'
 import { axisFormat, formatTeamMetric, numberAt, teamMetric, wl } from './teamMetrics'
-import { ChartBox, Note } from './shared'
+import { Note } from './shared'
 
 const TREND_METRICS = ['net_rating', 'off_rating', 'def_rating', 'pace', 'efg_pct', 'fg3a_rate'] as const
 
@@ -32,14 +33,9 @@ function TrendChart({ metric, rows, focus }: { metric: string; rows: TeamSeason[
     return { data, layout }
   }, [rows, metric, focus, m, t])
   return (
-    <figure className="m-0 rounded-[var(--radius-control)] border border-line p-2">
-      <figcaption className="mb-1 text-xs font-medium text-ink-2">
-        {m.label}{m.higherIsBetter === false ? <span className="font-normal text-ink-3"> · axis reversed, up is better</span> : null}
-      </figcaption>
-      <ChartBox height={170}>
-        <Plot data={data} layout={layout} config={{ displayModeBar: false }} />
-      </ChartBox>
-    </figure>
+    <ChartFrame title={m.label} question={m.higherIsBetter === false ? 'Axis reversed, up is better' : undefined} height={170} className="rounded-[var(--radius-control)] border border-line p-2">
+      <Plot data={data} layout={layout} config={{ displayModeBar: false }} />
+    </ChartFrame>
   )
 }
 

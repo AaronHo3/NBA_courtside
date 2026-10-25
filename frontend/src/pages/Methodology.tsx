@@ -21,7 +21,7 @@ export default function Methodology() {
 
   return (
     <>
-      <PageHeader title="Where the numbers come from" lede="Data status, coverage, sources, every metric's definition and the analytical rules behind each view. The repository mirrors this page in docs/METHODOLOGY.md and docs/LIMITATIONS.md." />
+      <PageHeader title="Where the numbers come from" lede="Data status, coverage, sources, metric definitions and the rules behind each view. Mirrored in docs/METHODOLOGY.md and docs/LIMITATIONS.md." />
       <div className="flex min-w-0 flex-col gap-4 lg:grid lg:grid-cols-[200px_minmax(0,1fr)]">
         <SectionNav />
         <div className="flex min-w-0 flex-col gap-4">

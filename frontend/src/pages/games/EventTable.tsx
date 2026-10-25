@@ -28,7 +28,8 @@ export function EventTable({ events, meta, selectedId, onSelect, onPage }: { eve
       onRowClick={onSelect}
       isSelected={(e) => e.source_event_id === selectedId}
       dense
-      height={520}
+      maxHeight={520}
+      pinFirstColumn
       initialSort={[]}
       toolbar={
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-ink-3">

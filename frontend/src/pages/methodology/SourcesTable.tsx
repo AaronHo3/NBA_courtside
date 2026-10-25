@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { EmptyState, ErrorState, Loading } from '@/components/ui'
 import { useManifest, useStatus } from '@/hooks/useApi'
 import { groupManifest, humanFamily } from './coverage'
 import { Code, P, Section } from './Prose'
@@ -16,10 +17,12 @@ export function SourcesTable() {
   const groups = useMemo(() => groupManifest(manifest.data?.data.entries ?? [], status.data?.data.families ?? []), [manifest.data, status.data])
   return (
     <Section id="sources" question="Where does each family come from, and how fresh is it?" method="Grouped from the manifest. Real data is retrieved through the nba_api client against stats.nba.com by the backend pipeline; the browser only talks to this API.">
-      {manifest.isLoading ? (
-        <P>Loading manifest…</P>
+      {manifest.error ? (
+        <ErrorState error={manifest.error} retry={() => { void manifest.refetch() }} />
+      ) : manifest.isLoading ? (
+        <Loading label="Loading manifest" />
       ) : groups.length === 0 ? (
-        <P>The manifest is empty.</P>
+        <EmptyState title="The manifest is empty" body="Run make ingest to fetch data; every family records its source and fetch time here." />
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">

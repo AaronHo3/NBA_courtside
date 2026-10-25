@@ -1,4 +1,4 @@
-import { Input, Segmented, Select } from '@/components/ui'
+import { Input, Segmented, Select, Toolbar } from '@/components/ui'
 import { CUSTOM_LENS } from './model'
 import type { RankingState } from './useRankingState'
 
@@ -9,10 +9,10 @@ const POSITIONS = [
   { value: 'C', label: 'Centers' },
 ]
 
-/** Single filter row. Every control writes to the URL so the view is shareable. */
+/** Single page-level filter row. Every control writes to the URL so the view is shareable. */
 export function RankingControls({ s }: { s: RankingState }) {
   return (
-    <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
+    <Toolbar label="Lens, population and scale">
       <Select label="Lens" value={s.lens} onChange={(e) => s.setLens(e.target.value)} className="min-w-44">
         {s.lenses.map((l) => <option key={l.key} value={l.key}>{l.label}</option>)}
         <option value={CUSTOM_LENS}>Custom composite</option>
@@ -46,6 +46,6 @@ export function RankingControls({ s }: { s: RankingState }) {
       <Select label="Position" value={s.position} onChange={(e) => s.setPosition(e.target.value || null)}>
         {POSITIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
       </Select>
-    </div>
+    </Toolbar>
   )
 }

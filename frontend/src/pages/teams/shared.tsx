@@ -3,11 +3,6 @@ import type { ReactNode } from 'react'
 import { Info, Select } from '@/components/ui'
 import { teamMetric, type TeamMetricDef } from './teamMetrics'
 
-/** Fixed-height frame for a Plotly chart (Plot fills 100% of its parent). */
-export function ChartBox({ height, children, className }: { height: number; children: ReactNode; className?: string }) {
-  return <div style={{ height }} className={clsx('w-full min-w-0', className)}>{children}</div>
-}
-
 /** Method / caveat line under a chart. */
 export function Note({ children, className }: { children: ReactNode; className?: string }) {
   return <p className={clsx('mt-2 text-xs leading-4 text-ink-3 max-w-prose', className)}>{children}</p>

@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { downloadCsv } from '@/components/table/DataTable'
-import { Button, EmptyState, Loading, Panel, Refetching, Segmented, Stat } from '@/components/ui'
+import { Button, Disclosure, EmptyState, Loading, Panel, Refetching, Segmented, Stat } from '@/components/ui'
 import { ComponentLegend } from './rankings/ComponentChips'
 import { ContributionChart } from './rankings/ContributionChart'
 import { CustomBuilder } from './rankings/CustomBuilder'
@@ -24,17 +24,20 @@ export default function Rankings() {
     <>
       <PageHeader
         title="Who is best, by which lens?"
-        lede="There is no single best player. Each lens is a user-defined index: you choose the components, the direction, the weights and the comparison population, and every player's score is shown as the sum of its parts."
+        lede="No single best player: each lens is a user-defined index of components, weights and population, and every score is shown as the sum of its parts."
       />
 
-      <Panel question="Which lens, population and scale?" method="Filters apply to one season. Thresholds define the comparison population that every component is normalised within." className="mb-4">
-        <RankingControls s={s} />
-        <div className="mt-3 flex flex-wrap items-start gap-x-8 gap-y-2 border-t border-line pt-3">
-          <Stat label="Met the thresholds" value={meta ? meta.population_size : '–'} sub={meta ? `${s.season} · ${s.seasonType} · ≥ ${meta.min_gp} games, ≥ ${meta.min_minutes} minutes${s.position ? ` · ${s.position}` : ''}` : 'Loading'} />
-          <Stat label="Eligible (all components present)" value={meta ? eligible.length : '–'} sub={meta ? (ineligible.length ? `${ineligible.length} excluded, listed below` : 'Nobody excluded') : ' '} />
-          <p className="max-w-prose text-xs text-ink-2">{s.disclaimer ?? meta?.disclaimer}</p>
-        </div>
-      </Panel>
+      <RankingControls s={s} />
+      <div className="mb-4 flex flex-wrap items-start gap-x-8 gap-y-3">
+        <Stat label="Met the thresholds" value={meta ? meta.population_size : '–'} sub={meta ? `${s.season} · ${s.seasonType} · ≥ ${meta.min_gp} games, ≥ ${meta.min_minutes} minutes${s.position ? ` · ${s.position}` : ''}` : 'Loading'} />
+        <Stat label="Eligible (all components present)" value={meta ? eligible.length : '–'} sub={meta ? (ineligible.length ? `${ineligible.length} excluded, listed below` : 'Nobody excluded') : ' '} />
+        {(s.disclaimer ?? meta?.disclaimer) && (
+          <Disclosure summary="What a lens score is, and is not" className="min-w-0 max-w-prose flex-1 basis-72">
+            <p>{s.disclaimer ?? meta?.disclaimer}</p>
+            <p className="mt-2 text-ink-3">Filters apply to one season. Thresholds define the comparison population that every component is normalised within.</p>
+          </Disclosure>
+        )}
+      </div>
 
       {s.lensesLoading && <Loading label="Loading lenses" />}
 
@@ -64,7 +67,7 @@ export default function Rankings() {
                 <div className={s.query.isFetching ? 'opacity-60 transition-opacity' : 'transition-opacity'}>
                   <div className="mb-2"><ComponentLegend components={meta.components} colors={s.colors} /></div>
                   {topRows.length === 0 ? (
-                    <p className="text-sm text-ink-2">No eligible players for these thresholds.</p>
+                    <EmptyState title="No eligible players for these thresholds" body="Lower the minimum games or minutes, or widen the position filter." />
                   ) : (
                     <ContributionChart rows={topRows} meta={meta} colors={s.colors} />
                   )}
@@ -83,11 +86,11 @@ export default function Rankings() {
 
               <IneligiblePanel rows={ineligible} meta={meta} />
 
-              <Panel question="Why only within one season?" method="A note on eras.">
-                <p className="max-w-prose text-sm text-ink-2">
+              <Disclosure summary="Why only within one season? A note on eras">
+                <p className="max-w-prose">
                   Every component is normalised against the players who qualified in the same season and season type, so a score says how a player compares with contemporaries under the same rules, pace and shot selection. Percentiles are therefore within-season by construction: a 90th-percentile three-point volume in 2016-17 and in 2025-26 describe different absolute numbers, and nothing here removes that era effect. Do not read scores across seasons as if they were on one scale; switch the season and read the new ranking on its own terms.
                 </p>
-              </Panel>
+              </Disclosure>
             </div>
           )}
         </Refetching>

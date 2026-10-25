@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Badge, Input } from '@/components/ui'
+import { Badge, ErrorState, Input } from '@/components/ui'
 import { useMetrics } from '@/hooks/useApi'
 import type { Metric } from '@/lib/types'
 import { Code, P, Section } from './Prose'
@@ -31,7 +31,7 @@ export function MetricCatalog() {
       method="Definitions, formulas, direction and source for every key the API serves. Percentages are stored as fractions and displayed ×100."
       actions={<Input aria-label="Filter metrics" placeholder="Filter by name, key, kind, definition" value={filter} onChange={(e) => setFilter(e.target.value)} className="w-64" />}
     >
-      <P>{rows.length} of {total} metrics{filter ? ` match "${filter}"` : ''}.</P>
+      {metrics.error ? <ErrorState error={metrics.error} retry={() => { void metrics.refetch() }} /> : <P>{rows.length} of {total} metrics{filter ? ` match "${filter}"` : ''}.</P>}
       <div className="mt-2 overflow-x-auto">
         <table className="w-full text-sm">
           <thead>

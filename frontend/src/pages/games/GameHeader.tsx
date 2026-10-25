@@ -1,9 +1,19 @@
-import { Badge, Stat } from '@/components/ui'
+import { Badge, Stat, TeamMark } from '@/components/ui'
 import type { Game, GameCoverage, Team } from '@/lib/types'
 
 export function teamLabel(teams: Team[] | undefined, id: number): string {
   const t = teams?.find((x) => x.team_id === id)
   return t ? `${t.city} ${t.name}` : String(id)
+}
+
+function TeamSide({ teams, id }: { teams: Team[] | undefined; id: number }) {
+  const t = teams?.find((x) => x.team_id === id)
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      {t && <TeamMark abbreviation={t.abbreviation} teamId={t.team_id} size={22} />}
+      {teamLabel(teams, id)}
+    </span>
+  )
 }
 
 /** Teams, score, date and what the data layer holds for this game. */
@@ -13,7 +23,11 @@ export function GameHeader({ game, coverage, teams }: { game: Game; coverage: Ga
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h2 className="text-lg font-semibold text-ink">{teamLabel(teams, game.away_team_id)} {game.neutral_site ? 'vs' : 'at'} {teamLabel(teams, game.home_team_id)}</h2>
+        <h2 className="inline-flex flex-wrap items-center gap-2 text-lg font-semibold text-ink">
+          <TeamSide teams={teams} id={game.away_team_id} />
+          <span className="font-normal text-ink-3">{game.neutral_site ? 'vs' : 'at'}</span>
+          <TeamSide teams={teams} id={game.home_team_id} />
+        </h2>
         <span className="tnum text-base text-ink-2">{score}</span>
         <span className="text-sm text-ink-3">{date}</span>
         {game.neutral_site && <Badge tone="warning">Neutral site: home/away slots are arbitrary</Badge>}

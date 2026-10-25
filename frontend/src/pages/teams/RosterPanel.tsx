@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
 import type { Data, Layout } from 'plotly.js'
+import { ChartFrame } from '@/components/charts/ChartFrame'
 import { Plot, useChartTheme } from '@/components/charts/Plot'
 import { SEQUENTIAL_BLUE } from '@/components/charts/palette'
 import { DataTable, downloadCsv } from '@/components/table/DataTable'
@@ -11,7 +12,7 @@ import { useParam } from '@/lib/urlState'
 import { useCompare } from '@/store/compare'
 import type { RosterRow, TeamSeason } from '@/lib/types'
 import { shareRows } from './analysis'
-import { ChartBox, LegendChips, Note } from './shared'
+import { Note } from './shared'
 
 const TOP_N = 9
 const SORT_OPTIONS = [
@@ -45,12 +46,9 @@ function SharesChart({ roster }: { roster: RosterRow[] }) {
     return { data, layout }
   }, [rows, colors, t])
   return (
-    <div className="flex flex-col gap-2">
-      <ChartBox height={150}>
-        <Plot data={data} layout={layout} config={{ displayModeBar: false }} />
-      </ChartBox>
-      <LegendChips ariaLabel="Players in share chart" items={rows.map((r, i) => ({ label: r.label, color: colors[i] }))} />
-    </div>
+    <ChartFrame title="Share of team points and minutes" height={150} legend={rows.map((r, i) => ({ label: r.label, color: colors[i] }))}>
+      <Plot data={data} layout={layout} config={{ displayModeBar: false }} />
+    </ChartFrame>
   )
 }
 
@@ -108,7 +106,7 @@ export function RosterPanel({ roster, team, caveat }: { roster: RosterRow[]; tea
     >
       <div className="flex flex-col gap-4">
         <SharesChart roster={roster} />
-        <DataTable key={sortId} data={roster} columns={columns} rowKey={(r) => r.player_id} initialSort={[{ id: sortId, desc: true }]} height={520} dense emptyMessage="No roster rows for this season." />
+        <DataTable key={sortId} data={roster} columns={columns} rowKey={(r) => r.player_id} initialSort={[{ id: sortId, desc: true }]} maxHeight={520} dense pinFirstColumn emptyMessage="No roster rows for this season." />
         <Note>{roster.length} players. {caveat ?? 'Team ratings are provider/derived estimates; player ratings do not add up to them.'} On/off net is raw and not adjusted for teammates, opponents or minutes. Traded players show their stint with this team only.</Note>
       </div>
     </Panel>

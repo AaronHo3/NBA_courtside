@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
 import type { Data, Layout } from 'plotly.js'
+import { ChartFrame } from '@/components/charts/ChartFrame'
 import { Plot, useChartTheme } from '@/components/charts/Plot'
-import { Badge, EmptyState, Panel, Refetching } from '@/components/ui'
+import { Badge, EmptyState, Loading, Panel, Refetching } from '@/components/ui'
 import { useRosterMetrics } from '@/hooks/useApi'
 import { useParam } from '@/lib/urlState'
 import { formatNumber } from '@/lib/format'
@@ -9,7 +10,7 @@ import type { RosterMetricsRow } from '@/lib/types'
 import { labelPositions, linearFit, pearson } from './analysis'
 import { ROSTER_DESCRIPTORS, ROSTER_OUTCOMES, TEAM_METRICS, axisFormat, formatTeamMetric, numberAt, teamMetric, wl, axisTitle } from './teamMetrics'
 import { useNarrow } from './useNarrow'
-import { ChartBox, MetricHeader, MetricSelect, Note } from './shared'
+import { MetricHeader, MetricSelect, Note } from './shared'
 
 const OUTCOME_DEFS = TEAM_METRICS.filter((m) => (ROSTER_OUTCOMES as readonly string[]).includes(m.key))
 const CONFOUNDING = 'Association, not effect: roster shape, coaching, health, schedule and opponent quality move together, and a correlation across 30 team-seasons cannot separate them. Nothing here says a roster descriptor caused a result.'
@@ -85,7 +86,7 @@ export function RosterShapePanel({ season }: { season: string }) {
     >
       <Refetching loading={q.isFetching} error={q.error} retry={() => q.refetch()}>
         {q.isLoading ? (
-          <p className="text-sm text-ink-3">Loading roster descriptors…</p>
+          <Loading label="Loading roster descriptors" />
         ) : !pts.length ? (
           <EmptyState title="No roster descriptors for this season" body="The roster-metrics endpoint returned no teams with both values." />
         ) : (
@@ -99,9 +100,9 @@ export function RosterShapePanel({ season }: { season: string }) {
                 <MetricHeader metric={y} definition={definitions[y]} short />
               </span>
             </div>
-            <ChartBox height={440}>
+            <ChartFrame title={`${mx.label} vs ${my.label}`} height={440}>
               <Plot data={data} layout={layout} />
-            </ChartBox>
+            </ChartFrame>
           </>
         )}
       </Refetching>

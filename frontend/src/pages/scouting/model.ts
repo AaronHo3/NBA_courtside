@@ -54,3 +54,14 @@ export function contributionShares(contributions: Array<Pick<Contribution, 'metr
 export function roleCaveatText(caveats: string[]): string {
   return caveats.map((c) => (c.trim().endsWith('.') ? c.trim() : `${c.trim()}.`)).join(' ')
 }
+
+/** Registry display name for a trait key; an unmapped key is shown as-is rather than guessed. */
+export function traitLabel(labels: Record<string, string>, key: string): string {
+  return labels[key] ?? key
+}
+
+/** Template display name for a role id from the roles registry; falls back to the id. */
+export function roleLabel(roles: ReadonlyArray<{ role_id: string; label: string }>, id: string | null | undefined): string {
+  if (!id) return ''
+  return roles.find((r) => r.role_id === id)?.label ?? id
+}

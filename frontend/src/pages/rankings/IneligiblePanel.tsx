@@ -36,7 +36,7 @@ export function IneligiblePanel({ rows, meta }: { rows: RankingRow[]; meta: Rank
       {rows.length === 0 ? (
         <p className="text-sm text-ink-2">Every player who met the thresholds has all components, so nobody was excluded.</p>
       ) : (
-        <DataTable data={rows} columns={columns} rowKey={(r) => r.player_id} height={320} dense initialSort={[{ id: 'min', desc: true }]} />
+        <DataTable data={rows} columns={columns} rowKey={(r) => r.player_id} maxHeight={320} dense pinFirstColumn initialSort={[{ id: 'min', desc: true }]} />
       )}
     </Panel>
   )

@@ -19,8 +19,16 @@ export function RankingTable({ rows, meta, colors }: { rows: RankingRow[]; meta:
   const counting = meta.normalization_of_counting_stats
 
   const columns = useMemo<ColumnDef<RankingRow, unknown>[]>(() => [
-    { id: 'rank', header: '#', accessorFn: (r) => r.rank ?? Infinity, cell: (c) => c.row.original.rank ?? '–', meta: { numeric: true } },
-    { id: 'player', header: 'Player', accessorKey: 'full_name', cell: (c) => <span onClick={(e) => e.stopPropagation()}><PlayerIdentity playerId={c.row.original.player_id} name={c.row.original.full_name} team={c.row.original.team_abbreviation} size="xs" /></span> },
+    {
+      // Rank rides inside the pinned player column so both stay readable while the components scroll.
+      id: 'player', header: 'Player', accessorFn: (r) => r.rank ?? Infinity,
+      cell: (c) => (
+        <span className="inline-flex items-center gap-2">
+          <span className="w-6 shrink-0 text-right tnum text-ink-3">{c.row.original.rank ?? '–'}</span>
+          <span onClick={(e) => e.stopPropagation()}><PlayerIdentity playerId={c.row.original.player_id} name={c.row.original.full_name} team={c.row.original.team_abbreviation} size="xs" /></span>
+        </span>
+      ),
+    },
     { id: 'team', header: 'Team', accessorFn: (r) => r.team_abbreviation ?? '', cell: (c) => c.getValue<string>() || '–' },
     { id: 'pos', header: 'Pos', accessorFn: (r) => r.position ?? '', cell: (c) => c.getValue<string>() || '–' },
     { id: 'gp', header: 'GP', accessorFn: (r) => r.gp ?? 0, cell: (c) => formatNumber(c.row.original.gp, 0), meta: { numeric: true } },
@@ -60,8 +68,10 @@ export function RankingTable({ rows, meta, colors }: { rows: RankingRow[]; meta:
         data={rows}
         columns={columns}
         rowKey={(r) => r.player_id}
-        height={520}
+        maxHeight={520}
         dense
+        pinFirstColumn
+        focusable
         onRowClick={(r) => setSelectedId((cur) => (cur === r.player_id ? null : r.player_id))}
         isSelected={(r) => r.player_id === selectedId}
         emptyMessage="No eligible players for these thresholds."

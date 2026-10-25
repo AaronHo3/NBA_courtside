@@ -1,13 +1,19 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Badge, Button, Input, Select } from '@/components/ui'
+import { Badge, Button, EmptyState, Input, Select } from '@/components/ui'
 import { useScoutingMutations, useShortlistDetail, useShortlists } from '@/hooks/useApi'
 import { useCompare } from '@/store/compare'
 import { eligibilityLabel } from './model'
 
 /** The working shortlist: pick or create one, see its entries, add the compare group, draft a report. */
-export function ShortlistDrawer({ shortlistId, onChoose, season, seasonType, role, cohort }: {
+export function ShortlistDrawer({ shortlistId, onChoose, season, seasonType, role, roleName, roleNames = {}, playerNames = {}, cohort }: {
   shortlistId: string | null; onChoose: (id: string | null) => void; season: string; seasonType: string; role: string
+  /** Display name of `role` from the roles registry (falls back to the id). */
+  roleName?: string
+  /** role_id → display name, for the badge of a saved list built from another template. */
+  roleNames?: Record<string, string>
+  /** player_id → name from the candidate rows; entries not in the current candidates show their id. */
+  playerNames?: Record<number, string>
   cohort: { min_gp: number; min_minutes: number; position?: string }
 }) {
   const lists = useShortlists()
@@ -17,8 +23,9 @@ export function ShortlistDrawer({ shortlistId, onChoose, season, seasonType, rol
   const navigate = useNavigate()
   const [label, setLabel] = useState('')
   const sl = detail.data?.data
+  const defaultLabel = `${roleName ?? role} · ${season}`
   const saveTop = async () => {
-    const res = await m.createShortlist.mutateAsync({ label: label || `${role} · ${season}`, season, season_type: seasonType, source: { role, ...cohort, limit: 20 } })
+    const res = await m.createShortlist.mutateAsync({ label: label || defaultLabel, season, season_type: seasonType, source: { role, ...cohort, limit: 20 } })
     onChoose(res.data.shortlist_id)
     setLabel('')
   }
@@ -38,14 +45,14 @@ export function ShortlistDrawer({ shortlistId, onChoose, season, seasonType, rol
           <option value="">None selected</option>
           {(lists.data?.data ?? []).map((s) => <option key={s.shortlist_id} value={s.shortlist_id}>{s.label} ({s.entry_count})</option>)}
         </Select>
-        <Input label="New shortlist name" value={label} onChange={(e) => setLabel(e.target.value)} placeholder={`${role} · ${season}`} className="min-w-48" />
+        <Input label="New shortlist name" value={label} onChange={(e) => setLabel(e.target.value)} placeholder={defaultLabel} className="min-w-48" />
         <Button variant="primary" size="sm" onClick={() => void saveTop()} disabled={m.createShortlist.isPending}>Save top 20 as shortlist</Button>
       </div>
       {sl ? (
         <>
           <div className="flex flex-wrap items-center gap-2 text-xs text-ink-3">
             <span>{sl.entries.length} players · {sl.season} {sl.season_type}</span>
-            {sl.role_id && <Badge>{sl.role_id} v{sl.role_version}</Badge>}
+            {sl.role_id && <Badge>{roleNames[sl.role_id] ?? sl.role_id} v{sl.role_version}</Badge>}
             {sl.ranking_meta && <span>fingerprint {String((sl.ranking_meta as { data_fingerprint?: string }).data_fingerprint ?? '')}</span>}
             <Link to={`/scouting/shortlists/${sl.shortlist_id}`} className="text-accent hover:underline">Open</Link>
           </div>
@@ -56,7 +63,7 @@ export function ShortlistDrawer({ shortlistId, onChoose, season, seasonType, rol
                 <li key={e.player_id} className="flex items-center justify-between gap-2 border-b border-line/60 py-1">
                   <span className="flex items-center gap-2">
                     <span className="tnum text-ink-3">{e.rank}</span>
-                    <Link to={`/players/${e.player_id}`} className="text-ink hover:underline">player {e.player_id}</Link>
+                    <Link to={`/players/${e.player_id}`} className="text-ink hover:underline">{playerNames[e.player_id] ?? `Player ${e.player_id}`}</Link>
                     {e.pinned && <Badge tone="accent">pinned</Badge>}
                     <Badge tone={el.tone}>{el.text}</Badge>
                   </span>
@@ -74,7 +81,7 @@ export function ShortlistDrawer({ shortlistId, onChoose, season, seasonType, rol
           </div>
         </>
       ) : (
-        <p className="text-sm text-ink-2">No shortlist selected. Save the current candidates or pick an existing list.</p>
+        <EmptyState title="No shortlist selected" body="Save the current candidates or pick an existing list." />
       )}
     </div>
   )

@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Data, Layout } from 'plotly.js'
+import { ChartFrame } from '@/components/charts/ChartFrame'
 import { Plot, useChartTheme } from '@/components/charts/Plot'
 import { Panel, Select } from '@/components/ui'
 import { useParam } from '@/lib/urlState'
@@ -8,7 +9,7 @@ import type { TeamSeason } from '@/lib/types'
 import { labelPositions } from './analysis'
 import { SCATTER_PRESETS, TEAM_METRICS, axisFormat, formatTeamMetric, numberAt, teamMetric, wl, axisTitle } from './teamMetrics'
 import { useNarrow } from './useNarrow'
-import { ChartBox, MetricSelect, Note } from './shared'
+import { MetricSelect, Note } from './shared'
 
 const SCATTER_METRICS = TEAM_METRICS.filter((m) => m.key !== 'w')
 
@@ -89,9 +90,9 @@ export function ProfileScatter({ rows, season }: { rows: TeamSeason[]; season: s
         </>
       }
     >
-      <ChartBox height={460}>
+      <ChartFrame title={`${mx.label} vs ${my.label}`} question={`One point per team, ${season}`} height={460}>
         <Plot data={data} layout={layout} onClick={(e) => { const i = e.points[0]?.pointIndex; if (i !== undefined && pts[i]) navigate(`/teams/${pts[i].row.team_id}?season=${encodeURIComponent(season)}`) }} />
-      </ChartBox>
+      </ChartFrame>
       <Note>n = {pts.length} teams, {season}. Where the two metrics move together it is an association across one season of team totals, not a cause; schedule, health and opponent quality are not held constant. {narrow ? 'Labels are hidden at this width; hover or tap a point for the team. ' : ''}Click a point to open the team.</Note>
     </Panel>
   )

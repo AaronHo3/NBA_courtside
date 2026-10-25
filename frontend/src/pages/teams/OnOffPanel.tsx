@@ -1,12 +1,13 @@
 import { useMemo } from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
 import type { Data, Layout } from 'plotly.js'
+import { ChartFrame } from '@/components/charts/ChartFrame'
 import { Plot, useChartTheme } from '@/components/charts/Plot'
 import { DataTable } from '@/components/table/DataTable'
 import { EmptyState, Panel } from '@/components/ui'
 import { formatNumber, formatSigned } from '@/lib/format'
 import type { OnOffRow } from '@/lib/types'
-import { ChartBox, LegendChips, Note } from './shared'
+import { Note } from './shared'
 
 const CAVEAT = 'Raw on/off is not adjusted for teammates, opponents, or minutes: a starter is "off" mostly against benches, and a reserve’s "on" minutes come in different game states. It describes the team with and without a player; it does not say the player caused the gap.'
 const LOW_MIN = 300
@@ -34,12 +35,9 @@ function Dumbbell({ rows }: { rows: OnOffRow[] }) {
     return { data, layout }
   }, [rows, t])
   return (
-    <div className="flex flex-col gap-2">
-      <LegendChips ariaLabel="On/off legend" items={[{ label: 'Team net rating with player on floor', color: t.series[0] }, { label: 'With player off floor', color: t.series[1] }]} />
-      <ChartBox height={60 + 24 * rows.length}>
-        <Plot data={data} layout={layout} config={{ displayModeBar: false }} />
-      </ChartBox>
-    </div>
+    <ChartFrame title="Team net rating, player on vs off the floor" height={60 + 24 * rows.length} legend={[{ label: 'Team net rating with player on floor', color: t.series[0] }, { label: 'With player off floor', color: t.series[1] }]}>
+      <Plot data={data} layout={layout} config={{ displayModeBar: false }} />
+    </ChartFrame>
   )
 }
 
@@ -67,7 +65,7 @@ export function OnOffPanel({ rows }: { rows: OnOffRow[] }) {
       ) : (
         <div className="flex flex-col gap-4">
           <Dumbbell rows={sorted} />
-          <DataTable data={sorted} columns={columns} rowKey={(r) => r.player_id} initialSort={[{ id: 'on_off_net', desc: true }]} height={440} dense />
+          <DataTable data={sorted} columns={columns} rowKey={(r) => r.player_id} initialSort={[{ id: 'on_off_net', desc: true }]} maxHeight={440} dense pinFirstColumn />
           <Note>{CAVEAT}{lowMin ? ` * ${lowMin} player${lowMin === 1 ? '' : 's'} with fewer than ${LOW_MIN} minutes on or off: treat those gaps as noise.` : ''}</Note>
         </div>
       )}

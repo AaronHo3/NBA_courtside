@@ -1,13 +1,14 @@
 import { useMemo } from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
 import type { Data, Layout } from 'plotly.js'
+import { ChartFrame } from '@/components/charts/ChartFrame'
 import { Plot, useChartTheme } from '@/components/charts/Plot'
 import { DataTable } from '@/components/table/DataTable'
 import { EmptyState, Panel } from '@/components/ui'
 import { formatNumber } from '@/lib/format'
 import type { TeamSeasonDetail } from '@/lib/types'
 import { stintBars, type StintBar } from './analysis'
-import { ChartBox, LegendChips, Note } from './shared'
+import { Note } from './shared'
 
 type Stint = TeamSeasonDetail['stints'][number]
 
@@ -36,12 +37,9 @@ function Gantt({ bars }: { bars: StintBar[] }) {
     return { data, layout }
   }, [bars, t])
   return (
-    <div className="flex flex-col gap-2">
-      <LegendChips ariaLabel="Stint legend" items={[{ label: 'Whole stint with this team', color: t.series[0] }, { label: 'Joined or left mid-season', color: t.series[1] }]} />
-      <ChartBox height={60 + 24 * bars.length}>
-        <Plot data={data} layout={layout} config={{ displayModeBar: false }} />
-      </ChartBox>
-    </div>
+    <ChartFrame title="First to last game with this team" height={60 + 24 * bars.length} legend={[{ label: 'Whole stint with this team', color: t.series[0] }, { label: 'Joined or left mid-season', color: t.series[1] }]}>
+      <Plot data={data} layout={layout} config={{ displayModeBar: false }} />
+    </ChartFrame>
   )
 }
 
@@ -53,7 +51,7 @@ function StintTable({ stints, tradedIds }: { stints: Stint[]; tradedIds: Readonl
     { id: 'stints', header: 'Stints', accessorFn: (r) => r.season_stints, meta: { numeric: true } },
     { id: 'traded', header: 'Moved', accessorFn: (r) => (tradedIds.has(r.player_id) || r.season_stints > 1 ? 'yes' : ''), cell: ({ getValue }) => (getValue() as string) || '–' },
   ], [tradedIds])
-  return <DataTable data={stints} columns={columns} rowKey={(r) => r.player_id} initialSort={[{ id: 'min', desc: true }]} height={420} dense />
+  return <DataTable data={stints} columns={columns} rowKey={(r) => r.player_id} initialSort={[{ id: 'min', desc: true }]} maxHeight={420} dense pinFirstColumn />
 }
 
 /** Gantt of first..last game per player (bar thickness = minutes); falls back to a table when game dates are missing. */

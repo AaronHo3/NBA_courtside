@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { clsx } from 'clsx'
-import { Segmented } from '@/components/ui'
+import { EmptyState, ErrorState, Loading, Segmented } from '@/components/ui'
 import { useManifest, useStatus } from '@/hooks/useApi'
 import type { SeasonType } from '@/lib/types'
 import { COVERAGE_STATUSES, humanFamily, shapeCoverage, type CoverageStatus } from './coverage'
@@ -31,10 +31,12 @@ export function CoverageMatrix() {
       method="One chip per (season, family) from the manifest. ok = complete; partial = some rows or seasons missing; stale = older than the refresh window; failed = last fetch errored; missing = never fetched."
       actions={st && <Segmented ariaLabel="Season type" value={active} onChange={(v) => setSeasonType(v as SeasonType)} options={st.season_types.map((t) => ({ value: t, label: t }))} />}
     >
-      {!grid ? (
-        <P>Loading coverage…</P>
+      {status.error ? (
+        <ErrorState error={status.error} retry={() => { void status.refetch() }} />
+      ) : !grid ? (
+        <Loading label="Loading coverage" />
       ) : grid.families.length === 0 ? (
-        <P>No season-scoped families are recorded for {active}.</P>
+        <EmptyState title={`No season-scoped families are recorded for ${active}`} />
       ) : (
         <div className="flex flex-col gap-3">
           <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-2" aria-label="Legend">

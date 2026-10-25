@@ -1,4 +1,4 @@
-import { Badge, Stat } from '@/components/ui'
+import { Badge, ErrorState, Loading, Stat } from '@/components/ui'
 import { useIngestionStatus, useStatus } from '@/hooks/useApi'
 import { Code, Formula, P, Section } from './Prose'
 
@@ -25,8 +25,10 @@ export function DataStatus() {
   const lastRun = ing?.last_run ? summarise(ing.last_run) : null
   return (
     <Section id="data-status" question="Which data is this app serving right now?" method="Status from /api/meta/status; ingestion state from /api/ingestion/status, refreshed every 5 seconds.">
-      {!st ? (
-        <P>Loading status…</P>
+      {status.error ? (
+        <ErrorState error={status.error} retry={() => { void status.refetch() }} />
+      ) : !st ? (
+        <Loading label="Loading status" />
       ) : (
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap items-start gap-x-8 gap-y-3">

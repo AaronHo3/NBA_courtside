@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Badge } from '@/components/ui'
+import { Badge, EmptyState } from '@/components/ui'
 import type { EvidenceItem } from '@/lib/types'
 import { ExternalReferenceButton } from './ExternalReferenceButton'
 
@@ -13,7 +13,7 @@ const CLASS_LABEL: Record<EvidenceItem['evidence_class'], string> = {
 
 /** Evidence items for one event or player; each item names its class so references are never read as observations. */
 export function EvidenceList({ items, emptyText = 'No evidence recorded.' }: { items: EvidenceItem[]; emptyText?: string }) {
-  if (!items.length) return <p className="text-sm text-ink-2">{emptyText}</p>
+  if (!items.length) return <EmptyState title={emptyText} />
   return (
     <ul className="flex flex-col gap-3" data-testid="evidence-list">
       {items.map((it) => (
@@ -26,7 +26,7 @@ export function EvidenceList({ items, emptyText = 'No evidence recorded.' }: { i
           {it.reference && <ExternalReferenceButton url={it.reference.external_url} availability={it.reference.availability} checkedAt={it.reference.availability_checked_at} metadata={it.reference.metadata} />}
           <div className="flex flex-wrap gap-x-3 text-xs text-ink-3">
             <span>id {it.evidence_id}</span>
-            {it.player_ids?.map((p) => <Link key={p} to={`/players/${p}`} className="text-accent hover:underline">player {p}</Link>)}
+            {it.player_ids?.map((p) => <Link key={p} to={`/players/${p}`} className="text-accent hover:underline">Player {p}</Link>)}
           </div>
         </li>
       ))}

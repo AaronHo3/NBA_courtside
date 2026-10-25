@@ -1,13 +1,14 @@
 import { useMemo } from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
 import type { Data, Layout } from 'plotly.js'
+import { ChartFrame } from '@/components/charts/ChartFrame'
 import { Plot, useChartTheme } from '@/components/charts/Plot'
 import { DataTable, downloadCsv } from '@/components/table/DataTable'
 import { Button, EmptyState, Input, Panel } from '@/components/ui'
 import { formatNumber, formatSigned } from '@/lib/format'
 import type { LineupRow } from '@/lib/types'
 import { filterLineups } from './analysis'
-import { ChartBox, LegendChips, MetricHeader, Note } from './shared'
+import { LegendChips, MetricHeader, Note } from './shared'
 
 const CSV_COLS = ['group_name', 'gp', 'w', 'l', 'min', 'poss', 'off_rating', 'def_rating', 'net_rating', 'pace', 'pts']
 
@@ -36,12 +37,14 @@ function LineupDots({ all, minPoss }: { all: LineupRow[]; minPoss: number }) {
     return { data, layout }
   }, [all, minPoss, t])
   return (
-    <div className="flex flex-col gap-2">
-      <LegendChips ariaLabel="Lineup legend" items={[{ label: `≥ ${minPoss} possessions`, color: t.accent }, { label: `Below ${minPoss} possessions (unstable)`, color: t.accent, hollow: true }]} />
-      <ChartBox height={300}>
-        <Plot data={data} layout={layout} />
-      </ChartBox>
-    </div>
+    <ChartFrame
+      title="Net rating by possessions played"
+      // hollow markers need the local legend; ChartFrame's swatches are solid
+      question={<LegendChips ariaLabel="Lineup legend" items={[{ label: `≥ ${minPoss} possessions`, color: t.accent }, { label: `Below ${minPoss} possessions (unstable)`, color: t.accent, hollow: true }]} />}
+      height={300}
+    >
+      <Plot data={data} layout={layout} />
+    </ChartFrame>
   )
 }
 
@@ -76,7 +79,7 @@ export function LineupsPanel({ lineups, minPoss, setMinPoss, team }: { lineups: 
         <div className="flex flex-col gap-4">
           <p className="text-xs text-ink-2">Showing {kept.length} of {lineups.length} lineups with ≥ {formatNumber(minPoss, 0)} possessions.</p>
           <LineupDots all={lineups} minPoss={minPoss} />
-          <DataTable data={kept} columns={columns} rowKey={(r) => r.group_id} initialSort={[{ id: 'poss', desc: true }]} height={400} dense emptyMessage="No lineups reach this possession floor; lower it to see more." />
+          <DataTable data={kept} columns={columns} rowKey={(r) => r.group_id} initialSort={[{ id: 'poss', desc: true }]} maxHeight={400} dense pinFirstColumn emptyMessage="No lineups reach this possession floor; lower it to see more." />
           <Note>Lineup ratings are estimates from the provider's five-man splits: a few hundred possessions can move net rating by double digits, and the five players' individual ratings are not summed here. Minutes and possessions are the sample behind each row.</Note>
         </div>
       )}

@@ -1,12 +1,13 @@
 import { useMemo } from 'react'
 import type { Data, Layout } from 'plotly.js'
+import { ChartFrame } from '@/components/charts/ChartFrame'
 import { Plot, useChartTheme } from '@/components/charts/Plot'
 import { Button, EmptyState, Panel, Select } from '@/components/ui'
 import { useTeamSeasons } from '@/hooks/useApi'
 import { useListParam, useParam } from '@/lib/urlState'
 import type { Team, TeamSeason } from '@/lib/types'
 import { axisFormat, formatTeamMetric, numberAt, teamMetric, wl } from './teamMetrics'
-import { ChartBox, LegendChips, Note } from './shared'
+import { LegendChips, Note } from './shared'
 
 const SLOTS = [0, 1, 2, 3] as const
 const BAR_METRICS = ['net_rating', 'off_rating', 'def_rating', 'pace', 'efg_pct', 'tm_tov_pct'] as const
@@ -116,21 +117,15 @@ export function CompareStrip({ season, seasons, teams, league }: { season: strin
                 yaxis: { type: 'category', autorange: 'reversed', tickfont: { size: 11 } },
               }
               return (
-                <figure key={k} className="m-0 rounded-[var(--radius-control)] border border-line p-2">
-                  <figcaption className="mb-1 text-xs font-medium text-ink-2">{m.label}{m.higherIsBetter === false ? <span className="font-normal text-ink-3"> · lower is better</span> : null}</figcaption>
-                  <ChartBox height={36 + 26 * picked.length}>
-                    <Plot data={data} layout={layout} config={{ staticPlot: false, displayModeBar: false }} />
-                  </ChartBox>
-                </figure>
+                <ChartFrame key={k} title={m.label} question={m.higherIsBetter === false ? 'Lower is better' : undefined} height={36 + 26 * picked.length} className="rounded-[var(--radius-control)] border border-line p-2">
+                  <Plot data={data} layout={layout} config={{ staticPlot: false, displayModeBar: false }} />
+                </ChartFrame>
               )
             })}
           </div>
-          <div>
-            <p className="mb-1 text-xs font-medium text-ink-2">Net rating by season{loading ? ' · loading' : ''}</p>
-            <ChartBox height={300}>
-              <Plot data={trend.data} layout={trend.layout} />
-            </ChartBox>
-          </div>
+          <ChartFrame title="Net rating by season" question={loading ? 'Loading seasons…' : `${cmpSeason} is shaded`} height={300}>
+            <Plot data={trend.data} layout={trend.layout} />
+          </ChartFrame>
           <Note>Season shown in the dot charts: {cmpSeason} (shaded in the trend). Ratings are provider/derived estimates; a team's rise or fall across seasons reflects roster, health, schedule and opponents together.</Note>
         </div>
       )}

@@ -19,8 +19,8 @@ export default function Teams() {
     <>
       <PageHeader
         title="How is each team built, and does it work?"
-        lede="Team ratings and four factors for one season, roster shape against results, and side-by-side comparisons. Everything here is descriptive: associations across 30 teams, never causes."
-        actions={<Badge tone="accent">{season || 'Season'}</Badge>}
+        lede="Ratings and four factors for one season, roster shape against results, and team comparisons: descriptive associations across 30 teams, never causes."
+        context={<Badge tone="accent">{season || 'Season'}</Badge>}
       />
       {!ready ? (
         <Loading />

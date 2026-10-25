@@ -1,4 +1,4 @@
-import { Segmented, Select } from '@/components/ui'
+import { Segmented, Select, Toolbar } from '@/components/ui'
 import type { Normalization } from '@/lib/types'
 import { MIN_MINUTES_OPTIONS, minMinutesLabel } from './format'
 import { POPULATION_LABEL, type PopulationKind } from './model'
@@ -24,7 +24,7 @@ export const NORM_OPTIONS: Array<{ value: Normalization; label: string; title: s
 
 export function Controls(p: Props) {
   return (
-    <div className="mb-4 flex flex-wrap items-end gap-x-4 gap-y-2 rounded-[var(--radius-panel)] border border-line bg-surface px-4 py-3">
+    <Toolbar label="Season, normalisation and population">
       <Select label="Season in focus" value={p.season} onChange={(e) => p.setSeason(e.target.value)}>
         {p.seasons.map((s) => <option key={s} value={s}>{s}</option>)}
       </Select>
@@ -44,6 +44,6 @@ export function Controls(p: Props) {
       <Select label="Minimum minutes (eligibility)" value={String(p.minMinutes)} onChange={(e) => p.setMinMinutes(Number(e.target.value))}>
         {MIN_MINUTES_OPTIONS.map((m) => <option key={m} value={m}>{minMinutesLabel(m)}</option>)}
       </Select>
-    </div>
+    </Toolbar>
   )
 }
