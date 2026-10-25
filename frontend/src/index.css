@@ -50,15 +50,16 @@
   --c-raised: #202124;
   --c-overlay: #26272b;
   --c-line: rgba(255, 255, 255, 0.08);
-  --c-line-strong: rgba(255, 255, 255, 0.16);
+  --c-line-strong: rgba(255, 255, 255, 0.22);
+  --c-control-line: rgba(255, 255, 255, 0.28); /* input/select borders */
   --c-mix: #121314;              /* what tinted borders are mixed against */
   --c-hatch: rgba(255, 255, 255, 0.18);
   --c-hatch-faint: rgba(255, 255, 255, 0.05);
   /* ink */
   --c-ink: #f3efe8;
   --c-ink-2: #b8b2a8;
-  --c-ink-3: #8a857c;
-  --c-ink-4: #5f5b54;
+  --c-ink-3: #a19b91;
+  --c-ink-4: #6f6a62;            /* decorative only (dividers, placeholders); never text */
   /* accent: selection and primary actions */
   --c-accent: #e8742a;
   --c-accent-hover: #f0844a;
@@ -71,6 +72,7 @@
   --c-neg-soft: rgba(239, 106, 90, 0.16);
   /* status */
   --c-amber: #e0a63a;
+  --c-amber-fill: #e0a63a;       /* badge backgrounds only, with --c-accent-ink text */
   --c-amber-soft: rgba(224, 166, 58, 0.14);
   --c-focus: #ffb27a;
   /* chart scaffolding */
@@ -99,6 +101,7 @@
   --overlay: var(--c-overlay);
   --line: var(--c-line);
   --line-strong: var(--c-line-strong);
+  --control-line: var(--c-control-line);
   --ink: var(--c-ink);
   --ink-2: var(--c-ink-2);
   --ink-3: var(--c-ink-3);
@@ -114,6 +117,7 @@
   --warning: var(--c-amber);
   --critical: var(--c-neg);
   --demo: var(--c-amber);
+  --amber-fill: var(--c-amber-fill);
   --grid: var(--c-grid);
   --axis: var(--c-axis);
   --focus: var(--c-focus);
@@ -125,23 +129,25 @@
   --c-raised: #f7f5f1;
   --c-overlay: #ece9e3;
   --c-line: rgba(20, 18, 14, 0.09);
-  --c-line-strong: rgba(20, 18, 14, 0.2);
+  --c-line-strong: rgba(20, 18, 14, 0.28);
+  --c-control-line: rgba(20, 18, 14, 0.34);
   --c-mix: #ffffff;
   --c-hatch: rgba(26, 29, 33, 0.18);
   --c-hatch-faint: rgba(26, 29, 33, 0.04);
   --c-ink: #1b1a17;
   --c-ink-2: #4b4842;
-  --c-ink-3: #78736a;
-  --c-ink-4: #a39e94;
-  --c-accent: #d4621a;
-  --c-accent-hover: #e8742a;
+  --c-ink-3: #66615a;
+  --c-ink-4: #8f8a82;
+  --c-accent: #b8500f;
+  --c-accent-hover: #d4621a;
   --c-accent-ink: #ffffff;
   --c-accent-soft: rgba(212, 98, 26, 0.12);
-  --c-pos: #168a7c;
+  --c-pos: #0f7d70;
   --c-pos-soft: rgba(22, 138, 124, 0.12);
-  --c-neg: #c9473a;
+  --c-neg: #b53d31;
   --c-neg-soft: rgba(201, 71, 58, 0.12);
-  --c-amber: #b57a12;
+  --c-amber: #8a5d0b;
+  --c-amber-fill: #e0a63a;
   --c-amber-soft: rgba(181, 122, 18, 0.14);
   --c-focus: #d4621a;
   --c-grid: #e6e2db;
@@ -156,6 +162,7 @@
   --color-overlay: var(--overlay);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
+  --color-control-line: var(--control-line);
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
   --color-ink-3: var(--ink-3);
@@ -171,11 +178,25 @@
   --color-warning: var(--warning);
   --color-critical: var(--critical);
   --color-demo: var(--demo);
+  --color-amber-fill: var(--amber-fill);
   --font-sans: var(--font-sans);
   --font-display: var(--font-display);
   --font-mono: var(--font-mono);
   --radius-control: var(--radius-control);
   --radius-panel: var(--radius-panel);
+  /* type scale: nothing a person reads as content is below 13px */
+  --text-xs: 13px;
+  --text-xs--line-height: 18px;
+  --text-sm: 14px;
+  --text-sm--line-height: 20px;
+  --text-base: 15px;
+  --text-base--line-height: 22px;
+}
+
+/* secondary metadata only (kbd hints, group labels, header labels, badge text) */
+@utility text-meta {
+  font-size: 12px;
+  line-height: 16px;
 }
 
 /* Utilities are a later layer than the base reset above, so any utility whose name the copilot also
@@ -234,10 +255,10 @@ body {
 select, input, button, textarea { font: inherit; color: inherit; }
 select.control, input.control {
   background: var(--surface);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--control-line);
   border-radius: var(--radius-control);
-  padding: 6px 8px;
-  min-height: 32px;
+  padding: 6px 10px;
+  min-height: 34px;
   transition: border-color var(--dur-fast) var(--ease), background-color var(--dur-fast) var(--ease);
 }
 select.control:hover, input.control:hover { border-color: var(--accent); }
