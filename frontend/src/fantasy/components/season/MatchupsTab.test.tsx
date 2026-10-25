@@ -34,14 +34,25 @@ describe('MatchupsTab', () => {
   it('features my matchup by default and swaps in the card I click', () => {
     render(<MatchupsTab sessionId="sess" userId="m01" />)
     const featured = screen.getByTestId('featured-matchup')
-    expect(within(featured).getByRole('heading').textContent).toMatch(/Aaron.*vs.*Yang/)
+    expect(within(featured).getByRole('heading', { level: 3 }).textContent).toMatch(/Aaron.*vs.*Yang/)
     fireEvent.click(screen.getByRole('button', { name: /Kurdi vs George/ }))
-    expect(within(screen.getByTestId('featured-matchup')).getByRole('heading').textContent).toMatch(/Kurdi.*vs.*George/)
+    expect(within(screen.getByTestId('featured-matchup')).getByRole('heading', { level: 3 }).textContent).toMatch(/Kurdi.*vs.*George/)
     // my own card is now in the grid, still marked as mine, and one click brings it back
     const grid = screen.getByTestId('other-matchups')
     expect(within(grid).getByTestId('user-matchup')).toBeInTheDocument()
     fireEvent.click(within(grid).getByRole('button', { name: /Aaron.*vs.*Yang/ }))
-    expect(within(screen.getByTestId('featured-matchup')).getByRole('heading').textContent).toMatch(/Aaron.*vs.*Yang/)
+    expect(within(screen.getByTestId('featured-matchup')).getByRole('heading', { level: 3 }).textContent).toMatch(/Aaron.*vs.*Yang/)
+  })
+
+  it('lists the other pairings compactly with the favourite win chance', () => {
+    render(<MatchupsTab sessionId="sess" userId="m01" />)
+    const grid = screen.getByTestId('other-matchups')
+    const row = within(grid).getByRole('button', { name: /Kurdi vs George/ })
+    expect(within(row).getByTestId('projected-winner')).toHaveTextContent(/George.*60%/)
+    expect(within(row).queryByTestId('cat-PTS')).toBeNull()
+    expect(within(grid).getByText(/Bye week/)).toBeInTheDocument()
+    // the week select stays in the toolbar above the cards
+    expect(screen.getByLabelText('Week')).toBeInTheDocument()
   })
 
   it('can feature a bye card too', () => {

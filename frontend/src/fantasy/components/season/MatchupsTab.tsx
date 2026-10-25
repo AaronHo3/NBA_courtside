@@ -11,7 +11,7 @@ import { RosterMoves } from './RosterMoves'
 const key = (m: MatchupPairView) => `${m.period}:${m.home_manager_id}`
 const PERIODS = Array.from({ length: 22 }, (_, i) => i + 1)
 
-/** The featured card is mine by default; clicking any other card swaps it into the main frame. */
+/** The featured card is mine by default; the other pairings are a compact list, and clicking one swaps it into the main frame. */
 export function MatchupsTab({ sessionId, userId }: { sessionId: string; userId: string }) {
   const overview = useSeasonStore((s) => s.overview)
   const results = useSeasonStore((s) => s.results)
@@ -73,7 +73,7 @@ export function MatchupsTab({ sessionId, userId }: { sessionId: string; userId: 
             <Icon name="chevron-left" size={13} /> Back to my matchup
           </button>
         )}
-        <span className="status">{others.length + (featured ? 1 : 0)} pairings · click a card to feature it</span>
+        <span className="status">{others.length + (featured ? 1 : 0)} pairings · click one to feature it</span>
       </div>
       {featured ? (
         <div data-testid="featured-matchup" className="featured">
@@ -82,28 +82,13 @@ export function MatchupsTab({ sessionId, userId }: { sessionId: string; userId: 
       ) : (
         <EmptyState title="No ESPN pairings for this week yet">Sync after ESPN publishes the schedule for this matchup period.</EmptyState>
       )}
-      {moves && moves.period === overview.current_period && (
-        <ChartFrame
-          title={`Roster moves in week ${overview.current_period}`}
-          description="Every add, drop and trade ESPN recorded this matchup period, from the synced transaction log. Your team is listed first."
-          legend={[
-            { label: 'added', swatch: 'good' },
-            { label: 'dropped', swatch: 'bad' },
-          ]}
-          testId="roster-moves"
-        >
-          <RosterMoves period={overview.current_period} moves={moves.moves} userId={userId} onOpen={openDrawer} />
-        </ChartFrame>
-      )}
-      {!moves && movesStatus === 'loading' && <p className="muted small-text">Loading roster moves…</p>}
-      {movesStatus === 'error' && <p className="error small-text">Roster moves unavailable: {movesError}</p>}
       {others.length > 0 && (
         <>
           <div className="section-title">
             <h2>Other matchups</h2>
-            <span className="muted">click one to feature it</span>
+            <span className="muted">favourite and its win chance · click one to feature it</span>
           </div>
-          <div className="matchup-grid" data-testid="other-matchups">
+          <div className="matchup-list" data-testid="other-matchups">
             {others.map((m) => (
               <div
                 key={key(m)}
@@ -125,6 +110,21 @@ export function MatchupsTab({ sessionId, userId }: { sessionId: string; userId: 
           </div>
         </>
       )}
+      {moves && moves.period === overview.current_period && (
+        <ChartFrame
+          title={`Roster moves in week ${overview.current_period}`}
+          description="Every add, drop and trade ESPN recorded this matchup period, from the synced transaction log. Your team is listed first."
+          legend={[
+            { label: 'added', swatch: 'good' },
+            { label: 'dropped', swatch: 'bad' },
+          ]}
+          testId="roster-moves"
+        >
+          <RosterMoves period={overview.current_period} moves={moves.moves} userId={userId} onOpen={openDrawer} />
+        </ChartFrame>
+      )}
+      {!moves && movesStatus === 'loading' && <p className="muted small-text">Loading roster moves…</p>}
+      {movesStatus === 'error' && <p className="error small-text">Roster moves unavailable: {movesError}</p>}
     </div>
   )
 }

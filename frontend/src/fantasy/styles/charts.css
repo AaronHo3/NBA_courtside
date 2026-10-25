@@ -393,3 +393,33 @@ table.grid.heat tbody tr:hover > .heat-cell {
     grid-template-columns: 1fr 34px;
   }
 }
+
+/* probability pair: captions and "close" chip (Task 6) */
+.pair-caption {
+  display: block;
+  font-size: var(--fs-xs);
+  color: var(--ink-3);
+}
+.pair-row .pair-label {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0 6px;
+}
+.pair-row .pair-values {
+  flex-basis: 100%;
+}
+.pair-close {
+  padding: 0 5px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-xs);
+  line-height: 16px;
+  color: var(--ink-2);
+}
+.pair-head .pair-side {
+  font-weight: 600;
+  color: var(--ink-2);
+}
+/* end probability pair (Task 6) */

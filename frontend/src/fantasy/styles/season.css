@@ -36,26 +36,20 @@
   animation: spin 0.9s linear infinite;
 }
 
-/* matchups */
-.featured .matchup-card {
-  padding: var(--s-4) var(--s-5);
-}
-.matchup-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
-  gap: var(--s-3);
-}
+/* matchups (Task 6: featured card = projected outcome, then ESPN actuals; others = compact list) */
 .matchup-card {
   border: 1px solid var(--border);
   border-radius: var(--r);
   padding: var(--s-3) var(--s-4);
   background: var(--surface);
   min-width: 0;
-  height: 100%;
+}
+.featured .matchup-card {
+  padding: var(--s-4) var(--s-5);
+  border-left: 3px solid var(--teal);
 }
 .matchup-card.mine {
-  background: var(--mine);
-  border-color: var(--mine-border);
+  border-left: 3px solid var(--amber);
 }
 .mc-head {
   display: flex;
@@ -63,56 +57,110 @@
   justify-content: space-between;
   gap: var(--s-2);
   flex-wrap: wrap;
-  margin-bottom: var(--s-2);
+  margin-bottom: var(--s-3);
 }
 .mc-title {
   font-family: var(--font-display);
   font-size: var(--fs-lg);
   font-weight: 700;
+  min-width: 0;
 }
 .featured .mc-title {
   font-size: var(--fs-xl);
 }
-.mc-odds {
+.mc-section + .mc-section {
+  margin-top: var(--s-4);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--border);
+}
+.mc-section-title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink-2);
+  margin: 0 0 var(--s-2);
+}
+.mc-section-note {
+  font-weight: 400;
+  color: var(--ink-3);
+}
+.mc-summary {
   display: flex;
-  align-items: baseline;
-  gap: var(--s-2) var(--s-4);
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s-3) var(--s-5);
   flex-wrap: wrap;
   margin-bottom: var(--s-3);
 }
 .mc-winner {
   display: inline-flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
+  min-width: 0;
 }
 .mc-k {
   font-size: var(--fs-xs);
   color: var(--ink-3);
 }
-.mc-v {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 8px;
-}
 .mc-name {
   font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--ink);
+}
+.mc-headline {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0 var(--s-1);
+  font-variant-numeric: tabular-nums;
 }
 .mc-p {
   font-family: var(--font-display);
-  font-size: 32px;
+  font-size: var(--fs-2xl);
   font-weight: 700;
-  color: var(--good);
-  line-height: 1;
+  color: var(--ink);
+  line-height: 1.05;
 }
 .featured .mc-p {
-  font-size: 44px;
+  font-size: 40px;
 }
-.mc-rest,
-.mc-exp {
+.mc-rest {
+  font-size: var(--fs-md);
+  color: var(--ink-2);
+}
+.mc-facts {
+  display: flex;
+  gap: var(--s-3) var(--s-5);
+  flex-wrap: wrap;
+  margin: 0;
+}
+.mc-facts dt {
+  font-size: var(--fs-xs);
+  color: var(--ink-3);
+}
+.mc-facts dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--ink);
+}
+.mc-context {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-1) var(--s-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--s-3);
   font-size: var(--fs-sm);
+  color: var(--ink-2);
 }
-.mc-exp {
-  margin-left: auto;
+.mc-context-line {
+  padding-top: 5px;
+  font-variant-numeric: tabular-nums;
+}
+.mc-context .disclosure {
+  flex: 1 1 260px;
+  min-width: 0;
 }
 .mc-note,
 .mc-notes {
@@ -122,14 +170,63 @@
 .mc-notes {
   padding-left: 16px;
 }
-.matchup-card.compact .mc-p {
-  font-size: 24px;
+.mc-bye {
+  margin: var(--s-1) 0 0;
+  font-size: var(--fs-sm);
+}
+table.grid.mc-actual-table {
+  width: 100%;
+  max-width: 560px;
+}
+table.grid.mc-actual-table td.won {
+  color: var(--ink);
+  font-weight: 700;
+}
+table.grid.mc-actual-table tfoot th,
+table.grid.mc-actual-table tfoot td {
+  border-top: 1px solid var(--border-strong);
+  font-weight: 600;
+}
+/* other pairings: one compact row each */
+.matchup-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: var(--s-2);
+}
+.matchup-card.compact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-3);
+  min-height: 44px;
+  height: 100%;
 }
 .matchup-card.compact .mc-title {
-  font-size: var(--fs-md);
+  font-family: var(--font-body);
+  font-size: var(--fs);
+  font-weight: 600;
 }
-.matchup-card.compact .mc-exp {
-  display: none;
+.matchup-card.compact .mc-bye {
+  margin: 0;
+  font-size: var(--fs-xs);
+  text-align: right;
+}
+.mc-fav {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  flex: none;
+  font-size: var(--fs-sm);
+}
+.mc-fav .mc-name {
+  font-size: var(--fs-sm);
+}
+.matchup-card.compact .mc-p {
+  font-family: var(--font-body);
+  font-size: var(--fs-md);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
 .matchup-pick {
   cursor: pointer;
@@ -141,9 +238,14 @@
   border-color: var(--teal);
   box-shadow: 0 0 0 3px var(--teal-soft);
 }
+.matchup-pick:hover .matchup-card.mine,
+.matchup-pick:focus-visible .matchup-card.mine {
+  border-left-color: var(--amber);
+}
 .matchup-pick:focus-visible {
   outline: none;
 }
+/* end matchups */
 
 /* free agents swap */
 .swap {
@@ -267,13 +369,13 @@ table.grid.results tr.projected-row .swatch {
   .featured .matchup-card {
     padding: var(--s-3);
   }
+  .featured .mc-title {
+    font-size: var(--fs-lg);
+  }
   .featured .mc-p {
-    font-size: 34px;
+    font-size: var(--fs-2xl);
   }
-  .mc-exp {
-    margin-left: 0;
-  }
-  .matchup-grid {
+  .matchup-list {
     grid-template-columns: 1fr;
   }
 }

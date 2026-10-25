@@ -25,16 +25,34 @@ interface ProbabilityPairProps {
   rowClass?: (key: string, pLeft: number) => string
   /** Appended to the values tooltip (e.g. how rates are computed). */
   valuesNote?: string
+  /** Rows whose left share falls inside [lo, hi] get a "close" chip, e.g. [0.4, 0.6]. */
+  closeBand?: readonly [number, number]
+  /** Optional captions under the side names, e.g. "projected winner". */
+  leftCaption?: string
+  rightCaption?: string
 }
 
-/** Nine category bars, one row per category, both sides' chances with exact percentages. */
-export function ProbabilityPair({ leftName, rightName, rows, valuesLabel, compact = false, rowTestId, rowClass, valuesNote }: ProbabilityPairProps) {
+/** Compared on the printed whole percentages so the chip always agrees with the numbers shown. */
+function isClose(p: number, band?: readonly [number, number]): boolean {
+  if (band === undefined) return false
+  const pct = Math.round(p * 100)
+  return pct >= Math.round(band[0] * 100) && pct <= Math.round(band[1] * 100)
+}
+
+/** One centred bar per category, both sides' chances printed at the ends; optional "close" chip for toss-ups. */
+export function ProbabilityPair({ leftName, rightName, rows, valuesLabel, compact = false, rowTestId, rowClass, valuesNote, closeBand, leftCaption, rightCaption }: ProbabilityPairProps) {
   return (
     <div className={`pair${compact ? ' compact' : ''}`} role="list" aria-label="Category odds">
       <div className="pair-head" aria-hidden="true">
-        <span className="pair-side">{leftName}</span>
+        <span className="pair-side">
+          {leftName}
+          {leftCaption && <span className="pair-caption">{leftCaption}</span>}
+        </span>
         <span className="pair-label" />
-        <span className="pair-side right">{rightName}</span>
+        <span className="pair-side right">
+          {rightName}
+          {rightCaption && <span className="pair-caption">{rightCaption}</span>}
+        </span>
       </div>
       {rows.map((r) => {
         const id = rowTestId ? rowTestId(r.key) : undefined
@@ -59,6 +77,7 @@ export function ProbabilityPair({ leftName, rightName, rows, valuesLabel, compac
         const pR = 1 - pL
         const leftLeads = pL > 0.5
         const rightLeads = pR > 0.5
+        const close = isClose(pL, closeBand)
         return (
           <div key={r.key} role="listitem" className={`pair-row${leftLeads ? ' lead-left' : rightLeads ? ' lead-right' : ' even'}${rowClass ? ` ${rowClass(r.key, pL)}` : ''}`} data-testid={id} title={`${leftName} wins ${r.label} in ${fmtPct(pL)} of simulated weeks${r.title ? ` · ${r.title}` : ''}`}>
             <span className={`pair-cell left${leftLeads ? ' lead' : ''}`} data-testid={id ? `${id}-winner` : undefined}>
@@ -69,6 +88,7 @@ export function ProbabilityPair({ leftName, rightName, rows, valuesLabel, compac
             </span>
             <span className="pair-label">
               <span className="pair-cat">{r.label}</span>
+              {close && <span className="pair-close">close</span>}
               {(r.leftValue || r.rightValue) && (
                 <span className="pair-values" title={[valuesLabel, valuesNote].filter(Boolean).join(' · ')}>
                   {r.leftValue ?? '—'} <span className="muted">·</span> {r.rightValue ?? '—'}
