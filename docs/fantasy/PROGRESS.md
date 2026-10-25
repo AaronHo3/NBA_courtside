@@ -231,6 +231,12 @@ API fields `minutes` on free agents/overview, MIN column and override control in
 Players without an NBA team are dropped from the free-agent list. Live session 5291db641583 has
 Vucevic pinned at 5 min.
 
+### 2026-10-25 — portfolio demo media
+`frontend/scripts/demo-tour.mjs` records a scripted Playwright tour (video + screenshots) for the
+README; `docs/media/` holds the GIF, MP4 and gallery shots. Recorded against a sanitized clone of
+the live session (manager, team and league names replaced; players and stats real). The clone and
+its league payload live only locally under `data/`, like every other session.
+
 ## How to resume
 Read CLAUDE.md, this file, DRAFT_COPILOT_PLAN.md and DECISIONS.md. `make install && make test`.
 Real data: `make refresh && make build-snapshot`. Ports 8000/5173 may be busy on this machine

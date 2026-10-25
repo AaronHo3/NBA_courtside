@@ -13,6 +13,28 @@ Nothing talks to the network on request paths; both services bind to localhost. 
 player headshots and team logos from the public NBA/ESPN image CDNs (initials and tricodes are the
 fallback when an image is unavailable).
 
+## Demo
+
+![Courtside: league matchups, power rankings, free agents and performers](docs/media/courtside-demo.gif)
+
+The clip above is the fantasy half running against a copy of my own ESPN league for the 2026-27
+season: real NBA players, the real schedule and this season's game logs, with every manager, team
+and league name replaced. The full 74-second tour, which also covers the research pages and a live
+draft, is [docs/media/courtside-demo.mp4](docs/media/courtside-demo.mp4).
+
+| | |
+|---|---|
+| [![Draft: best pick now with category impact](docs/media/shots/draft.png)](docs/media/shots/draft.png) **Draft copilot.** Value above replacement, category impact under your strategy, whether the player survives until your next pick, and the next-best alternatives. | [![This week's matchup with per-category odds](docs/media/shots/league-matchup.png)](docs/media/shots/league-matchup.png) **League matchups.** Simulated weeks on the real NBA schedule give a win chance per category, with ESPN's running totals underneath. |
+| [![Power rankings heatmap](docs/media/shots/power-rankings.png)](docs/media/shots/power-rankings.png) **Power rankings.** Expected categories won against the league-average opponent, and each team's chance in every category. | [![Free agents with the swap panel](docs/media/shots/free-agents.png)](docs/media/shots/free-agents.png) **Free agents.** Each add ranked against your roster with the cheapest drop, actual vs projected lines, and in-season minutes with a per-player override. |
+| [![Player profile: eight seasons of trends](docs/media/shots/player-profile.png)](docs/media/shots/player-profile.png) **Player profile.** Season-by-season stints, rate trends, shot zones and matchup history for any player. | [![Who guards whom](docs/media/shots/matchups.png)](docs/media/shots/matchups.png) **Matchups.** Tracked scorer–defender pairs: where a scorer's efficiency fell or rose, with sample-size caveats attached. |
+| [![Shooting lab hexbins](docs/media/shots/shooting-lab.png)](docs/media/shots/shooting-lab.png) **Shooting lab.** Hexbins, provider zones or raw markers; frequency and accuracy encoded separately with Wilson intervals. | [![Team performers](docs/media/shots/performers.png)](docs/media/shots/performers.png) **Performers.** Who carried a fantasy team this week and who beat their projection, from ESPN's applied box scores. |
+
+The demo is scripted and reproducible: `node frontend/scripts/demo-tour.mjs --session <id> --out <dir>`
+drives the app with Playwright while `make dev` is running, records the video and takes one
+screenshot per step; `--short` records only the fantasy highlights used for the GIF. Point it at a
+session whose names are already pseudonymous. The MP4 and GIF were encoded with ffmpeg
+(`libx264 -crf 24` and a 12 fps, 960 px palette GIF).
+
 ## The interface
 
 One shell for both halves: a grouped sidebar (Overview · NBA research · Scouting & film · Fantasy ·
