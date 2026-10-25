@@ -36,18 +36,33 @@ export function Portrait({ name, src, team, size = 'md', className, ring = true 
   }
   return (
     <span className={base} style={style}>
-      <img src={src} alt="" width={px} height={px} loading="lazy" decoding="async" className="h-full w-full object-cover object-top scale-[1.15] translate-y-[6%]" onError={() => setFailed(true)} />
+      <img src={src} alt="" width={px} height={px} style={{ width: px, height: px }} loading="lazy" decoding="async" className="h-full w-full object-cover object-top scale-[1.15] translate-y-[6%]" onError={() => setFailed(true)} />
     </span>
   )
 }
 
-/** Team logo with the tricode as fallback; `teamId` is the NBA team id. */
+/**
+ * Team logo with the tricode as fallback; `teamId` is the NBA team id. Logo and fallback occupy the same
+ * `size`×`size` box so rows never shift when the CDN is blocked or a team has no logo.
+ */
 export function TeamMark({ abbreviation, teamId, size = 20, className }: { abbreviation: string | null | undefined; teamId?: number | null; size?: number; className?: string }) {
   const [failed, setFailed] = useState(false)
+  const box: CSSProperties = { width: size, height: size }
   if (!teamId || failed) {
-    return <span className={clsx('inline-flex items-center rounded-sm px-1 font-mono text-meta font-medium text-ink-2', className)} style={{ boxShadow: `inset 0 -2px 0 ${teamColour(abbreviation)}` }}>{abbreviation ?? '—'}</span>
+    const code = abbreviation ?? '—'
+    return (
+      <span
+        data-testid="teammark-fallback"
+        role="img"
+        aria-label={abbreviation ?? 'Unknown team'}
+        className={clsx('inline-flex shrink-0 items-center justify-center overflow-hidden rounded-sm bg-raised font-display font-semibold leading-none tracking-tight text-ink-2', className)}
+        style={{ ...box, fontSize: Math.max(7, Math.round(size * (code.length > 2 ? 0.4 : 0.5))), boxShadow: `inset 0 -2px 0 ${teamColour(abbreviation)}` }}
+      >
+        {code}
+      </span>
+    )
   }
-  return <img src={nbaLogoUrl(teamId)} alt={abbreviation ?? ''} width={size} height={size} loading="lazy" className={clsx('inline-block', className)} onError={() => setFailed(true)} />
+  return <img src={nbaLogoUrl(teamId)} alt={abbreviation ?? ''} width={size} height={size} style={box} loading="lazy" className={clsx('inline-block shrink-0', className)} onError={() => setFailed(true)} />
 }
 
 export type PlayerIdentityProps = {
@@ -75,7 +90,7 @@ export function PlayerIdentity({ playerId, name, team, teamId, position, meta, s
     <span className={clsx('inline-flex min-w-0 items-center gap-2', rail && 'team-rail pl-2', className)} style={rail ? ({ ['--team' as string]: teamColour(team) } as CSSProperties) : undefined}>
       <Portrait name={name} src={headshot} team={team} size={size} ring={size !== 'xs'} />
       <span className="flex min-w-0 flex-col leading-tight">
-        <span className={clsx('truncate font-medium', size === 'lg' || size === 'xl' ? 'text-base' : 'text-[13px]')}>{nameEl}</span>
+        <span className={clsx('truncate font-medium', size === 'lg' || size === 'xl' ? 'text-base' : 'text-xs')}>{nameEl}</span>
         <span className="flex items-center gap-1.5 text-meta text-ink-3">
           {(team || teamId) && <TeamMark abbreviation={team} teamId={teamId} size={14} />}
           {position && <span>{position}</span>}
