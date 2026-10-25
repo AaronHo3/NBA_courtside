@@ -1,3 +1,5 @@
+import threading
+
 import pytest
 
 from app.draft.events import DraftError, EventType
@@ -255,3 +257,45 @@ def test_session_sync_roundtrip(store):
     assert store.get_sync(sid)["fetched_at"] == "later"
     store.delete_session(sid)
     assert store.get_sync(sid) is None
+
+
+def test_concurrent_reads_and_appends_do_not_interleave(tmp_path):
+    """Many request threads share one store (uvicorn runs sync endpoints in a threadpool)."""
+    store = SessionStore(tmp_path / "c.sqlite")
+    cfg = demo_league_config(user_pick=1, n_managers=3)
+    sid = store.create_session(cfg, name="concurrency")
+    stats = [{"period": p, "manager_id": "m01", "player_id": f"p{i}", "pts": i} for p in (1, 2) for i in range(20)]
+    store.upsert_period_player_stats(sid, stats)
+    errors: list[BaseException] = []
+
+    def reader():
+        try:
+            for _ in range(200):
+                meta = store.session_meta(sid)
+                assert meta is not None and meta["name"] == "concurrency"
+                st = store.state(sid)
+                assert st.league.name == cfg.name
+                assert store.periods_with_stats(sid) == [1, 2]
+                assert len(store.period_player_stats(sid, period=1)) == 20
+        except BaseException as e:  # noqa: BLE001 - collected and asserted on the main thread
+            errors.append(e)
+
+    def writer(w: int):
+        try:
+            for i in range(50):
+                store.append(sid, EventType.note, {"text": f"w{w}-n{i}"})
+                store.upsert_period_player_stats(sid, stats[:5])
+        except BaseException as e:  # noqa: BLE001
+            errors.append(e)
+
+    threads = [threading.Thread(target=reader) for _ in range(6)]
+    threads += [threading.Thread(target=writer, args=(w,)) for w in range(2)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    try:
+        assert errors == []
+        assert sum(1 for e in store.events(sid) if e.type == EventType.note) == 100
+    finally:
+        store.close()

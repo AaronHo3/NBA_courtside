@@ -1,4 +1,16 @@
-"""SQLite-backed session store: append-only events, idempotency, optimistic concurrency, export."""
+"""SQLite-backed session store: append-only events, idempotency, optimistic concurrency, export.
+
+Thread safety: uvicorn runs sync endpoints in a threadpool, so one ``SessionStore`` is used from many
+threads at once. A single shared ``sqlite3.Connection`` interleaves cursors and transactions across
+threads (``InterfaceError``, empty or all-``None`` rows), so each thread gets its own connection
+(``threading.local``), opened lazily with the same pragmas; the schema is initialised once in
+``__init__``. Every transaction begins and ends inside one method call, so nothing needs a
+connection to outlive a call. Writes (and the revision check that guards ``append``) still run
+under one ``RLock`` so they are serialised in-process; reads run concurrently under WAL snapshot
+isolation. Connections are opened with ``check_same_thread=False`` only so ``close()`` (and pruning
+of connections owned by exited worker threads) can close them from another thread; each connection
+is only ever used by the thread that opened it.
+"""
 
 from __future__ import annotations
 
@@ -41,6 +53,8 @@ CREATE TABLE IF NOT EXISTS session_sync (
 );
 """
 
+BUSY_TIMEOUT_S = 10.0  # cross-connection write waits (WAL readers never block)
+
 
 class ConflictError(Exception):
     def __init__(self, expected: int, actual: int):
@@ -51,15 +65,50 @@ class ConflictError(Exception):
 class SessionStore:
     def __init__(self, path: str | Path):
         self.path = str(path)
-        self._lock = threading.RLock()
-        self._conn = sqlite3.connect(self.path, check_same_thread=False, isolation_level=None)
+        self._lock = threading.RLock()  # serialises writes and the state cache
+        self._local = threading.local()
+        self._conns_lock = threading.Lock()
+        self._conns: list[tuple[threading.Thread, sqlite3.Connection]] = []
+        self._closed = False
         self._conn.execute("PRAGMA journal_mode=WAL")
-        self._conn.execute("PRAGMA foreign_keys=ON")
         self._conn.executescript(DDL)
         self._state_cache: dict[str, DraftState] = {}
 
+    @property
+    def _conn(self) -> sqlite3.Connection:
+        """The calling thread's connection, opened on first use."""
+        conn = getattr(self._local, "conn", None)
+        if conn is None:
+            conn = self._open()
+            self._local.conn = conn
+        return conn
+
+    def _open(self) -> sqlite3.Connection:
+        with self._conns_lock:
+            if self._closed:
+                raise sqlite3.ProgrammingError("Cannot operate on a closed SessionStore.")
+            self._prune_dead_locked()
+            conn = sqlite3.connect(self.path, check_same_thread=False, isolation_level=None, timeout=BUSY_TIMEOUT_S)
+            conn.execute("PRAGMA foreign_keys=ON")
+            self._conns.append((threading.current_thread(), conn))
+            return conn
+
+    def _prune_dead_locked(self) -> None:
+        """Close connections whose owning thread has exited (idle threadpool workers are reaped)."""
+        alive: list[tuple[threading.Thread, sqlite3.Connection]] = []
+        for thread, conn in self._conns:
+            if thread.is_alive():
+                alive.append((thread, conn))
+            else:
+                conn.close()
+        self._conns = alive
+
     def close(self) -> None:
-        self._conn.close()
+        with self._conns_lock:
+            self._closed = True
+            conns, self._conns = self._conns, []
+        for _, conn in conns:
+            conn.close()
 
     # --- sessions -------------------------------------------------------------------------
     def create_session(
@@ -183,7 +232,8 @@ class SessionStore:
                 for rec in records:
                     self._conn.execute(
                         "INSERT INTO period_player_stats VALUES (?,?,?,?,?) "
-                        "ON CONFLICT(session_id, period, manager_id, player_id) DO UPDATE SET record_json=excluded.record_json",
+                        "ON CONFLICT(session_id, period, manager_id, player_id) "
+                        "DO UPDATE SET record_json=excluded.record_json",
                         (session_id, int(rec["period"]), rec["manager_id"], rec["player_id"], json.dumps(rec)),
                     )
                 self._conn.execute("COMMIT")
