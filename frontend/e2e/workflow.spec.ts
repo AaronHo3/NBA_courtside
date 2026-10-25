@@ -15,15 +15,17 @@ test.describe('core research workflow', () => {
     const errors = await noConsoleErrors(page)
     await page.goto(`/explorer?season=${SEASON}`)
     await expect(page.getByRole('heading', { name: 'Who does what, league-wide?' })).toBeVisible()
+    // population filters sit in a collapsed disclosure above the chart toolbar
+    await page.getByTestId('explorer-population').locator('summary').click()
     await page.getByRole('combobox', { name: 'Position' }).selectOption('C')
     await expect(page).toHaveURL(/pos=C/)
     const rows = page.locator('tbody tr[data-index]')
     await expect(rows.first()).toBeVisible()
     await expect(rows.first()).toContainText(/C/)
-    // first click selects the row (sel= in the URL), second opens the profile
+    // a click only selects the row (sel= in the URL); the selection strip opens the profile
     await rows.first().click()
-    await expect(page).toHaveURL(/sel=\d+/)
-    await rows.first().click()
+    await expect(page).toHaveURL(/\/explorer\?.*sel=\d+/)
+    await page.getByTestId('explorer-selection').getByRole('link', { name: 'Open profile →' }).click()
     await expect(page).toHaveURL(/\/players\/\d+/)
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
     await page.getByRole('tab', { name: 'Advanced' }).click()

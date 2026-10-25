@@ -45,6 +45,13 @@ describe('useExplorerState', () => {
     expect(result.current.state.isDefaultFilters).toBe(true)
   })
 
+  it('writes size=none for a uniform-size preset so the points default does not come back', () => {
+    const { result } = renderHook(useStateAndSearch, { wrapper: wrapperFor('/?season=2025-26') })
+    act(() => result.current.state.applyPreset(PRESETS.find((p) => p.key === 'volume-eff')!))
+    expect(new URLSearchParams(result.current.search).get('size')).toBe('none')
+    expect(result.current.state.size).toBe('none')
+  })
+
   it('relaxes thresholds to zero in a single update', () => {
     const { result } = renderHook(useStateAndSearch, { wrapper: wrapperFor('/?season=2025-26') })
     act(() => result.current.state.relaxThresholds())

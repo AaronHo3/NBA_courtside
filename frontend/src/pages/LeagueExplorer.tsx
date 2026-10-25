@@ -1,24 +1,24 @@
 import { useCallback, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { downloadCsv } from '@/components/table/DataTable'
-import { Button, EmptyState, ErrorState, Panel, Refetching, SkeletonChart } from '@/components/ui'
+import { Button, Disclosure, EmptyState, ErrorState, Panel, Refetching, SkeletonChart } from '@/components/ui'
 import { useExplorer, useMetricIndex } from '@/hooks/useApi'
 import { useSeason } from '@/hooks/useSeason'
 import { csvUrl } from '@/lib/api'
 import { NORMALIZATION_LABEL } from '@/lib/format'
 import type { PlayerRow } from '@/lib/types'
 import { MAX_COMPARE, useCompare } from '@/store/compare'
+import { ChartControls, type ChartPatch } from './explorer/ChartControls'
 import { ExplorerChart } from './explorer/ExplorerChart'
 import { ExplorerTable } from './explorer/ExplorerTable'
 import { FilterRow } from './explorer/FilterRow'
-import { clampSelection, groupMetricOptions, type Preset } from './explorer/helpers'
-import { PARAM_KEYS, useExplorerState } from './explorer/useExplorerState'
+import { SelectionStrip } from './explorer/SelectionStrip'
+import { clampSelection, groupMetricOptions, populationSummary, type Preset } from './explorer/helpers'
+import { DEFAULTS, encodingParam, PARAM_KEYS, useExplorerState } from './explorer/useExplorerState'
 
 const CSV_PATH = '/api/analytics/league/explorer.csv'
 
 export default function LeagueExplorer() {
-  const navigate = useNavigate()
   const { season, seasonType, ready } = useSeason()
   const state = useExplorerState()
   const metrics = useMetricIndex()
@@ -37,18 +37,14 @@ export default function LeagueExplorer() {
   const groups = useMemo(() => groupMetricOptions(metrics.list, rows, state.normalization), [metrics.list, rows, state.normalization])
 
   const compareIds = useMemo(() => compare.players.map((p) => p.player_id), [compare.players])
-  const highlightedIds = useMemo(() => [...compareIds, ...(state.selected ? [state.selected] : []), ...(hoverId ? [hoverId] : [])], [compareIds, state.selected, hoverId])
+  const markedIds = useMemo(() => [...compareIds, ...(hoverId ? [hoverId] : [])], [compareIds, hoverId])
   const rowById = useMemo(() => new Map(rows.map((r) => [r.player_id, r])), [rows])
+  const selectedRow = state.selected ? rowById.get(state.selected) ?? null : null
 
-  const openPlayer = useCallback((id: number) => navigate(`/players/${id}?season=${encodeURIComponent(season)}`), [navigate, season])
-
-  const onRowClick = useCallback(
-    (row: PlayerRow) => {
-      if (state.selected === row.player_id) openPlayer(row.player_id)
-      else state.setSelected(row.player_id)
-    },
-    [state, openPlayer],
-  )
+  // Select-then-act: a click (marker or row) only selects; navigation lives on explicit links.
+  const { setSelected } = state
+  const select = useCallback((id: number) => setSelected(id), [setSelected])
+  const onRowClick = useCallback((row: PlayerRow) => setSelected(row.player_id), [setSelected])
 
   const onToggleCompare = useCallback(
     (row: PlayerRow) => {
@@ -70,12 +66,12 @@ export default function LeagueExplorer() {
   )
 
   const onChartChange = useCallback(
-    (patch: { x?: string; y?: string; size?: string; color?: string; medians?: boolean }) =>
+    (patch: ChartPatch) =>
       state.setMany({
-        ...(patch.x !== undefined ? { [PARAM_KEYS.x]: patch.x } : {}),
-        ...(patch.y !== undefined ? { [PARAM_KEYS.y]: patch.y } : {}),
-        ...(patch.size !== undefined ? { [PARAM_KEYS.size]: patch.size === 'none' ? null : patch.size } : {}),
-        ...(patch.color !== undefined ? { [PARAM_KEYS.color]: patch.color === 'none' ? null : patch.color } : {}),
+        ...(patch.x !== undefined ? { [PARAM_KEYS.x]: encodingParam('x', patch.x) } : {}),
+        ...(patch.y !== undefined ? { [PARAM_KEYS.y]: encodingParam('y', patch.y) } : {}),
+        ...(patch.size !== undefined ? { [PARAM_KEYS.size]: encodingParam('size', patch.size) } : {}),
+        ...(patch.color !== undefined ? { [PARAM_KEYS.color]: encodingParam('color', patch.color) } : {}),
         ...(patch.medians !== undefined ? { [PARAM_KEYS.medians]: patch.medians ? '1' : null } : {}),
       }),
     [state],
@@ -86,6 +82,8 @@ export default function LeagueExplorer() {
   const exportSelectionHref = csvUrl(CSV_PATH, { ...params, ids: compareIds })
   const fallbackCsv = () => downloadCsv(`explorer-${season}-${state.normalization}.csv`, rows as Record<string, unknown>[])
 
+  // Normalization lives with the chart controls, so it does not open the population filters.
+  const filtersAtDefault = state.teamId === 0 && !state.position && !state.query && state.ageMin === 0 && state.ageMax === 0 && state.minGp === DEFAULTS.minGp && state.minMinutes === DEFAULTS.minMinutes
   const normLabel = NORMALIZATION_LABEL[state.normalization].toLowerCase()
   const activeMetrics = [state.x, state.y, state.size, state.color]
 
@@ -93,9 +91,16 @@ export default function LeagueExplorer() {
     <>
       <PageHeader
         title="Who does what, league-wide?"
-        lede={`Every eligible player for ${season || '…'} ${seasonType} on one plot, with counting stats shown ${normLabel}. Pick two metrics, size and colour a third and fourth, then lasso a cluster to compare.`}
+        lede={`Every eligible player for ${season || '…'} ${seasonType} on one plot, with counting stats shown ${normLabel}. Pick two metrics, click a player to select them, or lasso a cluster to compare.`}
       />
-      <FilterRow state={state} population={population} hidden={hidden} />
+      <Disclosure
+        summary={populationSummary(population, hidden)}
+        defaultOpen={!filtersAtDefault}
+        testId="explorer-population"
+        className="mb-4 bg-surface"
+      >
+        <FilterRow state={state} />
+      </Disclosure>
 
       {notice && (
         <div role="status" className="mb-3 flex items-center justify-between gap-3 rounded-[var(--radius-control)] border border-line-strong bg-raised px-3 py-2 text-sm text-ink">
@@ -118,6 +123,19 @@ export default function LeagueExplorer() {
           </>
         }
       >
+        <ChartControls
+          groups={groups}
+          normalization={state.normalization}
+          x={state.x}
+          y={state.y}
+          size={state.size}
+          color={state.color}
+          medians={state.medians}
+          onChange={onChartChange}
+          onPreset={onPreset}
+          onNormalization={state.setNormalization}
+          onReset={state.reset}
+        />
         {query.isError ? (
           <ErrorState error={query.error} retry={() => query.refetch()} />
         ) : query.isPending ? (
@@ -141,7 +159,6 @@ export default function LeagueExplorer() {
           <Refetching loading={query.isFetching}>
             <ExplorerChart
               rows={rows}
-              groups={groups}
               getMetric={metrics.get}
               normalization={state.normalization}
               x={state.x}
@@ -151,13 +168,26 @@ export default function LeagueExplorer() {
               medians={state.medians}
               minGp={state.minGp}
               minMinutes={state.minMinutes}
-              highlightedIds={highlightedIds}
-              onChange={onChartChange}
-              onPreset={onPreset}
-              onPointClick={openPlayer}
+              selectedId={state.selected}
+              markedIds={markedIds}
+              onPointClick={select}
               onLasso={onLasso}
               onPointHover={setHoverId}
             />
+            <div className="mt-3">
+              <SelectionStrip
+                row={selectedRow}
+                season={season}
+                getMetric={metrics.get}
+                normalization={state.normalization}
+                x={state.x}
+                y={state.y}
+                inCompare={selectedRow ? compareIds.includes(selectedRow.player_id) : false}
+                compareFull={compareIds.length >= MAX_COMPARE}
+                onToggleCompare={onToggleCompare}
+                onClear={() => setSelected(null)}
+              />
+            </div>
           </Refetching>
         )}
       </Panel>
@@ -172,6 +202,7 @@ export default function LeagueExplorer() {
           <Refetching loading={query.isFetching}>
             <ExplorerTable
               rows={rows}
+              season={season}
               getMetric={metrics.get}
               normalization={state.normalization}
               activeMetrics={activeMetrics}

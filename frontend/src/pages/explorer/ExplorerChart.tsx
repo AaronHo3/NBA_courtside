@@ -1,22 +1,23 @@
-import { useCallback, useMemo, type ReactNode } from 'react'
-import type { Data, Layout, PlotMouseEvent, PlotSelectionEvent, Shape } from 'plotly.js'
-import { Plot, useChartTheme } from '@/components/charts/Plot'
+import { useCallback, useMemo } from 'react'
+import type { Config, Data, Layout, PlotMouseEvent, PlotSelectionEvent, Shape } from 'plotly.js'
+import { baseConfig, Plot, useChartTheme } from '@/components/charts/Plot'
 import { SEQUENTIAL_BLUE, toColorscale } from '@/components/charts/palette'
-import { Button, Toggle } from '@/components/ui'
-import { MetricLabel } from '@/components/ui/MetricLabel'
 import { formatMetric, metricLabelWithNorm } from '@/lib/format'
 import type { Metric, Normalization, PlayerRow } from '@/lib/types'
-import { activePreset, axisReversed, formatWithUnit, isLowSample, median, numeric, NONE, POSITION, POSITIONS, primaryPosition, PRESETS, type MetricGroup, type Preset } from './helpers'
+import { activePreset, axisReversed, encodingLegend, formatWithUnit, isLowSample, median, numeric, NONE, POSITION, POSITIONS, primaryPosition } from './helpers'
 
 const CHART_HEIGHT = 520
-const BASE_SIZE = 8
-const SIZE_RANGE: [number, number] = [5, 26]
-const LOW_SAMPLE_OPACITY = 0.4
-const OPACITY = 0.85
+const BASE_SIZE = 7
+const SIZE_RANGE: [number, number] = [5, 22]
+const LOW_SAMPLE_OPACITY = 0.25
+const OPACITY = 0.55
+const RING_PAD = 7
+
+/** Only the tools the caption names: box select, lasso, reset axes. */
+const CHART_CONFIG: Partial<Config> = { ...baseConfig, modeBarButtons: [['select2d', 'lasso2d', 'resetScale2d']], displaylogo: false }
 
 export interface ExplorerChartProps {
   rows: PlayerRow[]
-  groups: MetricGroup[]
   getMetric: (key: string) => Metric | undefined
   normalization: Normalization
   x: string
@@ -26,34 +27,14 @@ export interface ExplorerChartProps {
   medians: boolean
   minGp: number
   minMinutes: number
-  /** Ids drawn with a bold ring: the comparison group plus the row selected in the table. */
-  highlightedIds: number[]
+  /** The selected player (URL `sel`), ringed in accent. */
+  selectedId: number | null
+  /** The comparison group plus the hovered row, ringed in ink. */
+  markedIds: number[]
   /** Pointer over a marker (null when it leaves); the table mirrors it. */
   onPointHover?: (id: number | null) => void
-  onChange: (patch: { x?: string; y?: string; size?: string; color?: string; medians?: boolean }) => void
-  onPreset: (p: Preset) => void
   onPointClick: (playerId: number) => void
   onLasso: (playerIds: number[]) => void
-}
-
-function AxisControl({ label, metric, normalization, value, onChange, groups, extras }: { label: string; metric: string; normalization: Normalization; value: string; onChange: (v: string) => void; groups: MetricGroup[]; extras?: ReactNode }) {
-  const isMetric = metric !== NONE && metric !== POSITION
-  return (
-    <label className="flex min-w-0 flex-col gap-1 text-xs text-ink-3">
-      <span className="flex items-center gap-1 whitespace-nowrap">
-        <span>{label}</span>
-        {isMetric && <span className="text-ink-2">· <MetricLabel metric={metric} normalization={normalization} /></span>}
-      </span>
-      <select aria-label={label} value={value} onChange={(e) => onChange(e.target.value)} className="control text-sm text-ink">
-        {extras}
-        {groups.map((g) => (
-          <optgroup key={g.kind} label={g.label}>
-            {g.options.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
-          </optgroup>
-        ))}
-      </select>
-    </label>
-  )
 }
 
 /** Square-root scale from metric values to marker diameters in px; nulls draw at the minimum. */
@@ -77,7 +58,7 @@ function tickFormat(metric: Metric | undefined): string | undefined {
 }
 
 export function ExplorerChart(props: ExplorerChartProps) {
-  const { rows, groups, getMetric, normalization, x, y, size, color, medians, minGp, minMinutes, highlightedIds, onChange, onPreset, onPointClick, onLasso, onPointHover } = props
+  const { rows, getMetric, normalization, x, y, size, color, medians, minGp, minMinutes, selectedId, markedIds, onPointClick, onLasso, onPointHover } = props
   const t = useChartTheme()
   const xm = getMetric(x)
   const ym = getMetric(y)
@@ -107,7 +88,7 @@ export function ExplorerChart(props: ExplorerChartProps) {
   )
 
   const data = useMemo<Data[]>(() => {
-    const ring = { color: t.surface, width: 1 }
+    const outline = { color: t.surface, width: 1 }
     const traceFor = (name: string, subset: PlayerRow[], markerColor: string | number[], extra: Partial<Record<string, unknown>> = {}): Data => {
       const sizes = sm ? sizesFor(subset.map((r) => numeric(r, size))) : subset.map(() => BASE_SIZE)
       return {
@@ -123,7 +104,7 @@ export function ExplorerChart(props: ExplorerChartProps) {
           size: sizes,
           color: markerColor,
           opacity: subset.map((r) => (isLowSample(r, minGp, minMinutes) ? LOW_SAMPLE_OPACITY : OPACITY)),
-          line: ring,
+          line: outline,
           ...extra,
         },
         selected: { marker: { opacity: 1 } },
@@ -165,24 +146,28 @@ export function ExplorerChart(props: ExplorerChartProps) {
       traces.push(traceFor('Players', plotted, t.series[0]))
     }
 
-    const highlighted = plotted.filter((r) => highlightedIds.includes(r.player_id))
-    if (highlighted.length) {
-      const sizes = sm ? sizesFor(plotted.map((r) => numeric(r, size))) : plotted.map(() => BASE_SIZE)
-      const sizeById = new Map(plotted.map((r, i) => [r.player_id, sizes[i]]))
-      traces.push({
-        type: 'scatter',
-        mode: 'markers',
-        name: 'Selected / comparing',
-        x: highlighted.map((r) => numeric(r, x)),
-        y: highlighted.map((r) => numeric(r, y)),
-        customdata: highlighted.map((r) => r.player_id),
-        hoverinfo: 'skip',
-        marker: { symbol: 'circle-open', size: highlighted.map((r) => (sizeById.get(r.player_id) ?? BASE_SIZE) + 7), color: t.ink, line: { color: t.ink, width: 2.5 }, opacity: 1 },
-      } as Data)
-    }
+    // Overlay rings: the comparison group / hovered row in ink, the selected player in accent on top.
+    const sizes = sm ? sizesFor(plotted.map((r) => numeric(r, size))) : plotted.map(() => BASE_SIZE)
+    const sizeById = new Map(plotted.map((r, i) => [r.player_id, sizes[i]]))
+    const ring = (name: string, subset: PlayerRow[], colour: string, width: number): Data => ({
+      type: 'scatter',
+      mode: 'markers',
+      name,
+      showlegend: false,
+      x: subset.map((r) => numeric(r, x)),
+      y: subset.map((r) => numeric(r, y)),
+      customdata: subset.map((r) => r.player_id),
+      hoverinfo: 'skip',
+      marker: { symbol: 'circle-open', size: subset.map((r) => (sizeById.get(r.player_id) ?? BASE_SIZE) + RING_PAD), color: colour, line: { color: colour, width }, opacity: 1 },
+    } as Data)
+    const marked = plotted.filter((r) => markedIds.includes(r.player_id) && r.player_id !== selectedId)
+    if (marked.length) traces.push(ring('Comparing', marked, t.ink, 1.5))
+    const selected = plotted.filter((r) => r.player_id === selectedId)
+    if (selected.length) traces.push(ring('Selected', selected, t.accent, 2.5))
     return traces
-  }, [plotted, colorIsPosition, cm, sm, x, y, size, color, t, hoverFor, minGp, minMinutes, highlightedIds, normalization])
+  }, [plotted, colorIsPosition, cm, sm, x, y, size, color, t, hoverFor, minGp, minMinutes, markedIds, selectedId, normalization])
 
+  const legendTraces = data.filter((d) => (d as { showlegend?: boolean }).showlegend !== false).length
   const layout = useMemo<Partial<Layout>>(() => {
     const shapes: Array<Partial<Shape>> = []
     const annotations: NonNullable<Layout['annotations']> = []
@@ -199,20 +184,20 @@ export function ExplorerChart(props: ExplorerChartProps) {
         annotations.push({ xref: 'paper', yref: 'y', x: 1, y: my, text: `median ${formatWithUnit(my, ym)}`, showarrow: false, xanchor: 'right', yanchor: 'bottom', font: { color: t.ink3, size: 10 }, yshift: 2 })
       }
     }
-    const showlegend = data.length >= 2
+    const showlegend = legendTraces >= 2
     return {
       height: CHART_HEIGHT,
       showlegend,
       legend: { orientation: 'h', y: -0.16, x: 0, font: { color: t.ink2, size: 11 }, itemsizing: 'constant' },
       margin: { l: 60, r: cm ? 88 : 16, t: 12, b: showlegend ? 72 : 52 },
       hovermode: 'closest',
-      dragmode: 'zoom',
+      dragmode: 'select',
       xaxis: { title: { text: axisTitle(xm, x, normalization) }, tickformat: tickFormat(xm), autorange: axisReversed(xm) ? 'reversed' : true, zeroline: false },
       yaxis: { title: { text: axisTitle(ym, y, normalization) }, tickformat: tickFormat(ym), autorange: axisReversed(ym) ? 'reversed' : true, zeroline: false },
       shapes,
       annotations,
     }
-  }, [medians, plotted, x, y, xm, ym, cm, t, data.length, normalization])
+  }, [medians, plotted, x, y, xm, ym, cm, t, legendTraces, normalization])
 
   const handleClick = useCallback(
     (e: Readonly<PlotMouseEvent>) => {
@@ -234,30 +219,7 @@ export function ExplorerChart(props: ExplorerChartProps) {
   const lowCount = plotted.filter((r) => isLowSample(r, minGp, minMinutes)).length
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Quick presets">
-        <span className="mr-1 text-xs text-ink-3">Presets</span>
-        {PRESETS.map((p) => (
-          <Button key={p.key} size="sm" variant={current?.key === p.key ? 'primary' : 'default'} aria-pressed={current?.key === p.key} title={p.note} onClick={() => onPreset(p)}>
-            {p.label}
-          </Button>
-        ))}
-      </div>
-      <div className="grid grid-cols-1 gap-x-3 gap-y-2 sm:grid-cols-2 lg:grid-cols-[repeat(4,minmax(0,1fr))_auto] lg:items-end">
-        <AxisControl label="X axis" metric={x} normalization={normalization} value={x} onChange={(v) => onChange({ x: v })} groups={groups} />
-        <AxisControl label="Y axis" metric={y} normalization={normalization} value={y} onChange={(v) => onChange({ y: v })} groups={groups} />
-        <AxisControl label="Bubble size" metric={size} normalization={normalization} value={size} onChange={(v) => onChange({ size: v })} groups={groups} extras={<option value={NONE}>None (uniform)</option>} />
-        <AxisControl
-          label="Colour"
-          metric={color}
-          normalization={normalization}
-          value={color}
-          onChange={(v) => onChange({ color: v })}
-          groups={groups}
-          extras={<><option value={NONE}>None</option><option value={POSITION}>Position (G / F / C)</option></>}
-        />
-        <div className="pb-1.5"><Toggle checked={medians} onChange={(v) => onChange({ medians: v })} label="Median lines" /></div>
-      </div>
+    <div className="flex flex-col gap-2">
       {(current?.note || unplotted > 0 || lowCount > 0) && (
         <p className="text-xs text-ink-2">
           {current?.note && <span>{current.note} </span>}
@@ -269,10 +231,13 @@ export function ExplorerChart(props: ExplorerChartProps) {
         {plotted.length === 0 ? (
           <p className="pt-10 text-center text-sm text-ink-3">No player has values on both axes under the current filters.</p>
         ) : (
-          <Plot data={data} layout={layout} onClick={handleClick} onSelected={handleSelected} onHover={(e) => { const id = Number(e.points[0]?.customdata); if (Number.isFinite(id)) onPointHover?.(id) }} onUnhover={() => onPointHover?.(null)} />
+          <Plot data={data} layout={layout} config={CHART_CONFIG} onClick={handleClick} onSelected={handleSelected} onHover={(e) => { const id = Number(e.points[0]?.customdata); if (Number.isFinite(id)) onPointHover?.(id) }} onUnhover={() => onPointHover?.(null)} />
         )}
       </div>
-      <p className="text-xs text-ink-3">Click a marker to open the player. Use the box or lasso tool in the chart toolbar to add players to the comparison group. Hover any marker for its values.</p>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-xs">
+        <p data-testid="explorer-encoding" className="text-ink-2">{encodingLegend(size, color, getMetric, normalization)}</p>
+        <p className="text-ink-3">Drag to box-select · lasso · reset</p>
+      </div>
     </div>
   )
 }

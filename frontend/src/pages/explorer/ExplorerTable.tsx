@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import type { ColumnDef } from '@tanstack/react-table'
 import { DataTable } from '@/components/table/DataTable'
 import { Badge, Button, Info, Input, PlayerIdentity } from '@/components/ui'
@@ -9,6 +10,8 @@ import { formatWithUnit, isLowSample, tableMetricKeys } from './helpers'
 
 export interface ExplorerTableProps {
   rows: PlayerRow[]
+  /** Season carried into the profile link. */
+  season: string
   getMetric: (key: string) => Metric | undefined
   normalization: Normalization
   activeMetrics: string[]
@@ -29,7 +32,7 @@ const TOT_NOTE = 'TOT pools every stint of a player traded during the season int
 
 /** The linked table under the chart. Selection and the comparison group are shared with the chart. */
 export function ExplorerTable(props: ExplorerTableProps) {
-  const { rows, getMetric, normalization, activeMetrics, selectedId, hoveredId = null, onRowHover, compareIds, compareFull, minGp, minMinutes, textFilter, onTextFilter, onRowClick, onToggleCompare } = props
+  const { rows, season, getMetric, normalization, activeMetrics, selectedId, hoveredId = null, onRowHover, compareIds, compareFull, minGp, minMinutes, textFilter, onTextFilter, onRowClick, onToggleCompare } = props
   const metricKeys = useMemo(() => tableMetricKeys(activeMetrics), [activeMetrics])
 
   const columns = useMemo<ColumnDef<PlayerRow, unknown>[]>(() => {
@@ -43,6 +46,28 @@ export function ExplorerTable(props: ExplorerTableProps) {
       sortingFn: 'basic',
     })
     return [
+      {
+        id: 'full_name',
+        accessorKey: 'full_name',
+        header: 'Player',
+        cell: (c) => {
+          const r = c.row.original
+          const low = isLowSample(r, minGp, minMinutes)
+          return (
+            <span className="inline-flex items-center gap-1.5">
+              <Link
+                to={`/players/${r.player_id}?season=${encodeURIComponent(season)}`}
+                onClick={(e) => e.stopPropagation()}
+                className="t-fast min-w-0 rounded-sm hover:text-accent"
+                title={`Open ${r.full_name}'s profile`}
+              >
+                <PlayerIdentity playerId={r.player_id} name={r.full_name} team={r.team_abbreviation} teamId={r.team_id} size="xs" link={false} />
+              </Link>
+              {low && <Badge tone="warning">low sample</Badge>}
+            </span>
+          )
+        },
+      },
       {
         id: 'compare',
         header: () => <span className="sr-only">Compare</span>,
@@ -62,21 +87,6 @@ export function ExplorerTable(props: ExplorerTableProps) {
             >
               {inGroup ? '✓' : '+'}
             </Button>
-          )
-        },
-      },
-      {
-        id: 'full_name',
-        accessorKey: 'full_name',
-        header: 'Player',
-        cell: (c) => {
-          const r = c.row.original
-          const low = isLowSample(r, minGp, minMinutes)
-          return (
-            <span className="inline-flex items-center gap-1.5">
-              <PlayerIdentity playerId={r.player_id} name={r.full_name} team={r.team_abbreviation} teamId={r.team_id} size="xs" link={false} />
-              {low && <Badge tone="warning">low sample</Badge>}
-            </span>
           )
         },
       },
@@ -101,7 +111,7 @@ export function ExplorerTable(props: ExplorerTableProps) {
       num('min'),
       ...metricKeys.map((k) => num(k)),
     ]
-  }, [metricKeys, normalization, getMetric, compareIds, compareFull, minGp, minMinutes, onToggleCompare])
+  }, [metricKeys, normalization, getMetric, compareIds, compareFull, minGp, minMinutes, onToggleCompare, season])
 
   return (
     <DataTable<PlayerRow>
@@ -113,7 +123,9 @@ export function ExplorerTable(props: ExplorerTableProps) {
       isHighlighted={(r) => r.player_id === hoveredId || compareIds.includes(r.player_id)}
       onRowHover={onRowHover ? (r) => onRowHover(r ? r.player_id : null) : undefined}
       globalFilter={textFilter}
-      height={520}
+      maxHeight={520}
+      pinFirstColumn
+      focusable
       initialSort={[{ id: activeMetrics[1] && activeMetrics[1] !== 'none' ? activeMetrics[1] : 'pts', desc: true }]}
       dense
       emptyMessage="No rows match the table filter."
@@ -121,7 +133,7 @@ export function ExplorerTable(props: ExplorerTableProps) {
         <div className="flex flex-wrap items-end justify-between gap-2">
           <Input label="Filter table" type="search" placeholder="Name, team or position" value={textFilter} onChange={(e) => onTextFilter(e.target.value)} className="w-56" />
           <p className="text-xs text-ink-3">
-            Click a row to highlight it on the chart; click it again to open the profile. {formatMetric(rows.length)} rows.
+            Click a row to select it on the chart; the name opens the profile. {formatMetric(rows.length)} rows.
           </p>
         </div>
       }

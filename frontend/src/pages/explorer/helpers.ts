@@ -126,3 +126,16 @@ export function tableMetricKeys(active: string[]): string[] {
   }
   return out
 }
+
+/** "Size: Points / game · Colour: none", from the metric registry labels. */
+export function encodingLegend(size: string, color: string, getMetric: (key: string) => Metric | undefined, normalization: Normalization): string {
+  const sizeLabel = size === NONE ? 'none' : metricLabelWithNorm(getMetric(size), size, normalization)
+  const colourLabel = color === NONE ? 'none' : color === POSITION ? 'Position (G / F / C)' : metricLabelWithNorm(getMetric(color), color, normalization)
+  return `Size: ${sizeLabel} · Colour: ${colourLabel}`
+}
+
+/** "Population: 490 shown · 92 hidden" for the disclosure that holds these filters. */
+export function populationSummary(population: number | null, hidden: number | null): string {
+  if (population === null) return 'Population: counting players…'
+  return hidden !== null && hidden > 0 ? `Population: ${population} shown · ${hidden} hidden` : `Population: ${population} shown`
+}

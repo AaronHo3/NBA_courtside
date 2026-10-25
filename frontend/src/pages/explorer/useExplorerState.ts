@@ -35,6 +35,14 @@ export const PARAM_KEYS = {
   tableFilter: 'tq',
 } as const
 
+/**
+ * URL value for an encoding: dropped when it equals the default, otherwise written as is.
+ * "none" must be written when the default is a metric (size defaults to points), or the default comes back.
+ */
+export function encodingParam(key: 'x' | 'y' | 'size' | 'color', value: string): string | null {
+  return value === DEFAULTS[key] ? null : value
+}
+
 /** Whether a stored normalization value is one the API accepts. */
 export function parseNormalization(raw: string): Normalization {
   return (NORMALIZATIONS as string[]).includes(raw) ? (raw as Normalization) : DEFAULTS.normalization
@@ -83,7 +91,13 @@ export function useExplorerState() {
   )
 
   const applyPreset = useCallback(
-    (p: Preset) => setMany({ [PARAM_KEYS.x]: p.x, [PARAM_KEYS.y]: p.y, [PARAM_KEYS.size]: p.size === NONE ? null : p.size, [PARAM_KEYS.color]: p.color === NONE ? null : p.color }),
+    (p: Preset) =>
+      setMany({
+        [PARAM_KEYS.x]: encodingParam('x', p.x),
+        [PARAM_KEYS.y]: encodingParam('y', p.y),
+        [PARAM_KEYS.size]: encodingParam('size', p.size),
+        [PARAM_KEYS.color]: encodingParam('color', p.color),
+      }),
     [setMany],
   )
 
