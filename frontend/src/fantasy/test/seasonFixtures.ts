@@ -1,4 +1,4 @@
-import type { FreeAgentView, PlayerView, SeasonOverview, ActualLineView, MinutesMetaView, MinutesView } from '../api/types'
+import type { FreeAgentView, PlayerView, SeasonOverview, ActualLineView, GameLogsView, MinutesMetaView, MinutesView } from '../api/types'
 
 export function makePlayer(id: string, name: string, team = 'BOS'): PlayerView {
   return {
@@ -60,3 +60,14 @@ export function makeOverview(over: Partial<SeasonOverview> = {}): SeasonOverview
     ...over,
   }
 }
+
+/** Stored game-log meta fetched `hoursAgo` hours before now. */
+export function makeGameLogs(hoursAgo: number, over: Partial<GameLogsView> = {}): GameLogsView {
+  return { season: '2026-27', fetched_at: new Date(Date.now() - hoursAgo * 3_600_000).toISOString(), rows: 812, max_game_date: '2026-10-24', ...over }
+}
+
+/** Two league categories, one of them lower-is-better, for detail-row and advanced-table tests. */
+export const TWO_CATS: SeasonOverview['league_categories'] = [
+  { key: 'PTS', label: 'Points', higher_is_better: true, kind: 'counting', numerator: null, denominator: null },
+  { key: 'TOV', label: 'Turnovers', higher_is_better: false, kind: 'counting', numerator: null, denominator: null },
+]

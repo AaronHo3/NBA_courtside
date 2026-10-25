@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { act } from 'react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useSeasonStore } from '../../store/seasonStore'
 import { makeFreeAgent as fa, makeOverview } from '../../test/seasonFixtures'
 import { FreeAgentsTab } from './FreeAgentsTab'
@@ -122,5 +123,114 @@ describe('FreeAgentsTab in-season minutes', () => {
     fireEvent.click(within(screen.getByTestId('swap-panel')).getByRole('button', { name: /clear override/i }))
     await new Promise((r) => setTimeout(r, 0))
     expect(strategies[0].minutes_overrides).toEqual({})
+  })
+})
+
+describe('FreeAgentsTab layout', () => {
+  beforeEach(async () => {
+    const { TWO_CATS } = await import('../../test/seasonFixtures')
+    const ov = makeOverview({ league_categories: TWO_CATS })
+    useSeasonStore.setState({
+      overview: ov,
+      freeAgents: { ids: ov.ids, items: [fa('a', 'Healthy Guy'), fa('b', 'Other Guy')], synced_at: null },
+      faStatus: 'ready',
+      faError: null,
+      gameLogs: null,
+      logsStatus: 'idle',
+      logsError: null,
+      loadFreeAgents: async () => {},
+      loadGameLogsMeta: async () => {},
+    })
+    window.location.hash = ''
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('advanced toggle shows the full table', () => {
+    render(<FreeAgentsTab sessionId="sess" />)
+    const table = screen.getByRole('table', { name: 'Free agents' })
+    expect(within(table).queryByRole('columnheader', { name: 'Points' })).toBeNull()
+    expect(within(table).getAllByRole('button', { name: /category detail for/i })).toHaveLength(2)
+    const toggle = screen.getByTestId('fa-advanced')
+    expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    fireEvent.click(toggle)
+    expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    expect(within(table).getByRole('columnheader', { name: 'Points' })).toBeInTheDocument()
+    expect(within(table).getByRole('columnheader', { name: 'Turnovers' })).toBeInTheDocument()
+    expect(within(table).queryByRole('button', { name: /category detail for/i })).toBeNull()
+    // the swap panel sits below the table
+    const panel = screen.getByTestId('swap-panel')
+    expect(table.compareDocumentPosition(panel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(within(panel).getByRole('heading', { name: 'Add Healthy Guy, drop Bench Guy' })).toBeInTheDocument()
+  })
+
+  it('minutes override validates range and confirms a save', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const { makeMinutes, MINUTES_META } = await import('../../test/seasonFixtures')
+    const { useDraftStore } = await import('../../store/draftStore')
+    const saved: Array<Record<string, unknown>> = []
+    let strategy = { mode: 'balanced', minutes_overrides: {}, in_season_minutes: true }
+    useDraftStore.setState({
+      state: { strategy } as never,
+      setStrategy: async (s) => {
+        saved.push(s as unknown as Record<string, unknown>)
+        strategy = s as never
+        useDraftStore.setState({ state: { strategy } as never })
+        return true
+      },
+    })
+    const ov = useSeasonStore.getState().overview!
+    useSeasonStore.setState({ freeAgents: { ids: ov.ids, items: [fa('a', 'Blend Guy', [], null, makeMinutes())], synced_at: null, minutes: MINUTES_META } })
+    render(<FreeAgentsTab sessionId="sess" />)
+    const panel = screen.getByTestId('swap-panel')
+    const input = within(panel).getByLabelText(/override minutes/i) as HTMLInputElement
+    expect(input).toHaveAttribute('placeholder', 'projected 26.5')
+    const apply = within(panel).getByRole('button', { name: /apply/i })
+    fireEvent.change(input, { target: { value: '60' } })
+    expect(within(panel).getByText(/between 0 and 48/i)).toBeInTheDocument()
+    expect(input).toHaveAttribute('aria-invalid', 'true')
+    expect(apply).toBeDisabled()
+    fireEvent.change(input, { target: { value: '31' } })
+    expect(within(panel).queryByText(/between 0 and 48/i)).toBeNull()
+    await act(async () => {
+      fireEvent.click(apply)
+    })
+    expect(saved).toHaveLength(1)
+    expect(saved[0].minutes_overrides).toEqual({ a: 31 })
+    expect(within(screen.getByTestId('swap-panel')).getByText('Saved · ranking refreshed')).toBeInTheDocument()
+    await act(async () => {
+      vi.advanceTimersByTime(3100)
+    })
+    expect(within(screen.getByTestId('swap-panel')).queryByText('Saved · ranking refreshed')).toBeNull()
+  })
+
+  it('freshness shows the logs age next to the refresh button', async () => {
+    const { makeGameLogs } = await import('../../test/seasonFixtures')
+    useSeasonStore.setState({ gameLogs: makeGameLogs(3) })
+    const { unmount } = render(<FreeAgentsTab sessionId="sess" />)
+    const group = screen.getByTestId('fa-logs')
+    expect(within(group).getByTestId('refresh-logs')).toBeInTheDocument()
+    expect(group).toHaveTextContent(/Game logs · 3h ago/)
+    expect(group).toHaveAttribute('data-stale', 'false')
+    unmount()
+    useSeasonStore.setState({ gameLogs: makeGameLogs(30) })
+    render(<FreeAgentsTab sessionId="sess" />)
+    const stale = screen.getByTestId('fa-logs')
+    expect(stale).toHaveTextContent(/Game logs · 1d ago/)
+    expect(stale).toHaveAttribute('data-stale', 'true')
+  })
+
+  it('shows skeleton rows while the first load runs, and a retry on error', () => {
+    let retried = 0
+    useSeasonStore.setState({ freeAgents: null, faStatus: 'loading' })
+    const { unmount } = render(<FreeAgentsTab sessionId="sess" />)
+    expect(screen.getAllByTestId('fa-skeleton-row')).toHaveLength(5)
+    unmount()
+    useSeasonStore.setState({ freeAgents: null, faStatus: 'error', faError: 'boom', loadFreeAgents: async () => { retried += 1 } })
+    render(<FreeAgentsTab sessionId="sess" />)
+    expect(screen.getByRole('alert')).toHaveTextContent('boom')
+    fireEvent.click(screen.getByRole('button', { name: /retry/i }))
+    expect(retried).toBeGreaterThan(0)
   })
 })

@@ -64,3 +64,28 @@ describe('FreeAgentsTable minutes', () => {
     expect(plain).toHaveClass('muted')
   })
 })
+
+describe('FreeAgentsTable detail rows', () => {
+  it('expands a row to show category detail', async () => {
+    const { TWO_CATS } = await import('../../test/seasonFixtures')
+    const picked: string[] = []
+    const agent = { ...fa('a', 'Healthy Guy'), z: { PTS: 0.4, TOV: -0.8 } }
+    render(<FreeAgentsTable items={[agent, fa('b', 'Other Guy')]} categories={TWO_CATS} onSelect={(id) => picked.push(id)} />)
+    // compact by default: no per-category columns
+    expect(screen.queryByRole('columnheader', { name: 'Points' })).toBeNull()
+    expect(screen.queryByTestId('fa-detail-row')).toBeNull()
+    const toggle = screen.getByRole('button', { name: 'Category detail for Healthy Guy' })
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(toggle)
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    const detail = screen.getByTestId('fa-detail-row')
+    expect(detail).toHaveTextContent('Points')
+    expect(detail).toHaveTextContent('+0.4')
+    expect(detail).toHaveTextContent('Turnovers')
+    expect(detail).toHaveTextContent('-0.8')
+    expect(detail).toHaveTextContent(/lower is better/)
+    expect(picked).toEqual([]) // expanding does not change the swap selection
+    fireEvent.click(toggle)
+    expect(screen.queryByTestId('fa-detail-row')).toBeNull()
+  })
+})
