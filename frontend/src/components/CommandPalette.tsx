@@ -39,7 +39,12 @@ export function CommandPalette({ open, onClose, sessionId }: { open: boolean; on
     return () => document.removeEventListener('keydown', onKey)
   }, [open, onClose])
   if (!open) return null
-  const go = (it: Item) => { onClose(); navigate(it.href) }
+  const go = (it: Item) => {
+    onClose()
+    navigate(it.href)
+    // A fantasy href may change only the hash (pushState, no hashchange): tell the copilot's router and the bridge.
+    if (it.href.startsWith('/fantasy')) window.dispatchEvent(new Event('locationchange'))
+  }
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 px-4 pt-[12vh]" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div role="dialog" aria-modal="true" aria-label="Search players and pages" className="rise-in w-full max-w-xl overflow-hidden rounded-[var(--radius-panel)] border border-line-strong bg-surface shadow-[var(--shadow-float)]">

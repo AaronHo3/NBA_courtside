@@ -89,6 +89,15 @@ async function linkedSession(page: Page): Promise<string> {
   return sessionId
 }
 
+async function pickInPalette(page: Page, query: string, option: RegExp) {
+  await page.keyboard.press('ControlOrMeta+k')
+  const palette = page.getByRole('dialog', { name: 'Search players and pages' })
+  await expect(palette).toBeVisible()
+  await palette.getByRole('combobox', { name: 'Search players and pages' }).fill(query)
+  await palette.getByRole('option', { name: option }).first().click()
+  await expect(palette).toHaveCount(0)
+}
+
 const breadcrumb = (page: Page) => page.getByRole('navigation', { name: 'Breadcrumb' })
 const sidebar = (page: Page) => page.getByRole('navigation', { name: 'Primary' })
 const leagueViews = (page: Page) => sidebar(page).getByRole('list', { name: 'My league views' })
@@ -181,13 +190,7 @@ test('command palette navigation from a research page into fantasy keeps breadcr
   await page.reload()
   await expect(page.getByTestId('season')).toBeVisible()
 
-  const viaPalette = async (query: string, option: RegExp) => {
-    await page.keyboard.press('ControlOrMeta+k')
-    const palette = page.getByRole('dialog', { name: 'Search players and pages' })
-    await expect(palette).toBeVisible()
-    await palette.getByRole('combobox', { name: 'Search players and pages' }).fill(query)
-    await palette.getByRole('option', { name: option }).first().click()
-  }
+  const viaPalette = (query: string, option: RegExp) => pickInPalette(page, query, option)
 
   // React Router pushState: no hashchange/popstate fires, the shell must still follow the new hash
   await page.goto('/explorer')
@@ -208,5 +211,30 @@ test('command palette navigation from a research page into fantasy keeps breadcr
   await expect(breadcrumb(page)).toContainText('Performers')
   await expect(page).toHaveTitle('Performers · Courtside')
   await expect(sidebar(page).getByRole('link', { name: 'Performers' })).toHaveAttribute('aria-current', 'page')
+  await page.unrouteAll({ behavior: 'ignoreErrors' })
+})
+
+test('command palette jumps between fantasy screens switch the screen, URL, breadcrumb and sidebar together', async ({ page }) => {
+  const sid = await linkedSession(page)
+  await page.goto(`/fantasy?session=${sid}#/season?tab=power`)
+  await page.reload()
+  await expect(page.getByTestId('season-tab-power')).toHaveAttribute('aria-selected', 'true')
+
+  // same pathname and search, only the hash changes: a React Router pushState with no hashchange
+  await pickInPalette(page, 'Performers', /^↗?\s*Performers/)
+  await expect(page.getByTestId('performers')).toBeVisible()
+  await expect(page.getByTestId('season')).toHaveCount(0)
+  expect(new URL(page.url()).hash).toBe('#/performers')
+  await expect(breadcrumb(page)).toContainText('Performers')
+  await expect(page).toHaveTitle('Performers · Courtside')
+  await expect(sidebar(page).getByRole('link', { name: 'Performers' })).toHaveAttribute('aria-current', 'page')
+
+  await pickInPalette(page, 'My league', /^↗?\s*My league/)
+  await expect(page.getByTestId('season')).toBeVisible()
+  await expect(page.getByTestId('performers')).toHaveCount(0)
+  await expect(page.getByTestId('season-tab-matchups')).toHaveAttribute('aria-selected', 'true')
+  expect(new URL(page.url()).hash).toBe('#/season')
+  await expect(breadcrumb(page)).toContainText('Matchups')
+  await expect(leagueViews(page).getByRole('link', { name: 'Matchups', exact: true })).toHaveAttribute('aria-current', 'page')
   await page.unrouteAll({ behavior: 'ignoreErrors' })
 })

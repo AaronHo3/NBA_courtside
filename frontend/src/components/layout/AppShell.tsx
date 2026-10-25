@@ -162,6 +162,9 @@ export function AppShell() {
   const isFantasyRoute = loc.pathname.startsWith('/fantasy')
   // The copilot's hash router and hash-query writes change the hash without a React Router navigation; follow them.
   const hash = useLocationHash()
+  // React Router navigations (links, palette, programmatic) push without an event; announce each one so
+  // listeners outside the router context (the copilot's hash router, hash-query readers) follow too.
+  useEffect(() => { window.dispatchEvent(new Event('locationchange')) }, [loc.key])
   const activeId = activeNavId(loc.pathname, hash)
   const activeTab = isFantasyRoute && activeId === 'season' ? seasonTabFrom(readHashQuery(hash).tab) : null
   const pageParts = useCrumb((s) => s.parts)
