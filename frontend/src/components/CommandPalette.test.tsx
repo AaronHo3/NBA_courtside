@@ -1,4 +1,5 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { useState } from 'react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { CommandPalette } from './CommandPalette'
 
@@ -30,5 +31,32 @@ describe('CommandPalette', () => {
     expect(navigate).toHaveBeenCalledWith('/fantasy?session=s1#/draft')
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(onClose).toHaveBeenCalled()
+  })
+  it('moves focus into the search box, closes on Escape and returns focus to the opener', async () => {
+    function Harness() {
+      const [open, setOpen] = useState(false)
+      return (
+        <MemoryRouter>
+          <button type="button" onClick={() => setOpen(true)}>Open search</button>
+          <CommandPalette open={open} onClose={() => setOpen(false)} sessionId={null} />
+        </MemoryRouter>
+      )
+    }
+    render(<Harness />)
+    const opener = screen.getByRole('button', { name: 'Open search' })
+    opener.focus()
+    fireEvent.click(opener)
+    const input = await screen.findByRole('combobox', { name: /Search players and pages/ })
+    await waitFor(() => expect(input).toHaveFocus())
+    fireEvent.keyDown(input, { key: 'Escape' })
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(opener).toHaveFocus()
+  })
+  it('keeps Tab inside the dialog', async () => {
+    render(<MemoryRouter><CommandPalette open onClose={vi.fn()} sessionId={null} /></MemoryRouter>)
+    const input = screen.getByRole('combobox', { name: /Search players and pages/ })
+    await waitFor(() => expect(input).toHaveFocus())
+    fireEvent.keyDown(input, { key: 'Tab' })
+    expect(input).toHaveFocus()
   })
 })

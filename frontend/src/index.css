@@ -230,6 +230,22 @@ body {
 .display { font-family: var(--font-display); letter-spacing: 0.005em; }
 :where(:not(.fantasy-root *)):focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 3px; }
 
+/* ---- skip link and sticky-header scroll margins ------------------------------------------------ */
+:root { --shell-header-h: 56px; --sticky-toolbar-h: 72px; }
+/* Anchors, in-page targets and focused controls land below the sticky shell header instead of under it. */
+[id] { scroll-margin-top: var(--shell-header-h); }
+:focus-visible { scroll-margin-top: var(--shell-header-h); }
+/* Controls on a page with a sticky toolbar (`Toolbar sticky`) clear the toolbar too when focus scrolls them into view. */
+main:has([data-sticky]) :focus-visible:not([data-sticky] *) { scroll-margin-top: calc(var(--shell-header-h) + var(--sticky-toolbar-h)); }
+.skip-link {
+  position: fixed; left: 12px; top: 8px; z-index: 60;
+  padding: 8px 12px; border-radius: var(--radius-control);
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line-strong);
+  font-size: 14px; font-weight: 500; box-shadow: var(--shadow-float);
+  transform: translateY(-200%);
+}
+.skip-link:focus, .skip-link:focus-visible { transform: none; }
+
 /* ---- motion ---------------------------------------------------------------------------------- */
 .t-fast { transition: color var(--dur-fast) var(--ease), background-color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease); }
 .t-panel { transition: opacity var(--dur-panel) var(--ease), transform var(--dur-panel) var(--ease), max-height var(--dur-panel) var(--ease); }

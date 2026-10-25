@@ -4,21 +4,25 @@ import { clsx } from 'clsx'
 import { usePlayerSearch } from '@/hooks/useApi'
 import { ALL_NAV_ITEMS, navGroupOf, navHref } from '@/components/layout/nav'
 import { Portrait, nbaHeadshotUrl } from '@/components/ui'
+import { useDialogFocus } from '@/components/ui/useDialogFocus'
 
 type Item = { key: string; kind: 'player' | 'page'; label: string; detail: string; href: string; playerId?: number; team?: string | null }
 
 /**
  * ⌘K palette: players (existing /players/search) and pages. Keyboard: ↑ ↓ Enter Esc.
- * Opened from the shell button or the shortcut; closes on navigation.
+ * Opened from the shell button or the shortcut; closes on navigation. Focus moves to the search box,
+ * Tab stays inside, and Esc closes and returns focus to whatever opened it.
  */
 export function CommandPalette({ open, onClose, sessionId }: { open: boolean; onClose: () => void; sessionId: string | null }) {
   const [q, setQ] = useState('')
   const [debounced, setDebounced] = useState('')
   const [active, setActive] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
   useEffect(() => { const t = setTimeout(() => setDebounced(q.trim()), 120); return () => clearTimeout(t) }, [q])
-  useEffect(() => { if (open) { setQ(''); setDebounced(''); setActive(0); setTimeout(() => inputRef.current?.focus(), 0) } }, [open])
+  useEffect(() => { if (open) { setQ(''); setDebounced(''); setActive(0) } }, [open])
+  useDialogFocus(panelRef, open, onClose)
   const res = usePlayerSearch(open ? debounced : '', 6)
   const items = useMemo<Item[]>(() => {
     const needle = debounced.toLowerCase()
@@ -32,12 +36,6 @@ export function CommandPalette({ open, onClose, sessionId }: { open: boolean; on
     return [...players, ...pages]
   }, [debounced, res.data, sessionId])
   useEffect(() => { setActive(0) }, [items.length])
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.preventDefault(); onClose() } }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [open, onClose])
   if (!open) return null
   const go = (it: Item) => {
     onClose()
@@ -47,7 +45,7 @@ export function CommandPalette({ open, onClose, sessionId }: { open: boolean; on
   }
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 px-4 pt-[12vh]" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
-      <div role="dialog" aria-modal="true" aria-label="Search players and pages" className="rise-in w-full max-w-xl overflow-hidden rounded-[var(--radius-panel)] border border-line-strong bg-surface shadow-[var(--shadow-float)]">
+      <div ref={panelRef} role="dialog" aria-modal="true" aria-label="Search players and pages" className="rise-in w-full max-w-xl overflow-hidden rounded-[var(--radius-panel)] border border-line-strong bg-surface shadow-[var(--shadow-float)]">
         <div className="flex items-center gap-2 border-b border-line px-3">
           <span className="text-ink-3" aria-hidden="true">⌕</span>
           <input

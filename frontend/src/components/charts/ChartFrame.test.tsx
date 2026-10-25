@@ -20,6 +20,18 @@ describe('ChartFrame', () => {
     expect(screen.queryByTestId('plot')).toBeNull()
     expect(screen.getByRole('note')).toHaveTextContent('No tracking data for this season.')
   })
+
+  it('renders an optional visually hidden summary region so the chart reads without hover', () => {
+    render(<ChartFrame title="Net rating" summary="Boston leads at +9.1; Utah trails at −8.0."><svg /></ChartFrame>)
+    const region = screen.getByRole('region', { name: 'Net rating: summary' })
+    expect(region).toHaveTextContent('Boston leads at +9.1')
+    expect(region).toHaveClass('sr-only')
+  })
+
+  it('omits the summary region when none is given', () => {
+    render(<ChartFrame title="Net rating"><svg /></ChartFrame>)
+    expect(screen.queryByRole('region', { name: /summary/ })).toBeNull()
+  })
 })
 
 describe('hoverTemplate', () => {

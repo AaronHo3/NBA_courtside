@@ -23,4 +23,16 @@ describe('ChartFrame', () => {
     expect(screen.queryByTestId('chart')).toBeNull()
     expect(screen.getByText(/one scope at a time/)).toBeInTheDocument()
   })
+
+  it('renders an optional visually hidden summary region', () => {
+    render(
+      <ChartFrame title="Power" summary="Team A leads with 61% odds.">
+        <svg />
+      </ChartFrame>,
+    )
+    const region = screen.getByRole('region', { name: 'Power: summary' })
+    expect(region).toHaveTextContent('Team A leads with 61% odds.')
+    expect(region).toHaveClass('visually-hidden')
+    expect(screen.getByRole('region', { name: 'Power' })).toBeInTheDocument()
+  })
 })

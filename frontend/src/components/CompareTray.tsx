@@ -5,31 +5,36 @@ import { GitCompare, X } from 'lucide-react'
 import { useCompare, MAX_COMPARE } from '@/store/compare'
 import { useChartTheme } from '@/components/charts/Plot'
 import { Button } from './ui'
+import { useDialogFocus } from './ui/useDialogFocus'
 
 const EMPTY_HINT = 'Add players from the explorer or a profile'
 
-/** Closes an open popover on an outside click or Escape. */
-function useDismiss(open: boolean, close: () => void, ref: RefObject<HTMLElement | null>) {
+/** Closes an open popover on an outside click (Escape is handled by `useDialogFocus`). */
+function useOutsideClick(open: boolean, close: () => void, ref: RefObject<HTMLElement | null>) {
   useEffect(() => {
     if (!open) return
     const onDoc = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) close() }
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close() }
     document.addEventListener('mousedown', onDoc)
-    document.addEventListener('keydown', onKey)
-    return () => { document.removeEventListener('mousedown', onDoc); document.removeEventListener('keydown', onKey) }
+    return () => document.removeEventListener('mousedown', onDoc)
   }, [open, close, ref])
 }
 
-/** The comparison group as one control: `Compare · n/6`, opening a popover with the players and the way to compare them. */
+/**
+ * The comparison group as one control: `Compare · n/6`, opening a popover with the players and the way to
+ * compare them. Non-modal: focus moves into the popover on open, Tab wraps while inside, and Escape (or any
+ * close) returns focus to the trigger.
+ */
 export function CompareTray({ className }: { className?: string }) {
   const { players, remove, clear } = useCompare()
   const { series } = useChartTheme()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const popoverRef = useRef<HTMLDivElement>(null)
   const close = useCallback(() => setOpen(false), [])
-  useDismiss(open, close, ref)
   const empty = players.length === 0
   const isOpen = open && !empty
+  useOutsideClick(isOpen, close, ref)
+  useDialogFocus(popoverRef, isOpen, close, false)
 
   return (
     <div ref={ref} className={clsx('relative', className)}>
@@ -49,7 +54,7 @@ export function CompareTray({ className }: { className?: string }) {
         Compare · {players.length}/{MAX_COMPARE}
       </button>
       {isOpen && (
-        <div role="dialog" aria-label="Comparison group" className="pop-in absolute right-0 top-full z-30 mt-1.5 w-72 rounded-[var(--radius-panel)] border border-line-strong bg-surface p-2 shadow-[var(--shadow-float)]">
+        <div ref={popoverRef} role="dialog" aria-label="Comparison group" className="pop-in absolute right-0 top-full z-30 mt-1.5 w-72 rounded-[var(--radius-panel)] border border-line-strong bg-surface p-2 shadow-[var(--shadow-float)]">
           <ul className="flex flex-col gap-px" aria-label="Players in the comparison group">
             {players.map((p, i) => (
               <li key={p.player_id} className="flex items-center gap-2 rounded px-1.5 py-1 text-sm text-ink hover:bg-raised">

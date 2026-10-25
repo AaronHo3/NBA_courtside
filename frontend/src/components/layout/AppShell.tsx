@@ -193,6 +193,7 @@ export function AppShell() {
 
   return (
     <div className="flex min-h-full">
+      <a href="#main-content" className="skip-link" onClick={(e) => { e.preventDefault(); document.getElementById('main-content')?.focus() }}>Skip to content</a>
       <aside className="sticky top-0 hidden h-screen w-[var(--sidebar-w)] shrink-0 flex-col border-r border-line bg-page lg:flex">{sidebar()}</aside>
       {drawerOpen && (
         <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation">
@@ -216,7 +217,7 @@ export function AppShell() {
             <Button size="sm" variant="ghost" onClick={() => setPaletteOpen(true)} aria-label="Open command palette" className="md:hidden"><Search size={14} /></Button>
           </div>
         </header>
-        <main key={loc.pathname} className="flex-1 px-4 py-5 sm:px-6">
+        <main key={loc.pathname} id="main-content" tabIndex={-1} className="flex-1 px-4 py-5 outline-none sm:px-6">
           <Outlet />
         </main>
       </div>

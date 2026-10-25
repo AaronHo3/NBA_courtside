@@ -19,13 +19,18 @@ interface ChartFrameProps {
   /** When set, the chart is replaced by this note naming the missing data. */
   unavailable?: ReactNode
   actions?: ReactNode
+  /** Plain-text reading of the chart, rendered visually hidden so it is available without hover. */
+  summary?: ReactNode
   children: ReactNode
   testId?: string
   className?: string
 }
 
-/** Titled container for a visual: heading, optional help tooltip, legend, and an explicit unavailable state. */
-export function ChartFrame({ title, description, help, legend, unavailable, actions, children, testId, className }: ChartFrameProps) {
+/**
+ * Titled container for a visual: heading, optional help tooltip, legend, an explicit unavailable state, and
+ * an optional visually hidden `summary` region for screen-reader and keyboard users.
+ */
+export function ChartFrame({ title, description, help, legend, unavailable, actions, summary, children, testId, className }: ChartFrameProps) {
   return (
     <section className={`chart-frame${className ? ` ${className}` : ''}`} aria-label={title} data-testid={testId}>
       <header className="chart-head">
@@ -59,6 +64,11 @@ export function ChartFrame({ title, description, help, legend, unavailable, acti
         </div>
       ) : (
         <div className="chart-body">{children}</div>
+      )}
+      {summary && !unavailable && (
+        <div role="region" aria-label={`${title}: summary`} className="visually-hidden">
+          {summary}
+        </div>
       )}
     </section>
   )

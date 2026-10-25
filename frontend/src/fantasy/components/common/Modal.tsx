@@ -10,15 +10,58 @@ interface ModalProps {
   testId?: string
 }
 
-/** Minimal accessible dialog: focus moves inside, Esc closes, backdrop click closes. */
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+function focusables(root: HTMLElement): HTMLElement[] {
+  return Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((el) => el.getAttribute('aria-hidden') !== 'true')
+}
+
+/**
+ * Accessible modal dialog: focus moves inside (to `[data-autofocus]` when present, else the first control),
+ * Tab and Shift+Tab wrap inside it, focus that escapes is pulled back, Esc and a backdrop click close it, and
+ * focus returns to the element that opened it on unmount.
+ */
 export function Modal({ title, onClose, children, wide, onKeyDown, testId }: ModalProps) {
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const el = ref.current
     if (!el) return
-    const focusable = el.querySelector<HTMLElement>('[data-autofocus], button, select, input, textarea')
-    focusable?.focus()
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const target = el.querySelector<HTMLElement>('[data-autofocus]') ?? focusables(el)[0] ?? el
+    target.focus()
+    const onFocusIn = (e: FocusEvent) => {
+      if (e.target instanceof Node && !el.contains(e.target)) (focusables(el)[0] ?? el).focus()
+    }
+    document.addEventListener('focusin', onFocusIn)
+    return () => {
+      document.removeEventListener('focusin', onFocusIn)
+      if (opener && opener.isConnected) opener.focus()
+    }
   }, [])
+
+  const trapTab = (e: KeyboardEvent<HTMLDivElement>) => {
+    const el = ref.current
+    if (!el) return
+    // Handled here so an outer modal drawer's document-level trap never sees this Tab.
+    e.stopPropagation()
+    const items = focusables(el)
+    if (items.length === 0) {
+      e.preventDefault()
+      el.focus()
+      return
+    }
+    const head = items[0]
+    const tail = items[items.length - 1]
+    const active = document.activeElement
+    if (e.shiftKey && (active === head || active === el)) {
+      e.preventDefault()
+      tail.focus()
+    } else if (!e.shiftKey && active === tail) {
+      e.preventDefault()
+      head.focus()
+    }
+  }
+
   return (
     <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div
@@ -26,6 +69,7 @@ export function Modal({ title, onClose, children, wide, onKeyDown, testId }: Mod
         role="dialog"
         aria-modal="true"
         aria-label={title}
+        tabIndex={-1}
         ref={ref}
         data-testid={testId}
         onKeyDown={(e) => {
@@ -35,6 +79,7 @@ export function Modal({ title, onClose, children, wide, onKeyDown, testId }: Mod
             return
           }
           onKeyDown?.(e)
+          if (e.key === 'Tab' && !e.defaultPrevented) trapTab(e)
         }}
       >
         <div className="modal-head">

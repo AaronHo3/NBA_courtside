@@ -20,8 +20,10 @@ function swatchStyle(item: ChartLegendItem): CSSProperties {
 /**
  * Titled container for a chart (Plotly or SVG): the question it answers, legend chips, actions, a fixed
  * plot height so loading and empty states never shift the page, and an explicit unavailable state.
+ * `summary` is rendered visually hidden in a labelled region so the chart's essential reading is
+ * available to screen readers and keyboard users without hover.
  */
-export function ChartFrame({ title, question, legend, actions, height = 320, unavailable, children, className, testId }: {
+export function ChartFrame({ title, question, legend, actions, height = 320, unavailable, summary, children, className, testId }: {
   title: string
   question?: ReactNode
   legend?: ChartLegendItem[]
@@ -29,6 +31,8 @@ export function ChartFrame({ title, question, legend, actions, height = 320, una
   height?: number
   /** When set, replaces the chart with this note naming what is missing. */
   unavailable?: ReactNode
+  /** Plain-text reading of the chart (leaders, extremes, the answer to `question`), visually hidden. */
+  summary?: ReactNode
   children: ReactNode
   className?: string
   testId?: string
@@ -59,6 +63,7 @@ export function ChartFrame({ title, question, legend, actions, height = 320, una
       ) : (
         <div className="min-w-0" style={{ height }}>{children}</div>
       )}
+      {summary && !unavailable && <div role="region" aria-label={`${title}: summary`} className="sr-only">{summary}</div>}
     </figure>
   )
 }

@@ -30,3 +30,55 @@ describe('CompareTray', () => {
     expect(screen.getByRole('button', { name: 'Compare · 1/6' })).toBeInTheDocument()
   })
 })
+
+const PLAYERS = [
+  { player_id: 1, full_name: 'Ada One', team_abbreviation: 'AAA' },
+  { player_id: 2, full_name: 'Bea Two', team_abbreviation: 'BBB' },
+]
+
+function renderTrayWithOther() {
+  return render(
+    <MemoryRouter>
+      <button type="button">Elsewhere</button>
+      <CompareTray />
+    </MemoryRouter>,
+  )
+}
+
+describe('CompareTray focus', () => {
+  beforeEach(() => useCompare.setState({ players: PLAYERS }))
+
+  it('moves focus into the popover on open and back to the trigger on Escape', () => {
+    renderTrayWithOther()
+    const trigger = screen.getByRole('button', { name: /Compare · 2/ })
+    trigger.focus()
+    fireEvent.click(trigger)
+    const dialog = screen.getByRole('dialog', { name: 'Comparison group' })
+    expect(dialog.contains(document.activeElement)).toBe(true)
+    expect(screen.getByRole('link', { name: 'Ada One' })).toHaveFocus()
+    fireEvent.keyDown(document.activeElement as Element, { key: 'Escape' })
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(trigger).toHaveFocus()
+  })
+
+  it('returns focus to the trigger after Clear empties the group', () => {
+    renderTrayWithOther()
+    const trigger = screen.getByRole('button', { name: /Compare · 2/ })
+    trigger.focus()
+    fireEvent.click(trigger)
+    fireEvent.click(screen.getByRole('button', { name: 'Clear' }))
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(trigger).toHaveFocus()
+  })
+
+  it('wraps Tab from the last control back to the first while focus is inside', () => {
+    renderTrayWithOther()
+    const trigger = screen.getByRole('button', { name: /Compare · 2/ })
+    trigger.focus()
+    fireEvent.click(trigger)
+    const last = screen.getByRole('link', { name: 'Open comparison' })
+    last.focus()
+    fireEvent.keyDown(last, { key: 'Tab' })
+    expect(screen.getByRole('link', { name: 'Ada One' })).toHaveFocus()
+  })
+})
