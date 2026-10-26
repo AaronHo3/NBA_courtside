@@ -52,11 +52,18 @@ describe('CommandPalette', () => {
     expect(screen.queryByRole('dialog')).toBeNull()
     expect(opener).toHaveFocus()
   })
-  it('keeps Tab inside the dialog', async () => {
-    render(<MemoryRouter><CommandPalette open onClose={vi.fn()} sessionId={null} /></MemoryRouter>)
+  it('keeps Tab inside the dialog and pulls focus back from the page behind', async () => {
+    render(<MemoryRouter><button type="button">Behind</button><CommandPalette open onClose={vi.fn()} sessionId={null} /></MemoryRouter>)
     const input = screen.getByRole('combobox', { name: /Search players and pages/ })
     await waitFor(() => expect(input).toHaveFocus())
-    fireEvent.keyDown(input, { key: 'Tab' })
+    // jsdom does not move focus on Tab, so assert the trap acted: the default is prevented and focus wraps.
+    expect(fireEvent.keyDown(input, { key: 'Tab' })).toBe(false)
+    expect(input).toHaveFocus()
+    expect(fireEvent.keyDown(input, { key: 'Tab', shiftKey: true })).toBe(false)
+    expect(input).toHaveFocus()
+    const behind = screen.getByRole('button', { name: 'Behind' })
+    behind.focus()
+    expect(behind).not.toHaveFocus()
     expect(input).toHaveFocus()
   })
 })

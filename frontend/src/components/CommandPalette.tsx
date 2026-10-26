@@ -14,6 +14,11 @@ type Item = { key: string; kind: 'player' | 'page'; label: string; detail: strin
  * Tab stays inside, and Esc closes and returns focus to whatever opened it.
  */
 export function CommandPalette({ open, onClose, sessionId }: { open: boolean; onClose: () => void; sessionId: string | null }) {
+  // Mounted only while open, so every opening starts with an empty query and the first row active.
+  return open ? <PaletteDialog onClose={onClose} sessionId={sessionId} /> : null
+}
+
+function PaletteDialog({ onClose, sessionId }: { onClose: () => void; sessionId: string | null }) {
   const [q, setQ] = useState('')
   const [debounced, setDebounced] = useState('')
   const [active, setActive] = useState(0)
@@ -21,9 +26,8 @@ export function CommandPalette({ open, onClose, sessionId }: { open: boolean; on
   const panelRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
   useEffect(() => { const t = setTimeout(() => setDebounced(q.trim()), 120); return () => clearTimeout(t) }, [q])
-  useEffect(() => { if (open) { setQ(''); setDebounced(''); setActive(0) } }, [open])
-  useDialogFocus(panelRef, open, onClose)
-  const res = usePlayerSearch(open ? debounced : '', 6)
+  useDialogFocus(panelRef, true, onClose)
+  const res = usePlayerSearch(debounced, 6)
   const items = useMemo<Item[]>(() => {
     const needle = debounced.toLowerCase()
     const pages: Item[] = ALL_NAV_ITEMS.filter((n) => !needle || `${n.label} ${n.hint} ${navGroupOf(n.id)?.label ?? ''}`.toLowerCase().includes(needle))
@@ -36,7 +40,6 @@ export function CommandPalette({ open, onClose, sessionId }: { open: boolean; on
     return [...players, ...pages]
   }, [debounced, res.data, sessionId])
   useEffect(() => { setActive(0) }, [items.length])
-  if (!open) return null
   const go = (it: Item) => {
     onClose()
     navigate(it.href)

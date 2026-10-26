@@ -64,10 +64,22 @@ describe('Modal', () => {
     expect(dialog.contains(document.activeElement)).toBe(true)
   })
 
-  it('closes on a backdrop click and returns focus', () => {
-    const onClose = vi.fn()
-    render(<Modal title="T" onClose={onClose}><button type="button">x</button></Modal>)
+  it('closes on a backdrop click and returns focus to the opener', () => {
+    render(<Harness />)
+    const opener = open()
+    expect(screen.getByRole('button', { name: 'Close Compare players' })).toHaveFocus()
     fireEvent.mouseDown(document.querySelector('.modal-backdrop') as Element)
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(opener).toHaveFocus()
+  })
+
+  it('calls onClose once per Escape and passes other keys to onKeyDown', () => {
+    const onClose = vi.fn()
+    const onKeyDown = vi.fn()
+    render(<Modal title="T" onClose={onClose} onKeyDown={onKeyDown}><button type="button">x</button></Modal>)
+    fireEvent.keyDown(screen.getByRole('button', { name: 'x' }), { key: 'ArrowDown' })
+    expect(onKeyDown).toHaveBeenCalledTimes(1)
+    fireEvent.keyDown(screen.getByRole('button', { name: 'x' }), { key: 'Escape' })
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 })
