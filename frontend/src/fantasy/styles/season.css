@@ -654,10 +654,14 @@ table.grid.fa-table tr.fa-detail-row > td {
   scroll-margin-top: var(--s-4);
 }
 .swap-chart .div-bar.positive,
-.swap-chart .div-bar.negative,
-.swap-chart .div-bar.side-a.positive,
-.swap-chart .div-bar.side-a.negative {
+.swap-chart .div-bar.side-a.positive {
   background: var(--teal);
+}
+/* below pool: same series colour, lighter fill plus an outline, so the side is not told by colour alone */
+.swap-chart .div-bar.negative,
+.swap-chart .div-bar.side-a.negative {
+  background: color-mix(in srgb, var(--teal) 60%, transparent);
+  box-shadow: inset 0 0 0 1.5px var(--teal);
 }
 .swap-chart .div-value.positive,
 .swap-chart .div-value.negative {

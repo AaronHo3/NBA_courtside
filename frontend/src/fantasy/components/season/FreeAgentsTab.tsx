@@ -89,8 +89,10 @@ export function FreeAgentsTab({ sessionId }: { sessionId: string }) {
   }
   const saveStrategy = async (next: Strategy) => {
     const ok = await setStrategy(next)
-    if (ok) await reload()
-    return ok
+    if (!ok) return false
+    await reload()
+    // Confirm only when the ranking actually reloaded.
+    return useSeasonStore.getState().faStatus === 'ready'
   }
   const statusText = faStatus === 'loading' ? (freeAgents ? 'Updating…' : 'Loading…') : freeAgents ? `${visible.length} shown` : ''
   return (

@@ -233,4 +233,39 @@ describe('FreeAgentsTab layout', () => {
     fireEvent.click(screen.getByRole('button', { name: /retry/i }))
     expect(retried).toBeGreaterThan(0)
   })
+
+  it('prints every add-series value with an explicit sign and marks below-pool bars', () => {
+    const ov = useSeasonStore.getState().overview!
+    useSeasonStore.setState({ freeAgents: { ids: ov.ids, items: [{ ...fa('a', 'Signed Guy'), z: { PTS: 1.2, TOV: -0.6 } }], synced_at: null } })
+    render(<FreeAgentsTab sessionId="sess" />)
+    const panel = screen.getByTestId('swap-panel')
+    const up = within(panel).getByTestId('diverging-bar-PTS')
+    const down = within(panel).getByTestId('diverging-bar-TOV')
+    expect(up).toHaveClass('positive')
+    expect(down).toHaveClass('negative')
+    expect(within(panel).getByText('+1.2')).toHaveClass('positive')
+    expect(within(panel).getByText('−0.6')).toHaveClass('negative')
+    expect(within(panel).getByText('below pool')).toBeInTheDocument()
+    expect(within(panel).getByText('above pool')).toBeInTheDocument()
+  })
+
+  it('does not confirm a minutes save when the ranking reload fails', async () => {
+    const { makeMinutes, MINUTES_META } = await import('../../test/seasonFixtures')
+    const { useDraftStore } = await import('../../store/draftStore')
+    useDraftStore.setState({ state: { strategy: { mode: 'balanced', minutes_overrides: {}, in_season_minutes: true } } as never, setStrategy: async () => true })
+    const ov = useSeasonStore.getState().overview!
+    useSeasonStore.setState({
+      freeAgents: { ids: ov.ids, items: [fa('a', 'Blend Guy', [], null, makeMinutes())], synced_at: null, minutes: MINUTES_META },
+      loadFreeAgents: async () => {
+        useSeasonStore.setState({ faStatus: 'error', faError: 'reload failed' })
+      },
+    })
+    render(<FreeAgentsTab sessionId="sess" />)
+    const panel = screen.getByTestId('swap-panel')
+    fireEvent.change(within(panel).getByLabelText(/override minutes/i), { target: { value: '31' } })
+    await act(async () => {
+      fireEvent.click(within(panel).getByRole('button', { name: /apply/i }))
+    })
+    expect(screen.queryByText('Saved · ranking refreshed')).toBeNull()
+  })
 })
