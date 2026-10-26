@@ -15,7 +15,7 @@ fallback when an image is unavailable).
 
 ## Demo
 
-https://github.com/user-attachments/assets/db43b44b-a879-44b6-97f1-d34184eb0bfe
+[https://github.com/user-attachments/assets/db43b44b-a879-44b6-97f1-d34184eb0bfe](https://github.com/user-attachments/assets/223483d5-5dd2-4ace-84d0-fc83a777ddd0)
 
 A 74-second tour: the research pages, a live draft with recommendations, then my league's matchups,
 power rankings, free agents and performers. It runs against a copy of my own ESPN league for the
