@@ -1,0 +1,378 @@
+/* Draft control room, part 3: roster by slot, category bars, strategy, history, snake board, compare,
+   responsive rules and the pick-flash motion. Loaded after draft.css and draft-rec.css. */
+/* roster by slot */
+.roster-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 3.4em 1fr auto;
+  gap: 0 8px;
+  font-size: var(--fs-sm);
+}
+.roster-list > li {
+  display: contents;
+}
+.roster-list .slot {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--ink-3);
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+.roster-list .who,
+.roster-list .side {
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+.roster-list .side {
+  color: var(--ink-3);
+  font-size: var(--fs-xs);
+  text-align: right;
+  display: inline-flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 5px;
+}
+.roster-list .empty {
+  color: var(--ink-3);
+  font-style: italic;
+}
+.roster-list .bench .slot {
+  color: var(--ink-3);
+}
+.roster-list .group-head {
+  grid-column: 1 / -1;
+  font-size: var(--fs-xs);
+  color: var(--ink-3);
+  padding: var(--s-2) 0 2px;
+}
+.needs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: var(--s-2);
+  align-items: center;
+}
+
+/* category profile bars */
+table.grid.profile td.zbar {
+  min-width: 150px;
+}
+.zbar-track {
+  position: relative;
+  display: block;
+  height: 10px;
+  background: var(--surface-3);
+  border-radius: 3px;
+}
+.zbar-track::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -2px;
+  bottom: -2px;
+  width: 1px;
+  background: var(--ink-3);
+}
+.zbar-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 3px;
+  background: var(--good);
+}
+.zbar-fill.neg {
+  right: 50%;
+  background: var(--bad);
+}
+.zbar-fill.pos {
+  left: 50%;
+}
+
+/* strategy */
+.strategy-grid {
+  display: grid;
+  grid-template-columns: minmax(6em, 1fr) repeat(3, 2.6em) 4.6em;
+  gap: 4px 6px;
+  align-items: center;
+  font-size: var(--fs-sm);
+}
+.strategy-grid .head {
+  font-weight: 600;
+  color: var(--ink-3);
+  font-size: var(--fs-xs);
+}
+.strategy-grid input[type='number'] {
+  width: 4.4em;
+  padding: 2px 4px;
+  min-height: 24px;
+}
+details.engine {
+  margin-top: var(--s-2);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-sm);
+  padding: 4px 8px;
+}
+details.engine summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+/* history */
+.history {
+  margin-top: var(--s-4);
+}
+.history-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+.history-head .last {
+  color: var(--ink-2);
+}
+.history-body {
+  margin-top: var(--s-3);
+}
+.recent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 6px;
+}
+.recent-list li {
+  display: grid;
+  grid-template-columns: 3.2em 1fr auto;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 5px 8px;
+  font-size: var(--fs-sm);
+  border-left-width: 4px;
+}
+.recent-list li.mine {
+  background: var(--mine);
+}
+.recent-list .pick-no {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+  line-height: 1.1;
+}
+.recent-list .team {
+  color: var(--ink-3);
+  font-size: var(--fs-xs);
+}
+
+/* snake board */
+.board {
+  overflow: auto;
+  max-height: 60vh;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+}
+.board table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--fs-xs);
+}
+.board th,
+.board td {
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 4px 6px;
+  min-width: 112px;
+  max-width: 150px;
+  vertical-align: top;
+}
+.board thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-2);
+  z-index: 1;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.board th.round {
+  min-width: 2.6em;
+  background: var(--surface-2);
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--ink-3);
+  position: sticky;
+  left: 0;
+  z-index: 2;
+}
+.board thead th.round {
+  z-index: 3;
+}
+.board th.mine,
+.board td.mine {
+  background: var(--mine);
+}
+.board td.current {
+  outline: 2px solid var(--teal);
+  outline-offset: -2px;
+  background: var(--teal-soft);
+}
+.board td button {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 0;
+  min-height: 0;
+  font-size: inherit;
+  font-weight: 600;
+  justify-content: flex-start;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+.board td button:hover {
+  color: var(--teal);
+  background: none;
+}
+.board .cell-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+  color: var(--ink-3);
+  font-size: var(--fs-xs);
+}
+.board .cell-team {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.board td.empty {
+  color: var(--ink-3);
+}
+.board .keeper {
+  font-weight: 600;
+}
+
+/* compare */
+.compare-grid td,
+.compare-grid th {
+  text-align: right;
+}
+.compare-grid td:first-child,
+.compare-grid th:first-child {
+  text-align: left;
+}
+.compare-grid .mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.compare-grid .mini .zbar-track {
+  width: 70px;
+  height: 8px;
+}
+.compare-grid th.who {
+  text-align: left;
+}
+
+/* responsive draft */
+@media (max-width: 1179px) {
+  .draft-grid,
+  .draft-grid[data-team='drawer-open'] {
+    grid-template-columns: 1fr;
+  }
+  .col-picker .panel,
+  .col-side .panel {
+    position: static;
+  }
+  .col-picker .picker-results {
+    max-height: 36vh;
+  }
+}
+@media (max-width: 760px) {
+  .draft-grid > [data-mobile-hidden='true'] {
+    display: none;
+  }
+  .picker-results {
+    max-height: 40vh;
+  }
+  .status-strip {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+  .status-strip .cell {
+    flex: 1 1 46%;
+    padding: 8px 12px;
+    border-right: none;
+    border-bottom: 1px solid var(--nav-border);
+    white-space: normal;
+  }
+  .status-strip .cell {
+    align-items: flex-start;
+    text-align: left;
+  }
+  .status-strip .cell.clock {
+    flex-basis: 100%;
+    min-width: 0;
+  }
+  .status-strip .v .away {
+    display: block;
+    margin: 2px 0 0;
+  }
+  .status-strip .cell.clock .v {
+    font-size: var(--fs-xl);
+  }
+  .status-strip .cell.grow {
+    flex-basis: 100%;
+    justify-content: space-between;
+    border-bottom: none;
+  }
+  .tech-status {
+    flex-wrap: wrap;
+    white-space: normal;
+    padding: 4px 2px;
+  }
+  .tech-status .spacer {
+    display: none;
+  }
+  .table-wrap.tall {
+    max-height: 50vh;
+  }
+  .drawer {
+    width: 100vw;
+  }
+}
+
+/* ---- redesign motion: a newly recorded pick flashes once; controls get short feedback ------- */
+@keyframes pick-flash {
+  0% {
+    background: var(--teal-soft);
+  }
+  100% {
+    background: transparent;
+  }
+}
+.recent-list > li:first-child {
+  animation: pick-flash 900ms var(--ease) both;
+}
+.recent-list > li.mine:first-child {
+  animation: none;
+}
+button,
+.segmented button,
+.tabs button,
+.picker-row,
+.board-cell,
+.shortlist-row {
+  transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}

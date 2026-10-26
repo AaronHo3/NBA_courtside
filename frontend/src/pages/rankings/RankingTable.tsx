@@ -20,14 +20,14 @@ export function RankingTable({ rows, meta, colors }: { rows: RankingRow[]; meta:
 
   const columns = useMemo<ColumnDef<RankingRow, unknown>[]>(() => [
     {
-      // Rank rides inside the pinned player column so both stay readable while the components scroll.
-      id: 'player', header: 'Player', accessorFn: (r) => r.rank ?? Infinity,
-      cell: (c) => (
-        <span className="inline-flex items-center gap-2">
-          <span className="w-6 shrink-0 text-right tnum text-ink-3">{c.row.original.rank ?? '–'}</span>
-          <span onClick={(e) => e.stopPropagation()}><PlayerIdentity playerId={c.row.original.player_id} name={c.row.original.full_name} team={c.row.original.team_abbreviation} size="xs" /></span>
-        </span>
-      ),
+      // Pinned identity sorts by name; the rank has its own column beside it so both orders exist.
+      id: 'player', header: 'Player', accessorFn: (r) => r.full_name, sortingFn: 'alphanumeric',
+      cell: (c) => <span onClick={(e) => e.stopPropagation()}><PlayerIdentity playerId={c.row.original.player_id} name={c.row.original.full_name} team={c.row.original.team_abbreviation} size="xs" /></span>,
+    },
+    {
+      id: 'rank', header: () => <span title="Rank"><span aria-hidden="true">#</span><span className="sr-only">Rank</span></span>,
+      accessorFn: (r) => r.rank ?? Infinity, sortDescFirst: false,
+      cell: (c) => <span className="tnum text-ink-3">{c.row.original.rank ?? '–'}</span>, meta: { numeric: true },
     },
     { id: 'team', header: 'Team', accessorFn: (r) => r.team_abbreviation ?? '', cell: (c) => c.getValue<string>() || '–' },
     { id: 'pos', header: 'Pos', accessorFn: (r) => r.position ?? '', cell: (c) => c.getValue<string>() || '–' },
@@ -71,6 +71,7 @@ export function RankingTable({ rows, meta, colors }: { rows: RankingRow[]; meta:
         maxHeight={520}
         dense
         pinFirstColumn
+        initialSort={[{ id: 'rank', desc: false }]}
         focusable
         onRowClick={(r) => setSelectedId((cur) => (cur === r.player_id ? null : r.player_id))}
         isSelected={(r) => r.player_id === selectedId}

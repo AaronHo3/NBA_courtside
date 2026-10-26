@@ -12,14 +12,14 @@ export function CandidateTable({ rows, traitUnits, traitLabels = {}, onAdd, inSh
   const traitKeys = useMemo(() => (rows[0] ? Object.keys(rows[0].traits) : []), [rows])
   const columns = useMemo<ColumnDef<CandidateRow, unknown>[]>(() => [
     {
-      // Server order is the match ranking; the rank number rides in the pinned player column.
-      id: 'player', header: 'Player', accessorFn: (_r, i) => i,
-      cell: (c) => (
-        <span className="inline-flex items-center gap-2 whitespace-nowrap">
-          <span className="w-6 shrink-0 text-right tnum text-ink-3">{c.row.index + 1}</span>
-          <Link to={`/players/${c.row.original.player_id}`} className="text-ink hover:underline">{c.row.original.full_name ?? `Player ${c.row.original.player_id}`}</Link>
-        </span>
-      ),
+      // Pinned identity sorts by name; the match rank (server order) has its own column beside it.
+      id: 'player', header: 'Player', accessorFn: (r) => r.full_name ?? '', sortingFn: 'alphanumeric',
+      cell: (c) => <Link to={`/players/${c.row.original.player_id}`} className="whitespace-nowrap text-ink hover:underline">{c.row.original.full_name ?? `Player ${c.row.original.player_id}`}</Link>,
+    },
+    {
+      id: 'rank', header: () => <span title="Rank"><span aria-hidden="true">#</span><span className="sr-only">Rank</span></span>,
+      accessorFn: (_r, i) => i, sortDescFirst: false,
+      cell: (c) => <span className="tnum text-ink-3">{c.row.index + 1}</span>, ...numeric,
     },
     { id: 'team', header: 'Team', accessorKey: 'team_abbreviation' },
     { id: 'pos', header: 'Pos', accessorKey: 'position' },
@@ -37,5 +37,5 @@ export function CandidateTable({ rows, traitUnits, traitLabels = {}, onAdd, inSh
     { id: 'video', header: 'Video', accessorKey: 'video_coverage', cell: (c) => { const ch = coverageChip(c.getValue<CandidateRow['video_coverage']>()); return <Badge tone={ch.tone}>{ch.text}</Badge> } },
     ...(onAdd ? [{ id: 'add', header: '', cell: (c) => { const r = c.row.original; const has = inShortlist?.(r.player_id); return <Button size="sm" variant="ghost" disabled={has} onClick={(e) => { e.stopPropagation(); onAdd(r) }} aria-label={`Add ${r.full_name ?? r.player_id} to shortlist`}>{has ? 'In shortlist' : 'Add'}</Button> } } as ColumnDef<CandidateRow, unknown>] : []),
   ], [traitKeys, traitUnits, traitLabels, onAdd, inShortlist])
-  return <DataTable data={rows} columns={columns} rowKey={(r) => r.player_id} dense maxHeight={520} pinFirstColumn initialSort={[]} emptyMessage="No candidates: loosen the cohort or pick another template." />
+  return <DataTable data={rows} columns={columns} rowKey={(r) => r.player_id} dense maxHeight={520} pinFirstColumn initialSort={[{ id: 'rank', desc: false }]} emptyMessage="No candidates: loosen the cohort or pick another template." />
 }

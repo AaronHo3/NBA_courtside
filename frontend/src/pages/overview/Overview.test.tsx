@@ -71,6 +71,17 @@ describe('Overview', () => {
     expect(screen.getByTestId('matchup-games')).toHaveTextContent('Games 40 · 28 (scheduled this week)')
   })
 
+  it('shows the odds from my side when I am manager_b', () => {
+    const flipped: MatchupOddsView = { ...odds, manager_a: 'm02', manager_b: 'm05', p_win_a: 0.2, p_tie: 0.1, p_win_b: 0.7, cat_p_a: { PTS: 0.3 } }
+    setup({ ov: overview({ user_matchup: { period: 1, home_manager_id: 'm02', away_manager_id: 'm05', odds: flipped } }) })
+    const outcome = screen.getByTestId('matchup-outcome')
+    expect(outcome).toHaveTextContent(/Win\s*70%/)
+    expect(outcome).toHaveTextContent(/Tie\s*10%/)
+    expect(outcome).toHaveTextContent(/Lose\s*20%/)
+    const pts = screen.getAllByTestId('category-row').find((r) => within(r).getByTestId('category-label').textContent?.trim() === 'Points')
+    expect(pts).toHaveTextContent('70%')
+  })
+
   it('lists exactly the league\'s categories in league order', () => {
     setup()
     const rows = screen.getAllByTestId('category-row')
@@ -108,6 +119,7 @@ describe('Overview', () => {
     setup()
     const actions = screen.getByTestId('next-actions')
     expect(within(actions).getByRole('link', { name: /Review free agents/ })).toHaveAttribute('href', '/fantasy?session=demo1#/season?tab=free-agents')
+    expect(within(actions).getByRole('link', { name: /Review free agents/ })).toHaveTextContent('Your weakest: Threes made, Points, Turnovers')
     expect(within(actions).getByRole('link', { name: /See this week's performers/ })).toHaveAttribute('href', '/fantasy?session=demo1#/performers?team=m05&week=1')
     expect(within(actions).getByRole('link', { name: /Open my matchup/ })).toHaveAttribute('href', '/fantasy?session=demo1#/season?tab=matchups')
   })

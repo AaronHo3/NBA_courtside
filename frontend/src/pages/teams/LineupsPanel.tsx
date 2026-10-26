@@ -39,8 +39,8 @@ function LineupDots({ all, minPoss }: { all: LineupRow[]; minPoss: number }) {
   return (
     <ChartFrame
       title="Net rating by possessions played"
-      // hollow markers need the local legend; ChartFrame's swatches are solid
-      question={<LegendChips ariaLabel="Lineup legend" items={[{ label: `≥ ${minPoss} possessions`, color: t.accent }, { label: `Below ${minPoss} possessions (unstable)`, color: t.accent, hollow: true }]} />}
+      // hollow markers need the local legend (ChartFrame's swatches are solid); actions is a <div>, so the <ul> is valid there
+      actions={<LegendChips ariaLabel="Lineup legend" items={[{ label: `≥ ${minPoss} possessions`, color: t.accent }, { label: `Below ${minPoss} possessions (unstable)`, color: t.accent, hollow: true }]} />}
       height={300}
     >
       <Plot data={data} layout={layout} />

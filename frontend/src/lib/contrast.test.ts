@@ -9,7 +9,7 @@ const PAIRS: Array<[fg: string, bg: string, min: number]> = [
   ['--c-ink', '--c-page', 4.5], ['--c-ink', '--c-overlay', 4.5],
   ['--c-ink-2', '--c-page', 4.5], ['--c-ink-2', '--c-overlay', 4.5],
   ['--c-ink-3', '--c-page', 4.5], ['--c-ink-3', '--c-surface', 4.5], ['--c-ink-3', '--c-raised', 4.5], ['--c-ink-3', '--c-overlay', 4.5],
-  ['--c-accent', '--c-page', 4.5], ['--c-accent', '--c-surface', 4.5], ['--c-accent', '--c-raised', 4.5],
+  ['--c-accent', '--c-page', 4.5], ['--c-accent', '--c-surface', 4.5], ['--c-accent', '--c-raised', 4.5], ['--c-accent', '--c-overlay', 4.5],
   ['--c-accent-ink', '--c-accent', 4.5],
   ['--c-pos', '--c-page', 4.5], ['--c-pos', '--c-surface', 4.5], ['--c-neg', '--c-page', 4.5], ['--c-neg', '--c-surface', 4.5],
   ['--c-amber', '--c-page', 4.5], ['--c-amber', '--c-surface', 4.5],

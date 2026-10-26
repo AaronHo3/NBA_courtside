@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import type { RankingMeta, RankingRow } from '@/lib/types'
 import { RankingTable } from './rankings/RankingTable'
@@ -28,7 +28,21 @@ describe('Rankings', () => {
     const firstRow = screen.getAllByRole('row')[1]
     const firstCell = within(firstRow).getAllByRole('cell')[0]
     expect(firstCell).toHaveTextContent('Alpha Guard')
-    expect(firstCell).toHaveTextContent('1')
     expect(firstCell).toHaveStyle({ position: 'sticky', left: '0px' })
+    expect(within(firstRow).getAllByRole('cell')[1]).toHaveTextContent('1')
+  })
+
+  it('sorts the player column by name', async () => {
+    const names = () => screen.getAllByRole('row').slice(1).map((r) => within(r).getAllByRole('cell')[0].textContent)
+    render(<MemoryRouter><RankingTable rows={[row(1, 1, 'Charlie Big', 90), row(2, 2, 'Alpha Guard', 70), row(3, 3, 'Bravo Wing', 40)]} meta={meta} colors={new Map([['pts', '#f00']])} /></MemoryRouter>)
+    const rankHead = screen.getByRole('columnheader', { name: /Rank/ })
+    expect(rankHead).toHaveAttribute('aria-sort', 'ascending')
+    expect(names()[0]).toContain('Charlie Big')
+    const playerHead = screen.getByRole('columnheader', { name: /^Player/ })
+    fireEvent.click(playerHead)
+    expect(playerHead).toHaveAttribute('aria-sort', 'ascending')
+    expect(names().map((n) => n?.match(/Alpha Guard|Bravo Wing|Charlie Big/)?.[0])).toEqual(['Alpha Guard', 'Bravo Wing', 'Charlie Big'])
+    fireEvent.click(rankHead)
+    expect(names()[0]).toContain('Charlie Big')
   })
 })

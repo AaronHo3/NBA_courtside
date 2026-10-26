@@ -5,5 +5,7 @@
 @import './ui.css';
 @import './charts.css';
 @import './draft.css';
+@import './draft-rec.css';
+@import './draft-side.css';
 @import './season.css';
 @import './performers.css';

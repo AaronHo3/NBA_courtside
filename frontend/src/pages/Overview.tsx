@@ -40,7 +40,7 @@ function buildNextActions(sid: string, ov: SeasonOverview, userId: string | null
   const weak = me ? weakestCategories(me, ov.league_categories).map((w) => w.label) : []
   const opp = ov.user_matchup?.away_manager_id && userId ? (ov.user_matchup.home_manager_id === userId ? ov.user_matchup.away_manager_id : ov.user_matchup.home_manager_id) : null
   const actions: NextAction[] = [
-    { label: 'Review free agents', detail: weak.length ? `Help in ${weak.join(', ')}` : undefined, href: fantasyHref('season', sid, { tab: 'free-agents' }) },
+    { label: 'Review free agents', detail: weak.length ? `Your weakest: ${weak.join(', ')}` : undefined, href: fantasyHref('season', sid, { tab: 'free-agents' }) },
   ]
   if (userId) actions.push({ label: "See this week's performers", detail: `Your roster, week ${period}`, href: fantasyHref('performers', sid, { team: userId, week: String(period) }) })
   actions.push({ label: 'Open my matchup', detail: opp ? `vs ${managerName(names, opp)}` : ov.user_matchup ? 'Bye week' : undefined, href: fantasyHref('season', sid, { tab: 'matchups' }) })

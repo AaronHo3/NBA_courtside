@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { Badge, Disclosure, EmptyState, ErrorState, Loading, Panel, Refetching, Toolbar } from '@/components/ui'
+import { Badge, Disclosure, EmptyState, ErrorState, Loading, Notice, Panel, Refetching, Toolbar } from '@/components/ui'
 import { useCandidates, useRoles, useScoutingMutations, useShortlistDetail, useStatus, useTraitRegistry } from '@/hooks/useApi'
 import type { CandidateRow } from '@/lib/types'
 import { CandidateTable } from './scouting/CandidateTable'
@@ -66,11 +66,14 @@ export default function Scouting() {
               )}
             </Refetching>
             {meta && (
-              <Disclosure summary="How the match score is built" className="mt-3">
-                <p>Season-level cohort thresholds apply before the template's own filters, and percentiles are computed within the qualified cohort. A player missing any component is ineligible rather than re-weighted.</p>
-                {meta.notes.length ? <p className="mt-2">{meta.notes.join(' · ')}</p> : null}
-                <p className="mt-2 text-ink-3">{meta.disclaimer} Template {roleNames[meta.template.role_id] ?? meta.template.role_id} v{meta.template.version}, registry v{meta.trait_registry_version}, data {meta.data_fingerprint}.</p>
-              </Disclosure>
+              <>
+                <Notice tone="info" className="mt-3">Match scores are not forecasts; a player missing any component is ineligible.</Notice>
+                <Disclosure summary="How the match score is built" className="mt-2">
+                  <p>Season-level cohort thresholds apply before the template's own filters, and percentiles are computed within the qualified cohort. A player missing any component is ineligible rather than re-weighted.</p>
+                  {meta.notes.length ? <p className="mt-2">{meta.notes.join(' · ')}</p> : null}
+                  <p className="mt-2 text-ink-3">{meta.disclaimer} Template {roleNames[meta.template.role_id] ?? meta.template.role_id} v{meta.template.version}, registry v{meta.trait_registry_version}, data {meta.data_fingerprint}.</p>
+                </Disclosure>
+              </>
             )}
           </Panel>
         </div>

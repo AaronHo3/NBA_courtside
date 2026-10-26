@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { downloadCsv } from '@/components/table/DataTable'
-import { Button, Disclosure, EmptyState, Loading, Panel, Refetching, Segmented, Stat } from '@/components/ui'
+import { Button, Disclosure, EmptyState, Loading, Notice, Panel, Refetching, Segmented, Stat } from '@/components/ui'
 import { ComponentLegend } from './rankings/ComponentChips'
 import { ContributionChart } from './rankings/ContributionChart'
 import { CustomBuilder } from './rankings/CustomBuilder'
@@ -32,10 +32,13 @@ export default function Rankings() {
         <Stat label="Met the thresholds" value={meta ? meta.population_size : '–'} sub={meta ? `${s.season} · ${s.seasonType} · ≥ ${meta.min_gp} games, ≥ ${meta.min_minutes} minutes${s.position ? ` · ${s.position}` : ''}` : 'Loading'} />
         <Stat label="Eligible (all components present)" value={meta ? eligible.length : '–'} sub={meta ? (ineligible.length ? `${ineligible.length} excluded, listed below` : 'Nobody excluded') : ' '} />
         {(s.disclaimer ?? meta?.disclaimer) && (
-          <Disclosure summary="What a lens score is, and is not" className="min-w-0 max-w-prose flex-1 basis-72">
-            <p>{s.disclaimer ?? meta?.disclaimer}</p>
-            <p className="mt-2 text-ink-3">Filters apply to one season. Thresholds define the comparison population that every component is normalised within.</p>
-          </Disclosure>
+          <div className="flex min-w-0 max-w-prose flex-1 basis-72 flex-col gap-2">
+            <Notice tone="info">Scores are user-defined indexes within one season; see limitations.</Notice>
+            <Disclosure summary="What a lens score is, and is not">
+              <p>{s.disclaimer ?? meta?.disclaimer}</p>
+              <p className="mt-2 text-ink-3">Filters apply to one season. Thresholds define the comparison population that every component is normalised within.</p>
+            </Disclosure>
+          </div>
         )}
       </div>
 

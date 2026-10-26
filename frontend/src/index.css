@@ -140,8 +140,8 @@
   --c-ink-2: #4b4842;
   --c-ink-3: #66615a;
   --c-ink-4: #8f8a82;
-  --c-accent: #b14c0e;
-  --c-accent-hover: #d4621a;
+  --c-accent: #ad4a0d;
+  --c-accent-hover: #b14c0e;
   --c-accent-ink: #ffffff;
   --c-accent-soft: rgba(212, 98, 26, 0.12);
   --c-pos: #0d7569;
@@ -275,7 +275,10 @@ main:has([data-sticky]) :focus-visible:not([data-sticky] *) { scroll-margin-top:
 }
 
 /* ---- native controls --------------------------------------------------------------------------- */
-select, input, button, textarea { font: inherit; color: inherit; }
+/* Layered so colour and font utilities on native controls win (an unlayered reset beats every utility). */
+@layer base {
+  select, input, button, textarea { font: inherit; color: inherit; }
+}
 select.control, input.control {
   background: var(--surface);
   border: 1px solid var(--control-line);
