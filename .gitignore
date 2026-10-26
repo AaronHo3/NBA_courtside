@@ -37,6 +37,16 @@ coverage/
 test-results/
 playwright-report/
 
+# --- generated media / verification scratch --------------------------------
+# demo-tour.mjs records raw Playwright video here; the encoded GIF/MP4 under docs/media are tracked
+/docs/media/raw/
+*.webm
+# ad-hoc capture and survey scripts
+frontend/scripts/*.tmp.mjs
+frontend/scripts/.tmp-*
+# playwright artifacts written outside test-results when --output is used
+.playwright-artifacts/
+
 # --- os / editor / agent scratch -------------------------------------------
 .DS_Store
 .idea/
