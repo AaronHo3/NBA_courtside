@@ -2,7 +2,7 @@ import type { CategoryDef, PerformerRow } from '../../api/types'
 import { fmtNum, fmtSigned } from '../../lib/format'
 import { Badge } from '../common/Badge'
 import { Drawer } from '../ui/Drawer'
-import { NbaProfileLink } from './FeatureCards'
+import { type BackLink, NbaProfileLink } from './FeatureCards'
 import { PlayerIdentity } from '../ui/PlayerIdentity'
 import { StatCard, StatRow } from '../ui/StatCard'
 
@@ -28,10 +28,12 @@ interface PerformerDrawerProps {
   onClose: () => void
   /** The league's scored categories; stats outside them are shown but labelled as not scored. */
   categories?: CategoryDef[]
+  /** Back-link for the NBA profile link. */
+  back?: BackLink
 }
 
 /** Slide-in detail: actual vs expected production, games counted, makes/attempts, and the per-category units. */
-export function PerformerDrawer({ row: r, onClose, categories }: PerformerDrawerProps) {
+export function PerformerDrawer({ row: r, onClose, categories, back }: PerformerDrawerProps) {
   const scored = categories ? new Set(categories.map((c) => c.key)) : null
   const isScored = (key: string) => scored === null || scored.has(key)
   const scoresTov = isScored('TOV')
@@ -51,7 +53,7 @@ export function PerformerDrawer({ row: r, onClose, categories }: PerformerDrawer
       className="performer-drawer"
       closeLabel="Close details"
       testId="performer-detail"
-      head={<PlayerIdentity name={r.player.name} team={r.player.team} positions={r.player.eligible_positions} espnId={r.player.espn_id} size={56} meta={<>{`${r.games} GP · ${fmtNum(r.minutes, 0)} MIN`} <NbaProfileLink nbaId={r.player.nba_id} /></>} />}
+      head={<PlayerIdentity name={r.player.name} team={r.player.team} positions={r.player.eligible_positions} espnId={r.player.espn_id} size={56} meta={<>{`${r.games} GP · ${fmtNum(r.minutes, 0)} MIN`} <NbaProfileLink nbaId={r.player.nba_id} back={back} /></>} />}
     >
       {r.flags.length > 0 && (
         <div className="row" style={{ marginBottom: 12 }}>

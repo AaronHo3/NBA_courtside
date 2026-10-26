@@ -1,130 +1,8 @@
-/* Team performers: leaderboards, chart row, table, drawer, explainer. */
-.leaderboards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-  gap: var(--s-4);
-}
-.leaderboard {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: var(--s-3) var(--s-4) var(--s-4);
-  min-width: 0;
-}
-.leaders {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 6px;
-}
-.leaders li {
-  border: 1px solid var(--border);
-  border-left-width: 4px;
-  border-radius: var(--r-sm);
-  background: var(--surface);
-  min-width: 0;
-}
-.leaders li.lead {
-  background: var(--mine);
-  border-color: var(--mine-border);
-  border-left-color: inherit;
-}
-.leaders li.selected {
-  box-shadow: 0 0 0 2px var(--teal-soft);
-  border-color: var(--teal);
-}
-.leader-btn {
-  display: grid;
-  grid-template-columns: 22px auto 1fr auto;
-  gap: 10px;
-  align-items: center;
-  width: 100%;
-  padding: 8px 10px;
-  border: none;
-  background: none;
-  text-align: left;
-  font-weight: 400;
-  min-height: 0;
-  color: var(--ink);
-  border-radius: var(--r-sm);
-}
-button.leader-btn:hover {
-  background: var(--surface-2);
-}
-button.leader-btn[aria-pressed='true'] {
-  background: var(--teal-soft);
-  border: none;
-}
-.leaders .rank {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: var(--fs-md);
-  color: var(--ink-3);
-}
-.leaders li.lead .rank {
-  color: var(--ink);
-}
-.leaders .who {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-.leaders .who b {
-  font-size: var(--fs-md);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.leaders li.lead .who b {
-  font-size: var(--fs-lg);
-}
-.leaders .who .muted {
-  font-size: var(--fs-xs);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.leaders .bars {
-  display: grid;
-  gap: 2px;
-  margin-top: 4px;
-}
-.leaders .bar {
-  display: block;
-  height: 6px;
-  border-radius: 3px;
-}
-.leaders .bar.expected {
-  background: repeating-linear-gradient(45deg, var(--projected) 0 2px, transparent 2px 4px);
-  border: 1px solid var(--projected);
-  height: 6px;
-  box-sizing: border-box;
-}
-.leaders .bar.under {
-  background: var(--bad);
-}
-.leaders .value {
-  text-align: right;
-  display: grid;
-  font-variant-numeric: tabular-nums;
-}
-.leaders .value b {
-  font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1;
-}
-.leaders .value .muted {
-  font-size: var(--fs-xs);
-}
+/* Team performers: summary, key players, heatmap, chart row, table, drawer, explainer. */
 .perf-charts {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
   gap: var(--s-4);
-}
-.perf-charts .chart-frame:last-child {
-  grid-column: 1 / -1;
 }
 table.grid.performers tr.leader > td,
 table.grid.performers tr.leader > th {
@@ -163,19 +41,6 @@ table.grid.performers .row-player {
   }
 }
 @media (max-width: 720px) {
-  .leaderboards {
-    grid-template-columns: 1fr;
-  }
-  .leader-btn {
-    grid-template-columns: 18px auto 1fr;
-  }
-  .leaders .value {
-    grid-column: 2 / -1;
-    text-align: left;
-    display: flex;
-    gap: 8px;
-    align-items: baseline;
-  }
   .explainer-cols {
     grid-template-columns: 1fr;
   }
@@ -188,11 +53,59 @@ table.grid tr.unscored > td {
 }
 
 /* ---- redesign: feature cards, unit row, heatmap, links, motion ------------------------------ */
-.unit-row {
+/* ---- Task 9: one order (summary → key players → heatmap → charts → table), unit mode on every caption ---- */
+.perf-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+.unit-caption {
+  margin: 0;
   display: flex;
   align-items: center;
-  gap: var(--s-3);
+  gap: var(--s-2);
   flex-wrap: wrap;
+  font-size: var(--fs-sm);
+  color: var(--ink-2);
+}
+.unit-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-family: var(--font-body, inherit);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.panel-head h2 .unit-chip {
+  margin-left: var(--s-2);
+}
+.sample-tag {
+  display: inline-block;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--amber);
+  white-space: nowrap;
+}
+.num-with-tag {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: var(--s-2);
+}
+.feature-value .sample-tag {
+  margin-top: 4px;
+}
+.feature-note {
+  margin: 0;
+  font-size: var(--fs-sm);
 }
 .feature-cards {
   display: grid;
@@ -342,7 +255,6 @@ table.grid tr.unscored > td {
 .nba-link:hover {
   text-decoration: underline;
 }
-.leader-btn,
 .performer-drawer,
 .heatmap td,
 .heatmap th button {

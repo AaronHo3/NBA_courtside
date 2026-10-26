@@ -4,6 +4,7 @@ import { fmtNum, fmtSigned, positionsText } from '../../lib/format'
 import { Badge } from '../common/Badge'
 import { Icon } from '../ui/Icon'
 import { TeamMark } from '../ui/PlayerIdentity'
+import { type BackLink, SampleTag } from './FeatureCards'
 import { PerformerDrawer } from './PerformerDrawer'
 import { Portrait } from './Portrait'
 
@@ -35,19 +36,31 @@ function cell(v: number | null | undefined, key: string): string {
   return key.endsWith('PCT') ? pct1(v) : fmtNum(v, Number.isInteger(v) ? 0 : 1)
 }
 
-function sortValue(r: PerformerRow, key: SortKey): number | string {
+/** The row's numbers in the active unit mode: cumulative, or per ESPN-counted game. */
+function contributionOf(r: PerformerRow, perGame: boolean): number | null {
+  return perGame ? r.contribution_per_game : r.contribution
+}
+function overOf(r: PerformerRow, perGame: boolean): number | null {
+  return perGame ? r.over_expected_per_game : r.over_expected
+}
+function statOf(r: PerformerRow, key: string, perGame: boolean): number | null | undefined {
+  return perGame ? r.actual_per_game[key] : r.actual[key]
+}
+
+function sortValue(r: PerformerRow, key: SortKey, perGame: boolean): number | string {
   switch (key) {
     case 'player':
       return r.player.name
     case 'rank':
     case 'games':
     case 'minutes':
-    case 'contribution':
       return r[key]
+    case 'contribution':
+      return contributionOf(r, perGame) ?? Number.NEGATIVE_INFINITY
     case 'over_expected':
-      return r.over_expected ?? Number.NEGATIVE_INFINITY
+      return overOf(r, perGame) ?? Number.NEGATIVE_INFINITY
     default:
-      return r.actual[key] ?? Number.NEGATIVE_INFINITY
+      return statOf(r, key, perGame) ?? Number.NEGATIVE_INFINITY
   }
 }
 
@@ -64,10 +77,14 @@ interface PerformerTableProps {
   categories?: CategoryDef[]
   /** Roster moves to badge next to the player (added wk N / dropped wk N). */
   moves?: MoveTags
+  /** Per-game units and stats instead of cumulative ones. */
+  perGame?: boolean
+  /** Back-link for the drawer's NBA profile link. */
+  back?: BackLink
 }
 
 /** Sortable table of every rostered player; the name opens a detail drawer with actual vs expected. */
-export function PerformerTable({ rows, metric, selectedId = null, onSelect, openId, onOpenChange, categories, moves }: PerformerTableProps) {
+export function PerformerTable({ rows, metric, selectedId = null, onSelect, openId, onOpenChange, categories, moves, perGame = false, back }: PerformerTableProps) {
   const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({ key: 'rank', desc: false })
   const [localOpen, setLocalOpen] = useState<string | null>(null)
   const open = openId === undefined ? localOpen : openId
@@ -78,8 +95,8 @@ export function PerformerTable({ rows, metric, selectedId = null, onSelect, open
   const sorted = [...rows].sort((a, b) => {
     // players without a baseline always sort last on "vs expected", whichever direction
     if (sort.key === 'over_expected' && (a.over_expected === null) !== (b.over_expected === null)) return a.over_expected === null ? 1 : -1
-    const va = sortValue(a, sort.key)
-    const vb = sortValue(b, sort.key)
+    const va = sortValue(a, sort.key, perGame)
+    const vb = sortValue(b, sort.key, perGame)
     const cmp = typeof va === 'string' && typeof vb === 'string' ? va.localeCompare(vb) : Number(va) - Number(vb)
     return sort.desc ? -cmp : cmp
   })
@@ -104,14 +121,15 @@ export function PerformerTable({ rows, metric, selectedId = null, onSelect, open
               <th scope="col">Team · pos</th>
               {head('games', 'GP', 'games played')}
               {head('minutes', 'MIN', 'minutes')}
-              {head('contribution', 'Contribution', 'contribution: category value produced, cumulative')}
-              {head('over_expected', 'vs expected', 'vs expected: contribution minus projection x games played')}
+              {head('contribution', perGame ? 'Contribution / g' : 'Contribution', `contribution: category value produced, ${perGame ? 'per game played' : 'cumulative'}`)}
+              {head('over_expected', perGame ? 'vs expected / g' : 'vs expected', `vs expected: contribution minus projection x games played${perGame ? ', per game' : ''}`)}
               {STAT_COLS.map((c) => head(c.key, c.label, c.label))}
             </tr>
           </thead>
           <tbody>
             {sorted.map((r) => {
               const lead = (metric === 'contribution' ? r.rank === 1 : r.over_expected !== null && r.rank === 1) && rows[0]?.player.player_id === r.player.player_id
+              const over = overOf(r, perGame)
               const cls = [lead ? 'leader' : '', selectedId === r.player.player_id ? 'selected' : ''].filter(Boolean).join(' ')
               return (
                 <tr key={r.player.player_id} className={cls || undefined} data-testid="performer-row" onClick={onSelect ? () => onSelect(r.player.player_id) : undefined} style={onSelect ? { cursor: 'pointer' } : undefined}>
@@ -136,7 +154,7 @@ export function PerformerTable({ rows, metric, selectedId = null, onSelect, open
                           {t.kind === 'add' ? 'added' : 'dropped'} wk {t.period}
                         </Badge>
                       ))}
-                      {r.flags.map((f) => (
+                      {r.flags.filter((f) => f !== 'small sample').map((f) => (
                         <Badge key={f} tone={f === 'no games' ? 'neutral' : 'warn'}>
                           {f}
                         </Badge>
@@ -149,14 +167,17 @@ export function PerformerTable({ rows, metric, selectedId = null, onSelect, open
                   <td className="num">{r.games}</td>
                   <td className="num">{fmtNum(r.minutes, 0)}</td>
                   <td className="num">
-                    <b>{fmtNum(r.contribution, 1)}</b>
+                    <span className="num-with-tag">
+                      <SampleTag row={r} />
+                      <b>{fmtNum(contributionOf(r, perGame), perGame ? 2 : 1)}</b>
+                    </span>
                   </td>
-                  <td className={`num ${r.over_expected === null ? 'muted' : r.over_expected > 0 ? 'pos' : r.over_expected < 0 ? 'neg' : ''}`} data-testid="over-expected">
-                    {r.over_expected === null ? '—' : fmtSigned(r.over_expected, 1)}
+                  <td className={`num ${over === null ? 'muted' : over > 0 ? 'pos' : over < 0 ? 'neg' : ''}`} data-testid="over-expected">
+                    {over === null ? '—' : fmtSigned(over, perGame ? 2 : 1)}
                   </td>
                   {STAT_COLS.map((c) => (
                     <td key={c.key} className="num">
-                      {cell(r.actual[c.key], c.key)}
+                      {cell(statOf(r, c.key, perGame), c.key)}
                     </td>
                   ))}
                 </tr>
@@ -172,7 +193,7 @@ export function PerformerTable({ rows, metric, selectedId = null, onSelect, open
           </tbody>
         </table>
       </div>
-      {openRow && <PerformerDrawer row={openRow} onClose={() => setOpen(null)} categories={categories} />}
+      {openRow && <PerformerDrawer row={openRow} onClose={() => setOpen(null)} categories={categories} back={back} />}
     </>
   )
 }
