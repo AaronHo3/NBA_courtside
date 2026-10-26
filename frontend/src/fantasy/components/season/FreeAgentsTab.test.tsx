@@ -30,6 +30,22 @@ describe('FreeAgentsTab', () => {
     fireEvent.click(hurt.closest('tr')!.querySelector('td')!)
     expect(within(screen.getByTestId('swap-panel')).getByText('Hurt Guy')).toBeInTheDocument()
   })
+
+  it('scrolls the swap panel without smooth motion when the user prefers reduced motion', () => {
+    const matchMedia = vi.fn().mockReturnValue({ matches: true, addEventListener: () => {}, removeEventListener: () => {} })
+    vi.stubGlobal('matchMedia', matchMedia)
+    const scroll = vi.fn()
+    const original = Element.prototype.scrollIntoView
+    Element.prototype.scrollIntoView = scroll
+    try {
+      render(<FreeAgentsTab sessionId="sess" />)
+      fireEvent.click(screen.getAllByText('Healthy Guy')[0].closest('tr')!.querySelector('td')!)
+      expect(scroll).toHaveBeenCalledWith(expect.objectContaining({ behavior: 'auto' }))
+    } finally {
+      Element.prototype.scrollIntoView = original
+      vi.unstubAllGlobals()
+    }
+  })
 })
 
 describe('FreeAgentsTab actuals', () => {

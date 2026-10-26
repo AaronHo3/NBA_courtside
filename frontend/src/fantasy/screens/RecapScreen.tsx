@@ -16,7 +16,6 @@ export function RecapScreen() {
   const rec = useDraftStore((s) => s.rec)
   const current = useDraftStore(selectRecCurrent)
   const notify = useDraftStore((s) => s.notify)
-  const isDemo = useDraftStore((s) => s.snapshot?.is_demo ?? false)
   const stateStatus = useDraftStore((s) => s.stateStatus)
   if (!state && stateStatus === 'loading') return <LoadingState title="Loading session" />
   if (!sessionId || !state) {
@@ -46,7 +45,6 @@ export function RecapScreen() {
   const strengths = current && rec ? Object.entries(rec.category_profile.z).filter(([, z]) => z > 1).length : null
   const weaknesses = current && rec ? Object.entries(rec.category_profile.z).filter(([, z]) => z < -1).length : null
   const chips: ContextChip[] = [{ label: 'Format', value: state.league.scoring_format.replace('h2h_', 'H2H ').replace('_', ' '), tone: state.format_confirmed ? 'neutral' : 'warn' }]
-  if (isDemo) chips.push({ label: 'Data', value: 'demo', tone: 'demo' })
 
   return (
     <div className="stack" data-testid="recap">

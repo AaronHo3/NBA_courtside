@@ -85,7 +85,8 @@ export function FreeAgentsTab({ sessionId }: { sessionId: string }) {
   const refreshing = logsStatus === 'refreshing'
   const select = (id: string) => {
     setSelectedId(id)
-    panelRef.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' })
+    const reduce = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    panelRef.current?.scrollIntoView?.({ block: 'nearest', behavior: reduce ? 'auto' : 'smooth' })
   }
   const saveStrategy = async (next: Strategy) => {
     const ok = await setStrategy(next)

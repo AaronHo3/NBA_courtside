@@ -3,7 +3,8 @@
  * copilot components (their CSS is scoped); they read the copilot's stores and API through here.
  */
 import { useQuery } from '@tanstack/react-query'
-import { api } from '@/fantasy/api/client'
+import { useEffect } from 'react'
+import { api, ApiError } from '@/fantasy/api/client'
 import type { PlayerView, SessionDetail, SessionSummary, SnapshotMeta } from '@/fantasy/api/types'
 import { useDraftStore } from '@/fantasy/store/draftStore'
 import { useSeasonStore } from '@/fantasy/store/seasonStore'
@@ -48,6 +49,17 @@ export function useFantasyContext() {
   const leagueName = useSeasonStore((s) => s.overview?.league_name ?? null)
   const syncedAt = useSeasonStore((s) => s.overview?.synced_at ?? null)
   const period = useSeasonStore((s) => s.overview?.current_period ?? null)
+  // The saved id points at a session the service cannot return (deleted, or an id from another store):
+  // treat it as "no session open" instead of a draft in progress.
+  const missing = Boolean(sessionId) && !storeState && detail.isError
+  const gone = missing && detail.error instanceof ApiError && detail.error.status === 404
+  useEffect(() => {
+    // Forget the id only when the service says it does not exist; a transient error keeps it for the next visit.
+    if (gone && browserStorage.get(SESSION_KEY) === sessionId) browserStorage.remove(SESSION_KEY)
+  }, [gone, sessionId])
+  if (missing) {
+    return { sessionId: null, sessionName: null, isComplete: false, linked: false, isDemo: false, snapshotId: null, leagueName: null, syncedAt: null, period: null, isLoading: false, missing: true }
+  }
   return {
     sessionId,
     sessionName: storeName ?? detail.data?.meta.name ?? null,
@@ -59,6 +71,7 @@ export function useFantasyContext() {
     syncedAt,
     period,
     isLoading: Boolean(sessionId) && !state && detail.isLoading,
+    missing: false,
   }
 }
 

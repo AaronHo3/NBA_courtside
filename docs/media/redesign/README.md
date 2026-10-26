@@ -39,7 +39,7 @@ node scripts/capture-screens.mjs --session demo9fc7b974 --player 1629638 --varia
 | season-free-agents | ![season-free-agents before](before/season-free-agents-1440x900-dark.png) | ![season-free-agents after](after/season-free-agents-1440x900-dark.png) |
 | season-results | ![season-results before](before/season-results-1440x900-dark.png) | ![season-results after](after/season-results-1440x900-dark.png) |
 | performers | ![performers before](before/performers-1440x900-dark.png) | ![performers after](after/performers-1440x900-dark.png) |
-| setup | ![setup before](before/setup-1440x900-dark.png) | ![setup after](after/setup-1440x900-dark.png) |
+| setup | not captured (private session list) | ![setup after](after/setup-1440x900-dark.png) |
 
 ## Phone (390x844, dark)
 
@@ -64,7 +64,7 @@ node scripts/capture-screens.mjs --session demo9fc7b974 --player 1629638 --varia
 | season-free-agents | ![season-free-agents before](before/season-free-agents-390x844-dark.png) | ![season-free-agents after](after/season-free-agents-390x844-dark.png) |
 | season-results | ![season-results before](before/season-results-390x844-dark.png) | ![season-results after](after/season-results-390x844-dark.png) |
 | performers | ![performers before](before/performers-390x844-dark.png) | ![performers after](after/performers-390x844-dark.png) |
-| setup | ![setup before](before/setup-390x844-dark.png) | ![setup after](after/setup-390x844-dark.png) |
+| setup | not captured (private session list) | ![setup after](after/setup-390x844-dark.png) |
 
 ## Other variants
 

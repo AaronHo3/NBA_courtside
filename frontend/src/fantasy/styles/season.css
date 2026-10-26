@@ -570,8 +570,7 @@ table.grid.fa-table tbody tr.selected > th:first-child {
   gap: 2px;
 }
 .fa-th-info .icon-btn.help {
-  width: 18px;
-  min-height: 18px;
+  margin: -5px;
 }
 table.grid.fa-table th.fa-expand-col,
 table.grid.fa-table td.fa-expand-col {

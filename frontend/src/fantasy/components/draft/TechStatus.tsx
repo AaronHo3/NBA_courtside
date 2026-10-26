@@ -67,7 +67,6 @@ export function TechStatus() {
       </span>
       <span className="sep">·</span>
       <span title={`${snapshot?.label ?? ''} · ${snapshot ? fmtDate(snapshot.created_at) : ''}`}>data {snapshot ? fmtDate(snapshot.created_at).slice(0, 10) : '…'}</span>
-      {snapshot?.is_demo && <span className="demo">DEMO</span>}
       {noTeam && <span className="save bad">no team selected</span>}
     </div>
   )

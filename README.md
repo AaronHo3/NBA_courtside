@@ -53,7 +53,7 @@ the sidebar footer). Design tokens live in `frontend/src/index.css` (`--c-*`); t
 `docs/superpowers/plans/2026-10-25-courtside-redesign-v2.md`).
 
 **Type and contrast.** Body text is 14px in both halves (Tailwind `text-sm`, fantasy `--fs`), with a
-15px `text-base` step for emphasised lines; tables are 13px; 12px (`text-meta`, fantasy `--fs-xs`)
+15px `text-base` step for emphasised lines; tables are 13–14px (analytics `DataTable` body 14px, fantasy `table.grid` 13px); 12px (`text-meta`, fantasy `--fs-xs`)
 is for secondary metadata only. Controls are 34px (small 28px), tabs 36px, table rows 36px. Every
 text token is measured at ≥ 4.5:1 on the surfaces it is used on, in both themes, by
 `frontend/src/lib/contrast.test.ts` (`node frontend/scripts/contrast-report.mjs` prints the

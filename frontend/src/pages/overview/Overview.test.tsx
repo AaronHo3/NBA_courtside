@@ -1,12 +1,19 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import { vi } from 'vitest'
-import type { CategoryDef, MatchupOddsView, PredictionsResponse, SeasonOverview, TeamPowerView } from '@/fantasy/api/types'
+import { api, ApiError } from '@/fantasy/api/client'
+import type { CategoryDef, MatchupOddsView, PerformerRow, PredictionsResponse, SeasonOverview, TeamPowerView } from '@/fantasy/api/types'
+import { SESSION_KEY } from '@/fantasy/lib/storage'
 import Overview from '../Overview'
+import { FeatureCard } from './FeatureCard'
 
 const mockData = vi.hoisted(() => ({ current: null as unknown }))
-vi.mock('./useOverviewData', () => ({ useOverviewData: () => mockData.current }))
+// A null mock falls through to the real hook, so a test can drive the copilot API instead.
+vi.mock('./useOverviewData', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./useOverviewData')>()
+  return { useOverviewData: () => mockData.current ?? actual.useOverviewData() }
+})
 vi.mock('@/hooks/useApi', () => ({ useStatus: () => ({ data: undefined }) }))
 
 const cat = (key: string, label: string, higher = true): CategoryDef => ({ key, label, higher_is_better: higher, kind: 'counting' } as CategoryDef)
@@ -139,5 +146,38 @@ describe('Overview', () => {
   it('points to setup with no session', () => {
     setup({ sid: null })
     expect(screen.getByRole('link', { name: /Open setup/ })).toHaveAttribute('href', '/fantasy#/setup')
+  })
+
+  it('treats a saved session the service no longer has as no session open', async () => {
+    mockData.current = null
+    window.localStorage.setItem(SESSION_KEY, 'gone1')
+    const getSession = vi.spyOn(api, 'getSession').mockRejectedValue(new ApiError(404, 'not_found', 'Session not found'))
+    try {
+      render(
+        <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+          <MemoryRouter><Overview /></MemoryRouter>
+        </QueryClientProvider>,
+      )
+      expect(await screen.findByText('No fantasy session open')).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: /Open setup/ })).toHaveAttribute('href', '/fantasy#/setup')
+      expect(screen.queryByRole('link', { name: /Continue draft/ })).not.toBeInTheDocument()
+      expect(screen.queryByText('Draft in progress')).not.toBeInTheDocument()
+      await waitFor(() => expect(window.localStorage.getItem(SESSION_KEY)).toBeNull())
+    } finally {
+      getSession.mockRestore()
+      window.localStorage.removeItem(SESSION_KEY)
+    }
+  })
+})
+
+describe('FeatureCard', () => {
+  it('tags a contributor flagged as a small sample', () => {
+    const row = {
+      rank: 1, games: 2, periods: 1, minutes: 60, contribution: 3.2, contribution_per_game: 1.6, expected_contribution: 2, over_expected: 1.2, over_expected_per_game: 0.6,
+      actual: {}, expected: null, actual_per_game: {}, flags: ['small sample'],
+      player: { player_id: 'nba:1', nba_id: 1, name: 'Small Sample Guy', team: 'BOS', primary_position: 'G', espn_id: null },
+    } as unknown as PerformerRow
+    render(<MemoryRouter><FeatureCard title="Leading contributor this week" row={row} metric="contribution" href="/x" /></MemoryRouter>)
+    expect(screen.getByText(/2 GP · small sample/)).toBeInTheDocument()
   })
 })

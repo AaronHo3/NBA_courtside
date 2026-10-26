@@ -136,15 +136,20 @@ button[aria-pressed='true'] {
   border-color: var(--teal);
   color: var(--teal-hover);
 }
+/* 28px hit-target floor for every icon button, help triggers included (they are focusable tooltip triggers). */
 .icon-btn {
   padding: 0;
-  width: 26px;
-  min-height: 26px;
+  min-width: 28px;
+  min-height: 28px;
   border-radius: var(--r-sm);
 }
+/* The tooltip anchor resets its first child's min-width (ui.css); an icon button there keeps the floor. */
+.tip-anchor > .icon-btn:first-child {
+  min-width: 28px;
+}
+/* Help triggers keep their compact 20px footprint: the negative margin lets the 28px target overhang it. */
 .icon-btn.help {
-  width: 20px;
-  min-height: 20px;
+  margin: -4px;
   border: none;
   background: none;
   color: var(--ink-3);
