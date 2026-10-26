@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { SEASON_TABS, seasonTabFrom, type SeasonTabId } from '../../components/layout/nav'
+import { SEASON_TABS, seasonTabFrom, type SeasonTabId } from '../lib/seasonTabs'
 import { PlayerDrawer } from '../components/draft/PlayerDrawer'
 import { FreeAgentsTab } from '../components/season/FreeAgentsTab'
 import { LinkDialog } from '../components/season/LinkDialog'

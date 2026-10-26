@@ -24,6 +24,16 @@ export function buildUrl(route: Route, sessionId: string | null): string {
   return `${window.location.pathname}${q}#/${route}`
 }
 
+/** Copilot screens addressable from outside the copilot (research pages link here through `src/lib/fantasyBridge`). */
+export type FantasyRoute = Route
+
+/** Absolute URL of a copilot screen for a session, keeping the hash-router format: `/fantasy?session=S#/route?k=v`. */
+export function fantasyHref(route: FantasyRoute, sessionId: string | null, query?: Record<string, string>): string {
+  const q = sessionId ? `?session=${encodeURIComponent(sessionId)}` : ''
+  const hq = query && Object.keys(query).length ? `?${new URLSearchParams(query).toString()}` : ''
+  return `/fantasy${q}#/${route}${hq}`
+}
+
 export function navigate(route: Route, sessionId: string | null, replace = false): void {
   const url = buildUrl(route, sessionId)
   if (replace) window.history.replaceState(null, '', url)

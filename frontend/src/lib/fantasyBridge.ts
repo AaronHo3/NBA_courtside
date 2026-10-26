@@ -9,14 +9,7 @@ import { useDraftStore } from '@/fantasy/store/draftStore'
 import { useSeasonStore } from '@/fantasy/store/seasonStore'
 import { browserStorage, SESSION_KEY } from '@/fantasy/lib/storage'
 
-export type FantasyRoute = 'setup' | 'draft' | 'health' | 'recap' | 'season' | 'performers'
-
-/** URL of a copilot screen for a session, keeping the hash-router format the copilot and its tests use. */
-export function fantasyHref(route: FantasyRoute, sessionId: string | null, query?: Record<string, string>): string {
-  const q = sessionId ? `?session=${encodeURIComponent(sessionId)}` : ''
-  const hq = query && Object.keys(query).length ? `?${new URLSearchParams(query).toString()}` : ''
-  return `/fantasy${q}#/${route}${hq}`
-}
+export { fantasyHref, type FantasyRoute } from '@/fantasy/lib/router'
 
 /** The NBA person id behind a copilot player, if it has one. */
 export function nbaIdOf(p: Pick<PlayerView, 'player_id' | 'nba_id'>): number | null {
