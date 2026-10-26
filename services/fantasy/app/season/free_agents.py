@@ -22,6 +22,7 @@ class FreeAgent:
     score: float
     z: dict[str, float]
     best_drop: str | None
+    drop_z: dict[str, float] | None
     drop_value: float
     swap_delta: float
     injury_status: str | None
@@ -54,6 +55,15 @@ def _best_drop(
     return (best[2], best[0]) if best else (None, 0.0)
 
 
+def _drop_z(snap: Snapshot, state: DraftState, keys: tuple[str, ...], drop_id: str | None) -> dict[str, float] | None:
+    """Season-total z of the best drop per category, on the same standardized scale as each add's ``z``."""
+    i = snap.index.get(drop_id) if drop_id is not None else None
+    if i is None:
+        return None
+    row = standardized(snap, state.league).z_totals[i]
+    return {k: round(float(v), 3) for k, v in zip(keys, row, strict=True)}
+
+
 def free_agents(
     snap: Snapshot,
     state: DraftState,
@@ -65,6 +75,7 @@ def free_agents(
 ) -> tuple[FreeAgent, ...]:
     res = rank_layer_a(user_context(state, snap))
     drop_id, drop_value = _best_drop(snap, state, res.weights, ir_player_ids, status)
+    drop_z = _drop_z(snap, state, res.keys, drop_id)
     needle = normalize_name(q) if q else None
     rows: list[FreeAgent] = []
     for c in res.candidates:
@@ -85,6 +96,7 @@ def free_agents(
                 score=round(float(c.base_value), 4),
                 z={k: round(float(v), 3) for k, v in zip(res.keys, c.z, strict=True)},
                 best_drop=drop_id,
+                drop_z=drop_z,
                 drop_value=round(drop_value, 4) if np.isfinite(drop_value) else 0.0,
                 swap_delta=round(float(c.base_value) - (round(drop_value, 4) if np.isfinite(drop_value) else 0.0), 4),
                 injury_status=st.get("injury_status"),

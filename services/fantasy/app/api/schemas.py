@@ -602,6 +602,7 @@ class FreeAgentView(BaseModel):
     player: PlayerView
     score: float
     z: dict[str, float]
+    drop_z: dict[str, float] | None = None  # best drop's season-total z, same scale as z; None without a drop
     best_drop: PlayerView | None
     drop_value: float
     swap_delta: float

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import replace
 
 import pandas as pd
@@ -551,6 +552,20 @@ def test_free_agents_endpoint_excludes_owned(client, complete_session):
     )
     q = client.get(f"/api/sessions/{sid}/season/free-agents", params={"q": first["player"]["name"].split()[-1]}).json()
     assert any(it["player"]["player_id"] == first["player"]["player_id"] for it in q["items"])
+
+
+def test_free_agents_endpoint_returns_drop_z_on_the_add_scale(client, complete_session):
+    sid = complete_session
+    linked_and_synced(client, sid, week1())
+    body = client.get(f"/api/sessions/{sid}/season/free-agents", params={"limit": 15}).json()
+    keys = set(body["items"][0]["z"])
+    assert any(it["best_drop"] is not None for it in body["items"])
+    for it in body["items"]:
+        if it["best_drop"] is None:
+            assert it["drop_z"] is None
+            continue
+        assert set(it["drop_z"]) == keys
+        assert all(isinstance(v, float) and math.isfinite(v) for v in it["drop_z"].values())
 
 
 def test_results_endpoint_from_cached_payload(client, complete_session):

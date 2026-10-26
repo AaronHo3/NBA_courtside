@@ -894,6 +894,10 @@ export interface components {
             z: {
                 [key: string]: number;
             };
+            /** Drop Z */
+            drop_z?: {
+                [key: string]: number;
+            } | null;
             best_drop: components["schemas"]["PlayerView"] | null;
             /** Drop Value */
             drop_value: number;

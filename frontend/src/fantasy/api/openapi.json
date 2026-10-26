@@ -2707,6 +2707,20 @@
       "type": "object",
       "title": "Z"
      },
+     "drop_z": {
+      "anyOf": [
+       {
+        "additionalProperties": {
+         "type": "number"
+        },
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Drop Z"
+     },
      "best_drop": {
       "anyOf": [
        {

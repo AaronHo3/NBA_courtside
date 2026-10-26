@@ -766,6 +766,7 @@ def free_agents(
                 player=svc.player_view(ranked, ranked.index[f.player_id], state),
                 score=f.score,
                 z=f.z,
+                drop_z=f.drop_z,
                 best_drop=svc.player_view(ranked, drop, state) if drop is not None else None,
                 drop_value=f.drop_value,
                 swap_delta=f.swap_delta,
