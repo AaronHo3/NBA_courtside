@@ -5,7 +5,7 @@ import { PlayerDrawer } from '../components/draft/PlayerDrawer'
 import { Icon } from '../components/ui/Icon'
 import { PageHeader, type ContextChip } from '../components/ui/PageHeader'
 import { StatCard, StatRow } from '../components/ui/StatCard'
-import { EmptyState } from '../components/ui/States'
+import { EmptyState, LoadingState } from '../components/ui/States'
 import { buildUrl } from '../lib/router'
 import { selectRecCurrent, useDraftStore } from '../store/draftStore'
 
@@ -17,6 +17,8 @@ export function RecapScreen() {
   const current = useDraftStore(selectRecCurrent)
   const notify = useDraftStore((s) => s.notify)
   const isDemo = useDraftStore((s) => s.snapshot?.is_demo ?? false)
+  const stateStatus = useDraftStore((s) => s.stateStatus)
+  if (!state && stateStatus === 'loading') return <LoadingState title="Loading session" />
   if (!sessionId || !state) {
     return (
       <EmptyState title="No session loaded" action={<a href={buildUrl('setup', null)}>Go to setup</a>}>

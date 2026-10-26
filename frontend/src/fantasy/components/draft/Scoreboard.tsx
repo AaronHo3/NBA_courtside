@@ -63,8 +63,8 @@ export function Scoreboard() {
       </div>
       <div className="cell grow">
         {last && (
-          <button type="button" className="small" data-testid="board-undo" disabled={pending !== null} onClick={() => void undo()} title="Undo the most recent pick">
-            <Icon name="undo" size={13} /> Undo #{last.overall} {players[last.player_id]?.name ?? ''}
+          <button type="button" className="small" data-testid="board-undo" disabled={pending !== null} onClick={() => void undo()} title={`Undo the most recent pick: #${last.overall} ${players[last.player_id]?.name ?? ''}`}>
+            <Icon name="undo" size={13} /> <span className="undo-label">Undo #{last.overall} {players[last.player_id]?.name ?? ''}</span>
           </button>
         )}
         <label className="me-pick">

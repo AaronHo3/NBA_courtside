@@ -232,6 +232,8 @@ body {
 
 /* ---- skip link and sticky-header scroll margins ------------------------------------------------ */
 :root { --shell-header-h: 56px; --sticky-toolbar-h: 72px; }
+/* Below sm the shell header scrolls away with the page (it wraps to two rows there), so nothing sits over focused content. */
+@media (max-width: 639px) { :root { --shell-header-h: 0px; } }
 /* Anchors, in-page targets and focused controls land below the sticky shell header instead of under it. */
 [id] { scroll-margin-top: var(--shell-header-h); }
 :focus-visible { scroll-margin-top: var(--shell-header-h); }

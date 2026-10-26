@@ -23,6 +23,7 @@ type Tab = SeasonTabId
 export function SeasonScreen() {
   const sessionId = useDraftStore((s) => s.sessionId)
   const state = useDraftStore((s) => s.state)
+  const stateStatus = useDraftStore((s) => s.stateStatus)
   const overview = useSeasonStore((s) => s.overview)
   const overviewStatus = useSeasonStore((s) => s.overviewStatus)
   const overviewError = useSeasonStore((s) => s.overviewError)
@@ -40,6 +41,8 @@ export function SeasonScreen() {
     return () => stop()
   }, [sessionId, loadOverview, start, stop])
 
+  // While the session loads, say so; "No session loaded" is for when there is none.
+  if (!state && stateStatus === 'loading') return <LoadingState title="Loading session" />
   if (!sessionId || !state) {
     return (
       <EmptyState title="No session loaded" action={<a href={buildUrl('setup', null)}>Go to setup</a>}>

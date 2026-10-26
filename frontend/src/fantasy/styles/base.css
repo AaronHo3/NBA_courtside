@@ -651,6 +651,16 @@ legend {
 }
 @media (max-width: 900px) {
   .setup-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
+}
+/* Long option labels (the snapshot picker) must not push a column or fieldset past its edge. */
+.setup-layout > * {
+  min-width: 0;
+}
+.setup-layout select,
+.setup-layout input[type='file'],
+.setup-layout .row > label {
+  min-width: 0;
+  max-width: 100%;
 }

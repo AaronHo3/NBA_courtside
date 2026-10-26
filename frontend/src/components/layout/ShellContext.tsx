@@ -29,11 +29,11 @@ export function FantasyContextBar() {
         {ctx.sessionId && !list.some((s) => s.id === ctx.sessionId) && <option value={ctx.sessionId}>{ctx.sessionName ?? ctx.sessionId}</option>}
         {list.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
       </select>
-      {ctx.sessionId && (
+      {ctx.sessionId && !ctx.isLoading && (
         <span className="hidden min-w-0 flex-nowrap items-center gap-2 whitespace-nowrap sm:inline-flex">
           <Dot />
           <span className="max-w-[180px] truncate font-medium text-ink" title={leagueLabel}>{leagueLabel}</span>
-          {ctx.period != null && <><Dot /><span className="tnum">Week {ctx.period}</span></>}
+          {ctx.linked && ctx.period != null && <><Dot /><span className="tnum">Week {ctx.period}</span></>}
           {ctx.syncedAt && <><Dot /><span className="hidden tnum md:inline" title={ctx.syncedAt}>synced {fmtSynced(ctx.syncedAt)}</span></>}
         </span>
       )}

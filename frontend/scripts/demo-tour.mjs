@@ -36,6 +36,14 @@ await context.addInitScript((sid) => {
   }
 }, SESSION)
 const page = await context.newPage()
+// The Setup table and session picker list every local session, private leagues included: the tour only
+// ever shows the sanitized session and the practice draft it creates.
+await page.route((u) => new URL(u.href).pathname === '/api/fantasy/sessions', async (r) => {
+  if (r.request().method() !== 'GET') return r.continue()
+  const res = await r.fetch()
+  const rows = await res.json()
+  await r.fulfill({ response: res, json: rows.filter((s) => s.id === SESSION || s.name === 'Portfolio demo draft') })
+})
 page.on('dialog', (d) => void d.accept())
 const errors = []
 page.on('pageerror', (e) => errors.push(String(e)))

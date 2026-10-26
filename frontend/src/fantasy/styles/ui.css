@@ -230,7 +230,7 @@
 .portrait.fallback {
   color: #fff;
   font-weight: 700;
-  font-size: 0.4em;
+  line-height: 1;
   letter-spacing: 0.02em;
   font-family: var(--font-display);
 }
@@ -399,6 +399,9 @@
   min-height: 0;
   font-weight: 500;
 }
+.chips button {
+  min-height: 28px;
+}
 .chips button[aria-pressed='true'] {
   background: var(--teal);
   color: var(--teal-ink);
@@ -407,8 +410,11 @@
 .chip button {
   border: none;
   background: none;
-  padding: 0 2px;
-  min-height: 0;
+  padding: 0;
+  min-width: 28px;
+  min-height: 28px;
+  margin-right: -8px;
+  justify-content: center;
 }
 .pos-chip {
   display: inline-block;

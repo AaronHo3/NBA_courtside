@@ -47,6 +47,7 @@ function pickOverperformer(data: PerformersResponse): { row: PerformerRow | unde
 export function PerformersScreen() {
   const sessionId = useDraftStore((s) => s.sessionId)
   const state = useDraftStore((s) => s.state)
+  const stateStatus = useDraftStore((s) => s.stateStatus)
   const initial = readHashQuery(window.location.hash)
   const [manager, setManager] = useState<string | null>(initial.team ?? null)
   const [scope, setScope] = useState<Scope>(initial.scope === 'season' ? 'season' : 'week')
@@ -97,6 +98,7 @@ export function PerformersScreen() {
     setHashQuery({ team: manager, scope: scope === 'season' ? 'season' : null, week: scope === 'week' && period !== null ? String(period) : null })
   }, [manager, scope, period])
 
+  if (!state && stateStatus === 'loading') return <LoadingState title="Loading session" />
   if (!sessionId || !state) {
     return (
       <EmptyState title="No session loaded" action={<a href={buildUrl('setup', null)}>Go to setup</a>}>

@@ -26,7 +26,7 @@ export function Portrait({ name, espnId, team, size = 48 }: PortraitProps) {
   const style = { width: size, height: size, borderColor: color.primary }
   if (!url || failed) {
     return (
-      <span className="portrait fallback" style={{ ...style, background: color.primary }} data-testid="portrait-fallback" aria-label={name} role="img">
+      <span className="portrait fallback" style={{ ...style, background: color.primary, fontSize: Math.max(9, Math.round(size * 0.36)) }} data-testid="portrait-fallback" aria-label={name} role="img">
         {initials(name)}
       </span>
     )

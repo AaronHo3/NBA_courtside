@@ -33,7 +33,7 @@ export function SectionNav() {
             <a
               href={`#${s.id}`}
               aria-current={active === s.id ? 'location' : undefined}
-              className={clsx('block whitespace-nowrap rounded-[var(--radius-control)] px-2 py-1', active === s.id ? 'bg-accent-soft font-medium text-ink' : 'text-ink-2 hover:bg-raised hover:text-ink')}
+              className={clsx('block min-h-7 whitespace-nowrap rounded-[var(--radius-control)] px-2 py-1.5', active === s.id ? 'bg-accent-soft font-medium text-ink' : 'text-ink-2 hover:bg-raised hover:text-ink')}
             >
               <span className="tnum text-ink-3">{i + 1}.</span> {s.title}
             </a>

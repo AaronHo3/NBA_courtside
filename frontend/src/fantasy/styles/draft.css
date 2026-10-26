@@ -300,3 +300,17 @@
   align-items: center;
 }
 
+/* The undo label names the player: one line, shortened with an ellipsis when the strip is narrow. */
+.status-strip .cell.grow {
+  min-width: 0;
+}
+.status-strip .cell.grow > button {
+  min-width: 0;
+  max-width: 100%;
+}
+.status-strip .undo-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

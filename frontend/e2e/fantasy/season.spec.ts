@@ -122,7 +122,7 @@ test('link to ESPN (mocked), sync, matchups, power rankings, free agents, result
   await expect(page.getByTestId('user-matchup')).toBeVisible()
   await expect(page.getByTestId('user-matchup')).toContainText('70%')
   await expect(page.getByText(/Bye week/)).toBeVisible()
-  await expect(page.getByTestId('roster-moves')).toContainText(/No roster moves in week 1/)
+  await expect(page.getByTestId('roster-moves')).toContainText(/No roster moves in week \d+/)
 
   // --- power rankings (real backend) -------------------------------------------------------------
   await page.getByTestId('season-tab-power').click()

@@ -186,7 +186,7 @@ export function AppShell() {
       <SideNav activeId={activeId} activeTab={activeTab} sessionId={fantasy.sessionId} isComplete={fantasy.isComplete} onNavigate={onNavigate} />
       <div className="flex items-center justify-between gap-2 border-t border-line px-3 py-2.5 text-xs text-ink-3">
         <span className="truncate">{status.data ? <>NBA data: <span className="text-ink-2">{status.data.data.namespace}</span>{status.data.data.generated_at ? <span title={status.data.data.generated_at}> · {new Date(status.data.data.generated_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span> : null}</> : '…'}</span>
-        <button type="button" onClick={toggle} aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'} className="t-fast press rounded p-1 text-ink-3 hover:bg-raised hover:text-ink">{theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}</button>
+        <button type="button" onClick={toggle} aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'} className="t-fast press inline-flex h-7 w-7 items-center justify-center rounded text-ink-3 hover:bg-raised hover:text-ink">{theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}</button>
       </div>
     </>
   )
@@ -209,12 +209,12 @@ export function AppShell() {
             <Link to="/methodology" className="ml-auto whitespace-nowrap text-accent hover:underline">How to load real data</Link>
           </div>
         )}
-        <header className="sticky top-0 z-20 flex min-h-12 flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-page/90 px-4 py-2 backdrop-blur">
-          <button type="button" aria-label="Open navigation" onClick={() => setDrawerOpen(true)} className="t-fast rounded p-1 text-ink-2 hover:bg-raised lg:hidden"><Menu size={18} /></button>
+        <header className="z-20 flex min-h-12 flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-page/90 px-4 py-2 backdrop-blur sm:sticky sm:top-0">
+          <button type="button" aria-label="Open navigation" onClick={() => setDrawerOpen(true)} className="t-fast -ml-2 inline-flex h-10 w-10 items-center justify-center rounded text-ink-2 hover:bg-raised lg:hidden"><Menu size={18} /></button>
           <Breadcrumb crumbs={crumbs} />
           <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2">
             {isFantasyRoute ? <FantasyContextBar /> : <ResearchContextBar />}
-            <Button size="sm" variant="ghost" onClick={() => setPaletteOpen(true)} aria-label="Open command palette" className="md:hidden"><Search size={14} /></Button>
+            <Button size="sm" variant="ghost" onClick={() => setPaletteOpen(true)} aria-label="Open command palette" className="h-10 w-10 justify-center md:hidden"><Search size={14} /></Button>
           </div>
         </header>
         <main key={loc.pathname} id="main-content" tabIndex={-1} className="flex-1 px-4 py-5 outline-none sm:px-6">

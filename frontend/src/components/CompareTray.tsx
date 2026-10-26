@@ -51,7 +51,7 @@ export function CompareTray({ className }: { className?: string }) {
         )}
       >
         <GitCompare size={14} strokeWidth={1.75} aria-hidden="true" className={empty ? 'text-ink-3' : 'text-accent'} />
-        Compare · {players.length}/{MAX_COMPARE}
+        <span className="max-sm:sr-only">Compare ·</span>{' '}{players.length}/{MAX_COMPARE}
       </button>
       {isOpen && (
         <div ref={popoverRef} role="dialog" aria-label="Comparison group" className="pop-in absolute right-0 top-full z-30 mt-1.5 w-72 rounded-[var(--radius-panel)] border border-line-strong bg-surface p-2 shadow-[var(--shadow-float)]">

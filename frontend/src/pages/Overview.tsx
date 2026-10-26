@@ -52,6 +52,8 @@ export default function Overview() {
   const status = useStatus()
   const recent = useRecent((s) => s.players)
   const sid = ctx.sessionId
+  // Until the session's state arrives, isComplete defaults to false: show a skeleton, not "Draft in progress".
+  const pending = ctx.isLoading
   const ov = overview.data
   const names = ov?.manager_names ?? {}
   const myPower = ov?.power.find((p) => p.is_user)
@@ -71,13 +73,14 @@ export default function Overview() {
         title="Overview"
         lede={lede}
         chips={<>{ctx.isDemo && <Badge tone="warning">Demo data</Badge>}{freshness && <span className="text-xs text-ink-3">NBA data: {freshness.namespace}{freshness.generated_at ? ` · updated ${new Date(freshness.generated_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}` : ''}</span>}</>}
-        actions={sid ? <Link to={fantasyHref(ctx.isComplete ? 'season' : 'draft', sid)} className="t-fast rounded-[var(--radius-control)] bg-accent px-3 py-1.5 text-sm font-medium text-accent-ink hover:bg-[var(--c-accent-hover)]">{ctx.isComplete ? 'Open my league' : 'Continue draft'}</Link> : undefined}
+        actions={sid && !pending ? <Link to={fantasyHref(ctx.isComplete ? 'season' : 'draft', sid)} className="t-fast rounded-[var(--radius-control)] bg-accent px-3 py-1.5 text-sm font-medium text-accent-ink hover:bg-[var(--c-accent-hover)]">{ctx.isComplete ? 'Open my league' : 'Continue draft'}</Link> : undefined}
       />
 
       {!sid && (
         <EmptyState title="No fantasy session open" body="Create or resume a draft session in the copilot to see your league here." action={<Link to="/fantasy#/setup" className="text-sm font-medium text-accent hover:underline">Open setup →</Link>} />
       )}
-      {sid && !ctx.isComplete && (
+      {sid && pending && <Skeleton lines={5} className="max-w-xl" />}
+      {sid && !pending && !ctx.isComplete && (
         <EmptyState title="Draft in progress" body="The league view unlocks once every pick is recorded." action={<Link to={fantasyHref('draft', sid)} className="text-sm font-medium text-accent hover:underline">Back to the draft →</Link>} />
       )}
       {sid && ctx.isComplete && overview.isLoading && <Skeleton lines={5} className="max-w-xl" />}

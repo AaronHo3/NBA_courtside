@@ -68,7 +68,7 @@ export function Segmented<T extends string>({ value, onChange, options, ariaLabe
           aria-checked={value === o.value}
           title={o.title}
           onClick={() => onChange(o.value)}
-          className={clsx('t-fast px-2.5 py-1 text-xs font-medium border-r border-line-strong last:border-r-0', value === o.value ? 'bg-accent text-accent-ink' : 'bg-surface text-ink-2 hover:bg-raised hover:text-ink')}
+          className={clsx('t-fast min-h-7 px-2.5 py-1 text-xs font-medium border-r border-line-strong last:border-r-0', value === o.value ? 'bg-accent text-accent-ink' : 'bg-surface text-ink-2 hover:bg-raised hover:text-ink')}
         >
           {o.label}
         </button>
