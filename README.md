@@ -6,8 +6,8 @@ One local-first NBA workspace built from two earlier projects:
   over Parquet, React + Vite + Tailwind frontend. This frontend is now the main Courtside UI.
 - **Fantasy** (from `fantasy_draft_simulator`): ESPN nine-category draft copilot and in-season
   companion (draft, recap, ESPN league link and sync, season odds, performers, CSV imports, session
-  export/import). FastAPI + SQLite sessions + Parquet snapshots. Its UI is mounted unchanged inside
-  the main frontend at `/fantasy`.
+  export/import). FastAPI + SQLite sessions + Parquet snapshots. Its UI renders inside the main
+  Courtside shell at `/fantasy`, on the same design tokens as the research pages.
 
 Nothing talks to the network on request paths; both services bind to localhost. The browser loads
 player headshots and team logos from the public NBA/ESPN image CDNs (initials and tricodes are the
@@ -42,22 +42,84 @@ session whose names are already pseudonymous. The MP4 and GIF were encoded with 
 ## The interface
 
 One shell for both halves: a grouped sidebar (Overview · NBA research · Scouting & film · Fantasy ·
-Data & methods), a toolbar that shows the NBA season picker and compare tray on research pages and
-the fantasy session / league / week / last-sync on fantasy pages, and a ⌘K palette for players and
-pages. Dark is the primary theme (toggle in the sidebar footer). Design tokens live in
-`frontend/src/index.css` (`--c-*`, mirrored for the fantasy copilot in
-`frontend/src/fantasy/styles/tokens.css`); the spec is
-`docs/superpowers/specs/2026-10-24-courtside-redesign.md`.
+Data & methods), a header with a breadcrumb and one compact context area (the NBA season picker and
+compare tray on research pages; the fantasy session, league, week, last sync and demo flag on
+fantasy pages), and a ⌘K palette for players and pages. The fantasy copilot renders inside this
+shell with the shared tokens; it has no sidebar of its own. Dark is the primary theme (toggle in
+the sidebar footer). Design tokens live in `frontend/src/index.css` (`--c-*`); the copilot's
+`frontend/src/fantasy/styles/tokens.css` aliases them. Specs:
+`docs/superpowers/specs/2026-10-24-courtside-redesign.md`, revised by
+`docs/superpowers/specs/2026-10-25-courtside-redesign-v2-brief.md` (plan:
+`docs/superpowers/plans/2026-10-25-courtside-redesign-v2.md`).
 
-- **Overview** (`/`): your matchup this week with per-category odds, power rank, projection track
-  record, leading contributor and biggest overperformer, recently viewed players.
-- **Player profile**: hero header with portrait and team colours, the copilot's eligibility /
-  ownership / projection for the player when a session is open, stat tiles, tabs
-  (Performance · Shooting · Advanced · Fantasy).
-- **Fantasy performers**: feature cards, player × category contribution heatmap, totals / per-game
-  toggle, and "NBA profile" links; the browser Back button returns to the same team and week.
-- **Fantasy free agents**: rank by projection or by actual production (this week or season to date)
-  once you press "Refresh game logs"; the swap panel shows add and drop actual vs projected.
+**Type and contrast.** Body text is 14px in both halves (Tailwind `text-sm`, fantasy `--fs`), with a
+15px `text-base` step for emphasised lines; tables are 13px; 12px (`text-meta`, fantasy `--fs-xs`)
+is for secondary metadata only. Controls are 34px (small 28px), tabs 36px, table rows 36px. Every
+text token is measured at ≥ 4.5:1 on the surfaces it is used on, in both themes, by
+`frontend/src/lib/contrast.test.ts` (`node frontend/scripts/contrast-report.mjs` prints the
+matrix); `--c-ink-4` is decorative only and never used for text.
+
+**Navigation.** One Fantasy group: Draft, Recap, My league, Performers, Setup. My league has five
+views (Matchups, Power rankings, Free agents, Results, Track record; defined once in
+`src/fantasy/lib/seasonTabs.ts`) that are the season tabs, the sidebar sub-items and the
+breadcrumb's last step at once; `#/season?tab=matchups` and the other
+`tab=` deep links still work. The URL is the only route state: every hash-query write dispatches a
+`locationchange` event, and the shell and the fantasy router read the location through
+`useSyncExternalStore`, so the view, URL, breadcrumb, page title and selected sidebar item stay in
+step through tab changes, sidebar and palette jumps, reloads and Back/Forward (tabs push a history
+entry; filters replace it). Player profiles read "NBA research / Players / <name>".
+
+- **Overview** (`/`): this week's matchup first, with win, tie and loss chances kept apart from the
+  expected category score, actual totals and games scheduled; the three most vulnerable categories;
+  compact power rank and category outlook; leading contributor and biggest overperformer; next
+  actions; recently viewed players. The track record explains when results become available
+  instead of showing empty tiles.
+- **Draft**: recommendation first. The card ("Best pick now", or "Previewing <name>" with a way
+  back) keeps a stable height while recalculating and separates projected production, fantasy
+  value and category impact (bars on a shared zero baseline); "Draft to my team" stays visible at
+  1280×800. Timing, model tier and revision live in a quiet status line. "My team" docks as a third
+  column from 1180px and opens as a drawer below that; peeking at a player is a non-modal drawer, so
+  the picker stays usable. Stale-recommendation checks, pick confirmation and undo work as before.
+- **League matchups**: each card separates the projected outcome (per-category chances, ties
+  counted half for each side) from actual ESPN totals, with schedule volume and injuries in one
+  line and assumptions in a disclosure; only the league's configured categories appear.
+- **Power rankings**: a sortable heatmap with sticky team column and header, a fixed 0–100% scale
+  with a legend, and your row marked; picking another team opens a category-by-category comparison
+  with yours.
+- **Free agents**: built around the swap. Rows lead with the player, value, best drop and net Δ;
+  category detail expands per row and the full table is behind "Advanced table". Rank by projection
+  or by actual production (this week or season to date, after "Refresh game logs", with freshness
+  shown beside it); the swap panel draws add and drop on one scale (the API's `drop_z`), labels
+  actual vs projected lines, and holds the minutes override.
+- **Performers**: team summary, key players (leading contributor, biggest overperformer), a
+  sortable player × category heatmap, actual vs expected, then the full table; totals / per-game is
+  explicit throughout, and "NBA profile" links return to the same team and week.
+- **Explorer**: select, then act. A click selects and highlights the player in the chart and
+  table; profile and compare are explicit actions in the selection strip. Size and colour encodings
+  are labelled and the population filters sit in a disclosure next to the chart.
+- **Player profile**: a scannable hero (portrait and logo with fallbacks, team colours, the
+  copilot's draft status and ADP when a session is open), research and fantasy season scopes kept
+  distinct, a career timeline that shows it scrolls, then Performance · Shooting · Advanced ·
+  Fantasy.
+- **Shooting**: the court sized to the panel, with zone detail beside it when there is room;
+  frequency, accuracy and relative-to-league encodings, attempt counts and Wilson intervals stay.
+- **Matchups** (research): the result leads with its sample size and uncertainty; the
+  observation-not-causation caveat stays beside it.
+- Scouting, Rankings, Teams, Compare, Games, Evidence and Data & methods share the same page
+  header, toolbar, pinned-identity tables and method disclosures.
+
+Shared primitives (`frontend/src/components/ui`, `components/layout`, `components/table`,
+`components/charts`, with plain-CSS counterparts in `frontend/src/fantasy/components/ui`):
+`PageHeader` (context and tabs slots), `Toolbar`, `PlayerIdentity` / `TeamMark`, `StatTile` and
+`Delta`, `Tabs` and `Segmented`, `DataTable` (pinned first column, sticky header, 36px rows, keyboard
+row focus), `ChartFrame` (question, legend, keyboard summary), `Drawer` (modal unless `modal={false}`),
+`Disclosure`, `Freshness`, `Skeleton` and the empty / error / loading states. Dialogs, drawers and
+the palette share one layer stack, so only the top layer traps focus and handles Esc.
+
+`node frontend/scripts/capture-screens.mjs --session <id> --out <dir>` captures every page at 1440,
+1280, 768 and 390 px (`--theme light`, `--reduced-motion`, `--pages`, `--full-page`) and reports
+horizontal overflow; `frontend/scripts/demo-tour.mjs` records the tour in the Demo section. Both
+need `make dev` running.
 
 ## Layout
 
@@ -88,8 +150,8 @@ make dev       # analytics :8001, fantasy :8002, Courtside UI :5173 — Ctrl-C s
 ```
 
 Open http://127.0.0.1:5173 for the analytics workbench and http://127.0.0.1:5173/fantasy for the
-fantasy copilot (session ids stay in the URL as before: `/fantasy?session=<id>#/season`). Each
-sidebar links to the other. Override ports with `make dev ANALYTICS_PORT=8011 FANTASY_PORT=8012 FRONTEND_PORT=5183`.
+fantasy copilot (session ids stay in the URL as before: `/fantasy?session=<id>#/season`). One
+sidebar covers both. Override ports with `make dev ANALYTICS_PORT=8011 FANTASY_PORT=8012 FRONTEND_PORT=5183`.
 
 | Browser path          | Forwarded to                | As        |
 | --------------------- | --------------------------- | --------- |
@@ -103,14 +165,16 @@ UI calls `/api/analytics/...` through `src/lib/api.ts`; the fantasy UI has its o
 
 ### How the fantasy UI is embedded
 
-`frontend/src/fantasy` is the standalone copilot app copied verbatim and mounted full-screen at
-`/fantasy` outside the analytics shell, so it keeps its charcoal sidebar, hash router and design
-system. Its stylesheets are plain CSS; `vite.config.ts` prefixes every rule with `.fantasy-root` at
-build time, `src/index.css` reverts Tailwind's preflight and utilities inside that container, and
-Tailwind never scans `src/fantasy` for class names. Edit the copilot's CSS and components as before;
-the only differences from the standalone app are the API base and a link back to the analytics
-side. Regenerate its typed client with `make -C services/fantasy openapi`. Decision record:
-`docs/fantasy/DECISIONS.md` (DEC-31).
+`frontend/src/fantasy` is the copilot app (hash router, plain CSS), rendered at `/fantasy` inside
+the shared `AppShell`: the shell supplies the sidebar, breadcrumb and context area, and the
+copilot's tokens alias the shared palette. Its stylesheets stay isolated: `vite.config.ts` prefixes
+every rule with `.fantasy-root` at build time, `src/index.css` reverts Tailwind's preflight and
+utilities inside that container, and Tailwind never scans `src/fantasy` for class names. Components
+there use plain CSS classes, never Tailwind utilities, and never import from the analytics tree
+(`src/fantasy/lib/isolation.test.ts` guards this); research pages reach the copilot through
+`src/lib/fantasyBridge.ts`. Regenerate its typed client with
+`make -C services/fantasy openapi`. Decision records: `docs/fantasy/DECISIONS.md` (DEC-31 isolation,
+DEC-32 shared shell, DEC-35 route state, type scale and dialogs).
 
 ## Data
 
@@ -141,9 +205,14 @@ make test-analytics        # pytest + coverage (services/analytics)
 make test-fantasy          # pytest (services/fantasy)
 make test-frontend         # vitest (analytics + fantasy UI) + tsc -b
 make lint                  # ruff (both services) + oxlint (frontend)
-make e2e                   # analytics Playwright smoke tests; needs `make dev` running
-make e2e-fantasy           # fantasy Playwright suite; boots its own API (:8010) and Vite (:5175)
+make e2e                   # analytics Playwright suite incl. e2e/a11y.spec.ts; needs `make dev` running
+make e2e-fantasy           # fantasy Playwright suite incl. e2e/fantasy/navigation.spec.ts; boots its own API (:8010) and Vite (:5175)
 ```
+
+Inside `frontend/`: `npx vitest run` (unit and component tests, including the contrast matrix in
+`src/lib/contrast.test.ts`), `npm run typecheck` (`tsc -b`), `npm run lint` (oxlint). The backends'
+pytest suites run with `make test-analytics` and `make test-fantasy`; the fantasy one includes a
+concurrency test for the per-thread SQLite connections in `app/persistence/store.py`.
 
 Service-specific commands (ingestion, snapshot builds, ESPN link/sync, benchmarks, evaluations)
 live in `services/analytics/Makefile` and `services/fantasy/Makefile`; run them with
@@ -154,5 +223,3 @@ live in `services/analytics/Makefile` and `services/fantasy/Makefile`; run them 
 - `services/analytics/deploy/` (docker-compose files, Caddyfile) and the two Dockerfiles are
   copied verbatim from the analytics project and still assume the old `backend/` + `frontend/`
   layout. Local development does not use them.
-- The two UIs are still two design systems (Tailwind dark/light workbench, plain-CSS light
-  copilot) that share one app shell boundary at `/fantasy`; unifying them is a later phase.

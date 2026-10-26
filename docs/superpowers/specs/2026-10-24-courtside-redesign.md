@@ -1,5 +1,27 @@
 # Courtside redesign: one basketball product (spec)
 
+> **Superseded in part by v2 (2026-10-25).** The second pass
+> (`docs/superpowers/specs/2026-10-25-courtside-redesign-v2-brief.md`, executed from
+> `docs/superpowers/plans/2026-10-25-courtside-redesign-v2.md`; decision DEC-35) changes these
+> values below; everything else here still binds.
+>
+> - Ink: dark `--ink-3 #a19b91`, `--ink-4 #6f6a62`; light `--ink-3 #66615a`, `--ink-4 #8f8a82`.
+>   `--ink-4` is decorative only (dividers, placeholders), never text.
+> - Light accent and signed colours: `--accent #ad4a0d` (hover `#b14c0e`), `--pos #0d7569`,
+>   `--neg #b53d31`, `--amber #8a5d0b`. Dark accent, pos, neg and amber are unchanged.
+> - New tokens: `--c-control-line` (input/select borders; dark `rgba(255,255,255,.36)`, light
+>   `rgba(20,18,14,.42)`), `--c-amber-fill #e0a63a` (badge backgrounds only) and `--c-on-fill
+>   #15110d` (text on bright fills, both themes). `--line-strong` is `.22` dark / `.28` light.
+> - Type: body 14px (fantasy `--fs` 14px), `text-base` 15px, tables 13px (`text-xs`), and a
+>   `text-meta` 12px utility (fantasy `--fs-xs`) for secondary metadata only; nothing textual
+>   below 12px. Every text token is ≥ 4.5:1 on its surfaces in both themes
+>   (`frontend/src/lib/contrast.test.ts`).
+> - Sizes: controls 34px (small 28px), tabs 36px, table rows 36px (30px dense), replacing the
+>   30–34px rows under "Density".
+> - Navigation: the Fantasy group has no separate "League matchups" item; My league carries five
+>   views (Matchups, Power rankings, Free agents, Results, Track record) and
+>   `#/season?tab=matchups` remains a valid deep link.
+
 Audience: whoever implements or extends a page. Everything here is binding unless a later DEC says otherwise.
 
 ## Product shape

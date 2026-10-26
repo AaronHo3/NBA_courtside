@@ -309,3 +309,37 @@ snapshot. The API says what it used (`FreeAgentView.minutes`, `FreeAgentsRespons
 the minutes line in the swap panel, and an override input there. Players with no NBA team
 (`NO_TEAM`) are no longer listed as free agents. The logs come only from the stored Parquet
 (DEC-33); no request path fetches.
+
+## DEC-35 — 2026-10-25 — Redesign v2: event-driven route state, one fantasy hierarchy, readable type, layered dialogs
+The URL is the only route state. Every hash-query write goes through `setHashQuery`
+(`src/fantasy/lib/hashQuery.ts`), which pushes a history entry for tab changes (`{ push: true }`, so
+Back undoes them) and replaces it for filters, then dispatches a `locationchange` event; the shell
+(`AppShell`'s location hash) and the fantasy router (`src/fantasy/lib/router.ts`) read the location
+through `useSyncExternalStore` subscribed to `hashchange`, `popstate` and `locationchange`, and the
+shell re-announces React Router navigations, so the view, URL, breadcrumb, document title and
+selected sidebar item cannot drift (`e2e/fantasy/navigation.spec.ts`). There is one fantasy
+navigation hierarchy: Draft, Recap, My league, Performers, Setup; the separate "League matchups"
+item is gone, and My league's five views (`SEASON_TABS` in `src/fantasy/lib/seasonTabs.ts`, re-exported
+by `nav.ts`: Matchups, Power rankings, Free agents, Results, Track record) are at once the season tabs, the sidebar sub-items and the
+breadcrumb, with `#/season?tab=matchups` and the other `tab=` links still honoured. Text follows
+one scale (body 14px, `text-base` 15px, tables 13px, 12px `text-meta` / `--fs-xs` for secondary
+metadata only) and every text token measures ≥ 4.5:1 on its surfaces in both themes, enforced by
+`frontend/src/lib/contrast.test.ts`; `--ink-4` is decorative only, and the new `--c-control-line`,
+`--c-amber-fill` and `--c-on-fill` cover borders and bright badges. Drawers are modal only when
+they say so: both `Drawer` primitives take `modal` (default true: scrim, outside pointerdown
+closes, `aria-modal`, Tab trap); the draft player peek is `modal={false}` so the picker stays usable
+on draft night, `PerformerDrawer` stays modal, and the draft's "My team" panel at ≥ 1180px is a
+plain `<aside>` with no dialog semantics or Esc handler (the drawer form is used only below that).
+Open dialogs form a single layer stack kept on `globalThis` under a registered symbol, so the two
+`useDialogFocus` copies (the copilot may not import the analytics one, DEC-31) agree on which
+layer is on top: only it traps focus and handles Esc, and the fantasy `Modal` uses the same hook.
+The import direction stays research → copilot: URL helpers (`fantasyHref`) and the season tabs live
+in `src/fantasy/lib`, the bridge and `nav.ts` re-export them, and `src/fantasy/lib/isolation.test.ts`
+fails on any copilot import of an analytics-side module.
+API changes are additive only: `FreeAgentView.drop_z` (the best drop's per-category z on the add's
+scale) lets the swap panel draw add and drop on one axis, as `nba_id` did for DEC-32. The session
+store now gives each thread its own SQLite connection (`app/persistence/store.py`, writes
+serialised by a lock), fixing intermittent 500s and `InterfaceError`s from a connection shared
+across the server's worker threads. Calculations, labels, caveats and the pick-commit path are
+unchanged. Brief: `docs/superpowers/specs/2026-10-25-courtside-redesign-v2-brief.md`; plan:
+`docs/superpowers/plans/2026-10-25-courtside-redesign-v2.md`.

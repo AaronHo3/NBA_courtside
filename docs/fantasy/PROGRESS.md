@@ -237,6 +237,33 @@ README; `docs/media/` holds the GIF, MP4 and gallery shots. Recorded against a s
 the live session (manager, team and league names replaced; players and stats real). The clone and
 its league payload live only locally under `data/`, like every other session.
 
+### 2026-10-25 — Courtside redesign v2 (DEC-35)
+Shipped on `redesign/v2` (f8c66ca..0acbf11, plus the batched review fixes): a type scale and contrast-safe tokens in both themes
+with a contrast test; event-driven route state and one fantasy navigation hierarchy (no separate
+"League matchups" item; URL, breadcrumb, title and sidebar in sync); shared primitives (Disclosure,
+Drawer with a `modal` prop, Freshness, ChartFrame, pinned/sticky DataTable, PageHeader context and
+tabs) with plain-CSS fantasy counterparts; a matchup-first Overview; a recommendation-first draft
+screen with impact bars, a quiet status line and a docked "My team" panel; matchup cards that
+separate projected outcome from actual totals; sortable sticky power rankings with a two-team
+comparison; free agents around the swap (detail rows, advanced table, add and drop on one scale via
+the additive `FreeAgentView.drop_z`); performers in one order with a sortable heatmap; an
+isolation guard test that keeps the copilot from importing analytics-side modules; select-then-act
+Explorer; a scannable player profile; the shooting court with adjacent zone detail; matchup results
+led by sample size; the remaining research pages on the shared header, toolbar and tables; a focus,
+reduced-motion and dialog-layer pass; and per-thread SQLite connections in the session store. Verify
+with `make test`, `make lint`, `make e2e` (with `make dev` up; includes `e2e/a11y.spec.ts`) and
+`make e2e-fantasy` (includes `e2e/fantasy/navigation.spec.ts`); `node frontend/scripts/capture-screens.mjs
+--session <id> --out <dir>` captures every page at 1440/1280/768/390 px for a visual pass. Known
+deferred minors, all recorded in `.superpowers/sdd/2026-10-25-courtside-redesign-v2/progress.md`:
+a few contrast edges outside the tested pairs (light primary-button hover, `.portrait.fallback` on
+team colours) and gaps in the ink-4 guard; small accessibility follow-ups
+(screen-reader names for ProbabilityPair sides, no page yet passing a ChartFrame `summary`,
+document-level Esc for non-modal layers, focus fallback when an opener unmounts, aria-live on
+Explorer keyboard selection); layout edges (narrow court at ~1024 px in split mode, overlay team
+drawer styling at 761–1179 px); untested branches (tie and missing sorting in heatmaps, `drop_z` scale, Freshness on unparseable
+dates); backend hygiene in the store (BEGIN without ROLLBACK on error, `export_session` not one
+snapshot); and an unexplained 1-in-33 flake in `strategy_import.spec.ts`.
+
 ## How to resume
 Read CLAUDE.md, this file, DRAFT_COPILOT_PLAN.md and DECISIONS.md. `make install && make test`.
 Real data: `make refresh && make build-snapshot`. Ports 8000/5173 may be busy on this machine
