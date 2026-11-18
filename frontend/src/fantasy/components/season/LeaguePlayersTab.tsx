@@ -135,7 +135,7 @@ export function LeaguePlayersTab({ sessionId }: { sessionId: string }) {
       {data && inSync && rows.length === 0 && <EmptyState title="No box scores for this selection yet">{data.notes.join(' ') || 'Sync the league after games have been played; weekly stats fill in as ESPN applies them.'}</EmptyState>}
       {data && rows.length > 0 && (
         <>
-          <PerformerTable rows={rows} metric="contribution" categories={data.categories} perGame={perGame} team={team} />
+          <PerformerTable rows={rows} metric="contribution" categories={data.categories} perGame={perGame} team={team} bothUnits />
           <p className="table-note">
             Rank is by contribution across the whole league{perGame ? ', shown per game played' : ''}. {UNIT_CAPTION} Every game that counted for any team is included; a player who changed hands shows his current team with the earlier stints underneath. Games played while on waivers are not in ESPN's box scores.
           </p>

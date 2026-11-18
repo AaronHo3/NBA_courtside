@@ -119,3 +119,22 @@ describe('LeaguePlayersTab week default', () => {
   })
 })
 
+describe('LeaguePlayersTab contribution per game', () => {
+  it('shows contribution in both units side by side, whichever unit is active, and sorts by the second one', () => {
+    useSeasonStore.setState({ overview: makeOverview(), leaguePerformers: response, leaguePerformersStatus: 'ready', leaguePerformersError: null, loadLeaguePerformers: async () => {} })
+    render(<LeaguePlayersTab sessionId="sess" />)
+    expect(screen.getByRole('columnheader', { name: /^contribution$/i })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: /^contribution \/ g$/i })).toBeInTheDocument()
+    const star = screen.getByText('Star Player').closest('tr')!
+    expect(within(star).getByText('12.0')).toBeInTheDocument() // 12 units over 3 games
+    expect(within(star).getByText('4.00')).toBeInTheDocument()
+    fireEvent.click(screen.getByTestId('lp-unit-per-game'))
+    expect(screen.getByRole('columnheader', { name: /^contribution \/ g$/i })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: /^contribution$/i })).toBeInTheDocument()
+    expect(within(screen.getByText('Star Player').closest('tr')!).getByText('12.0')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /sort by contribution, cumulative/i })) // first click: descending
+    const names = screen.getAllByTestId('performer-row').map((tr) => within(tr).getByRole('button', { name: /details for/i }).textContent)
+    expect(names).toEqual(['Star Player', 'Their Guy', 'Role Player'])
+  })
+})
+

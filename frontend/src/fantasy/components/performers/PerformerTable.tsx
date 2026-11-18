@@ -26,7 +26,7 @@ export interface RowTeam {
   /** Tooltip for the whole cell. */
   title?: string
 }
-type SortKey = 'rank' | 'player' | 'team' | 'games' | 'minutes' | 'contribution' | 'over_expected' | 'PTS' | 'REB' | 'AST' | 'STL' | 'BLK' | 'FG3M' | 'FG_PCT' | 'FT_PCT'
+type SortKey = 'rank' | 'player' | 'team' | 'games' | 'minutes' | 'contribution' | 'contribution_alt' | 'over_expected' | 'PTS' | 'REB' | 'AST' | 'STL' | 'BLK' | 'FG3M' | 'FG_PCT' | 'FT_PCT'
 
 const STAT_COLS: { key: 'PTS' | 'REB' | 'AST' | 'STL' | 'BLK' | 'FG3M' | 'FG_PCT' | 'FT_PCT'; label: string }[] = [
   { key: 'PTS', label: 'PTS' },
@@ -69,6 +69,8 @@ function sortValue<R extends PerformerRow>(r: R, key: SortKey, perGame: boolean,
       return r[key]
     case 'contribution':
       return contributionOf(r, perGame) ?? Number.NEGATIVE_INFINITY
+    case 'contribution_alt':
+      return contributionOf(r, !perGame) ?? Number.NEGATIVE_INFINITY
     case 'over_expected':
       return overOf(r, perGame) ?? Number.NEGATIVE_INFINITY
     default:
@@ -95,10 +97,12 @@ interface PerformerTableProps<R extends PerformerRow> {
   back?: BackLink
   /** Adds a "Fantasy team" column; a row whose team has a colour is tinted with it. */
   team?: (r: R) => RowTeam | null
+  /** Also show contribution in the other unit (per game beside totals, or totals beside per game). */
+  bothUnits?: boolean
 }
 
 /** Sortable table of every rostered player; the name opens a detail drawer with actual vs expected. */
-export function PerformerTable<R extends PerformerRow>({ rows, metric, selectedId = null, onSelect, openId, onOpenChange, categories, moves, perGame = false, back, team }: PerformerTableProps<R>) {
+export function PerformerTable<R extends PerformerRow>({ rows, metric, selectedId = null, onSelect, openId, onOpenChange, categories, moves, perGame = false, back, team, bothUnits = false }: PerformerTableProps<R>) {
   const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({ key: 'rank', desc: false })
   const [localOpen, setLocalOpen] = useState<string | null>(null)
   const open = openId === undefined ? localOpen : openId
@@ -137,6 +141,7 @@ export function PerformerTable<R extends PerformerRow>({ rows, metric, selectedI
               {head('games', 'GP', 'games played')}
               {head('minutes', 'MIN', 'minutes')}
               {head('contribution', perGame ? 'Contribution / g' : 'Contribution', `contribution: category value produced, ${perGame ? 'per game played' : 'cumulative'}`)}
+              {bothUnits && head('contribution_alt', perGame ? 'Contribution' : 'Contribution / g', `contribution, ${perGame ? 'cumulative' : 'per game played'}`)}
               {head('over_expected', perGame ? 'vs expected / g' : 'vs expected', `vs expected: contribution minus projection x games played${perGame ? ', per game' : ''}`)}
               {STAT_COLS.map((c) => head(c.key, c.label, c.label))}
             </tr>
@@ -205,6 +210,7 @@ export function PerformerTable<R extends PerformerRow>({ rows, metric, selectedI
                       <b>{fmtNum(contributionOf(r, perGame), perGame ? 2 : 1)}</b>
                     </span>
                   </td>
+                  {bothUnits && <td className="num">{fmtNum(contributionOf(r, !perGame), perGame ? 1 : 2)}</td>}
                   <td className={`num ${over === null ? 'muted' : over > 0 ? 'pos' : over < 0 ? 'neg' : ''}`} data-testid="over-expected">
                     {over === null ? '—' : fmtSigned(over, perGame ? 2 : 1)}
                   </td>
@@ -218,7 +224,7 @@ export function PerformerTable<R extends PerformerRow>({ rows, metric, selectedI
             })}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={7 + STAT_COLS.length + (team ? 1 : 0)} className="muted">
+                <td colSpan={7 + STAT_COLS.length + (team ? 1 : 0) + (bothUnits ? 1 : 0)} className="muted">
                   Nothing to show.
                 </td>
               </tr>
