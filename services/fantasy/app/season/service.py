@@ -401,6 +401,29 @@ def _refresh_period_stats(ctx: AppContext, session_id: str, period: int, warning
             warnings.append(f"ESPN box score for week {p} not refreshed ({e})")
 
 
+def _box_score_notes(available: list[int], records: list[dict[str, Any]], period: int | None) -> list[str]:
+    notes: list[str] = []
+    if period is not None and period not in available:
+        notes.append(f"no ESPN box scores stored for week {period} (sync while or after that week to capture it)")
+    if not records and period is None:
+        notes.append("no ESPN box scores stored yet: run a sync during a matchup week")
+    return notes
+
+
+def _unknown_notes(snap, records: list[dict[str, Any]]) -> list[str]:
+    unknown = sorted({r["name"] for r in records if r["player_id"] not in snap.index})
+    return [f"not in the projection snapshot (no baseline, not ranked): {', '.join(unknown)}"] if unknown else []
+
+
+def _performer_row[R: (S.PerformerRow, S.LeaguePerformerRow)](
+    snap, state: DraftState, row: dict[str, Any], rank: int, cls: type[R]
+) -> R:
+    """A ``rank_performers`` row (plus any extra fields, e.g. ``manager_id``) as the given response model."""
+    fields = dict(row)
+    pid = fields.pop("player_id")
+    return cls(rank=rank, player=svc.player_view(snap, snap.index[pid], state), **fields)
+
+
 def performers(ctx: AppContext, session_id: str, manager_id: str, period: int | None) -> S.PerformersResponse:
     meta, state = _session(ctx, session_id)
     if manager_id not in {m.id for m in state.league.managers}:
@@ -408,24 +431,12 @@ def performers(ctx: AppContext, session_id: str, manager_id: str, period: int | 
     snap = _snapshot(ctx, meta)
     available = ctx.store.periods_with_stats(session_id)
     records = ctx.store.period_player_stats(session_id, period=period, manager_id=manager_id)
-    notes: list[str] = []
-    if period is not None and period not in available:
-        notes.append(f"no ESPN box scores stored for week {period} (sync while or after that week to capture it)")
-    if not records and period is None:
-        notes.append("no ESPN box scores stored yet: run a sync during a matchup week")
+    notes = _box_score_notes(available, records, period)
     contributors, overperformers = rank_performers(snap, state, records)
     units, rates = unit_sizes(snap, state.league)
-
-    def view(row: dict, rank: int) -> S.PerformerRow:
-        pid = row.pop("player_id")
-        player = svc.player_view(snap, snap.index[pid], state)
-        return S.PerformerRow(rank=rank, player=player, **row)
-
-    c_rows = [view(dict(r), i + 1) for i, r in enumerate(contributors)]
-    o_rows = [view(dict(r), i + 1) for i, r in enumerate(overperformers)]
-    unknown = [r["name"] for r in records if r["player_id"] not in snap.index]
-    if unknown:
-        notes.append(f"not in the projection snapshot (no baseline, not ranked): {', '.join(sorted(set(unknown)))}")
+    c_rows = [_performer_row(snap, state, r, i + 1, S.PerformerRow) for i, r in enumerate(contributors)]
+    o_rows = [_performer_row(snap, state, r, i + 1, S.PerformerRow) for i, r in enumerate(overperformers)]
+    notes += _unknown_notes(snap, records)
     return S.PerformersResponse(
         ids=svc.response_ids(state, snap, ctx.settings.default_seed),
         manager_id=manager_id,
@@ -439,6 +450,40 @@ def performers(ctx: AppContext, session_id: str, manager_id: str, period: int | 
         benchmark_rates=rates,
         contributors=c_rows,
         overperformers=o_rows,
+        notes=notes,
+    )
+
+
+def league_performers(ctx: AppContext, session_id: str, period: int | None) -> S.LeaguePerformersResponse:
+    """Every team's performers on one ranking: the per-team numbers of ``performers`` with a manager column."""
+    meta, state = _session(ctx, session_id)
+    snap = _snapshot(ctx, meta)
+    available = ctx.store.periods_with_stats(session_id)
+    records = ctx.store.period_player_stats(session_id, period=period)
+    notes = _box_score_notes(available, records, period)
+    by_manager: dict[str, list[dict[str, Any]]] = {}
+    for rec in records:
+        by_manager.setdefault(rec["manager_id"], []).append(rec)
+    rows: list[dict[str, Any]] = []
+    for manager_id, recs in by_manager.items():
+        contributors, _ = rank_performers(snap, state, recs)  # same per-team ranking as ``performers``
+        rows.extend({**r, "manager_id": manager_id} for r in contributors)
+    rows.sort(key=lambda r: (-r["contribution"], -r["games"], r["player_id"]))
+    units, rates = unit_sizes(snap, state.league)
+    notes += _unknown_notes(snap, records)
+    return S.LeaguePerformersResponse(
+        ids=svc.response_ids(state, snap, ctx.settings.default_seed),
+        scope="week" if period is not None else "season",
+        period=period,
+        periods_available=available,
+        baseline=BASELINE_LABEL,
+        source="ESPN applied box scores per matchup period (what counted for each fantasy team that week)",
+        categories=state.league.categories,
+        unit_sizes=units,
+        benchmark_rates=rates,
+        managers={m.id: m.name for m in state.league.managers},
+        user_manager_id=state.league.user_manager_id,
+        rows=[_performer_row(snap, state, r, i + 1, S.LeaguePerformerRow) for i, r in enumerate(rows)],
         notes=notes,
     )
 

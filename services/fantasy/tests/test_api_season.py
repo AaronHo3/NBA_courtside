@@ -1157,3 +1157,31 @@ def test_free_agents_hide_players_without_an_nba_team(client, complete_session):
     assert client.post(f"/api/sessions/{sid}/espn/sync", json={}).status_code == 200
     ids = [it["player"]["player_id"] for it in client.get(url, params={"limit": 500}).json()["items"]]
     assert top["player_id"] not in ids
+
+
+def test_league_performers_lists_every_team_on_one_ranking(client, complete_session):
+    sid = complete_session
+    install_fakes(client, league_from_state(client, sid, matchups=week1()))
+    link(client, sid)
+    install_boxscore(client, {1: boxscore_from_state(client, sid, 1)})
+    assert client.post(f"/api/sessions/{sid}/espn/sync", json={}).status_code == 200
+    r = client.get(f"/api/sessions/{sid}/season/performers/league", params={"period": 1})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["scope"] == "week" and body["period"] == 1 and body["periods_available"] == [1]
+    rows = body["rows"]
+    assert {x["manager_id"] for x in rows} == {"m01", "m02", "m03"}
+    assert all(x["rank"] == i + 1 for i, x in enumerate(rows))
+    assert [x["contribution"] for x in rows] == sorted((x["contribution"] for x in rows), reverse=True)
+    # same numbers as the per-team view, so the two screens never disagree
+    mine = client.get(f"/api/sessions/{sid}/season/performers", params={"manager_id": "m01", "period": 1}).json()
+    by_pid = {x["player"]["player_id"]: x for x in rows if x["manager_id"] == "m01"}
+    for x in mine["contributors"]:
+        assert by_pid[x["player"]["player_id"]]["contribution"] == x["contribution"]
+        assert by_pid[x["player"]["player_id"]]["over_expected"] == x["over_expected"]
+    assert set(body["managers"]) == {"m01", "m02", "m03"} and body["user_manager_id"] in body["managers"]
+    assert body["unit_sizes"] and body["categories"]
+    season = client.get(f"/api/sessions/{sid}/season/performers/league").json()
+    assert season["scope"] == "season" and season["period"] is None and len(season["rows"]) == len(rows)
+    empty = client.get(f"/api/sessions/{sid}/season/performers/league", params={"period": 5}).json()
+    assert empty["rows"] == [] and any("no ESPN box scores" in n for n in empty["notes"])

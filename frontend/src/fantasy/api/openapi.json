@@ -1588,6 +1588,63 @@
     }
    }
   },
+  "/api/sessions/{session_id}/season/performers/league": {
+   "get": {
+    "summary": "Season League Performers",
+    "operationId": "season_league_performers_api_sessions__session_id__season_performers_league_get",
+    "parameters": [
+     {
+      "name": "session_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Session Id"
+      }
+     },
+     {
+      "name": "period",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer",
+         "maximum": 22,
+         "minimum": 1
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Period"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/LeaguePerformersResponse"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/sessions/{session_id}/season/performers": {
    "get": {
     "summary": "Season Performers",
@@ -3508,6 +3565,314 @@
      "user_manager_id"
     ],
     "title": "LeagueConfig"
+   },
+   "LeaguePerformerRow": {
+    "properties": {
+     "rank": {
+      "type": "integer",
+      "title": "Rank"
+     },
+     "player": {
+      "$ref": "#/components/schemas/PlayerView"
+     },
+     "games": {
+      "type": "integer",
+      "title": "Games"
+     },
+     "periods": {
+      "type": "integer",
+      "title": "Periods"
+     },
+     "minutes": {
+      "type": "number",
+      "title": "Minutes"
+     },
+     "contribution": {
+      "type": "number",
+      "title": "Contribution"
+     },
+     "contribution_per_game": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Contribution Per Game"
+     },
+     "expected_contribution": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Expected Contribution"
+     },
+     "over_expected": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Over Expected"
+     },
+     "over_expected_per_game": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Over Expected Per Game"
+     },
+     "actual": {
+      "additionalProperties": {
+       "anyOf": [
+        {
+         "type": "number"
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "type": "object",
+      "title": "Actual"
+     },
+     "expected": {
+      "anyOf": [
+       {
+        "additionalProperties": {
+         "anyOf": [
+          {
+           "type": "number"
+          },
+          {
+           "type": "null"
+          }
+         ]
+        },
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Expected"
+     },
+     "actual_per_game": {
+      "additionalProperties": {
+       "anyOf": [
+        {
+         "type": "number"
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "type": "object",
+      "title": "Actual Per Game"
+     },
+     "expected_per_game": {
+      "anyOf": [
+       {
+        "additionalProperties": {
+         "anyOf": [
+          {
+           "type": "number"
+          },
+          {
+           "type": "null"
+          }
+         ]
+        },
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Expected Per Game"
+     },
+     "category_z": {
+      "additionalProperties": {
+       "type": "number"
+      },
+      "type": "object",
+      "title": "Category Z"
+     },
+     "contribution_by_category": {
+      "additionalProperties": {
+       "type": "number"
+      },
+      "type": "object",
+      "title": "Contribution By Category"
+     },
+     "expected_by_category": {
+      "anyOf": [
+       {
+        "additionalProperties": {
+         "type": "number"
+        },
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Expected By Category"
+     },
+     "flags": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Flags"
+     },
+     "manager_id": {
+      "type": "string",
+      "title": "Manager Id"
+     }
+    },
+    "type": "object",
+    "required": [
+     "rank",
+     "player",
+     "games",
+     "periods",
+     "minutes",
+     "contribution",
+     "contribution_per_game",
+     "expected_contribution",
+     "over_expected",
+     "over_expected_per_game",
+     "actual",
+     "expected",
+     "actual_per_game",
+     "expected_per_game",
+     "category_z",
+     "contribution_by_category",
+     "expected_by_category",
+     "flags",
+     "manager_id"
+    ],
+    "title": "LeaguePerformerRow"
+   },
+   "LeaguePerformersResponse": {
+    "properties": {
+     "ids": {
+      "$ref": "#/components/schemas/ResponseIds"
+     },
+     "scope": {
+      "type": "string",
+      "enum": [
+       "week",
+       "season"
+      ],
+      "title": "Scope"
+     },
+     "period": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Period"
+     },
+     "periods_available": {
+      "items": {
+       "type": "integer"
+      },
+      "type": "array",
+      "title": "Periods Available"
+     },
+     "baseline": {
+      "type": "string",
+      "title": "Baseline"
+     },
+     "source": {
+      "type": "string",
+      "title": "Source"
+     },
+     "categories": {
+      "items": {
+       "$ref": "#/components/schemas/CategoryDef"
+      },
+      "type": "array",
+      "title": "Categories"
+     },
+     "unit_sizes": {
+      "additionalProperties": {
+       "type": "number"
+      },
+      "type": "object",
+      "title": "Unit Sizes"
+     },
+     "benchmark_rates": {
+      "additionalProperties": {
+       "type": "number"
+      },
+      "type": "object",
+      "title": "Benchmark Rates"
+     },
+     "managers": {
+      "additionalProperties": {
+       "type": "string"
+      },
+      "type": "object",
+      "title": "Managers"
+     },
+     "user_manager_id": {
+      "type": "string",
+      "title": "User Manager Id"
+     },
+     "rows": {
+      "items": {
+       "$ref": "#/components/schemas/LeaguePerformerRow"
+      },
+      "type": "array",
+      "title": "Rows"
+     },
+     "notes": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Notes"
+     }
+    },
+    "type": "object",
+    "required": [
+     "ids",
+     "scope",
+     "period",
+     "periods_available",
+     "baseline",
+     "source",
+     "categories",
+     "unit_sizes",
+     "benchmark_rates",
+     "managers",
+     "user_manager_id",
+     "rows",
+     "notes"
+    ],
+    "title": "LeaguePerformersResponse",
+    "description": "Every rostered player in the league on one contribution ranking (same numbers as PerformersResponse)."
    },
    "LeagueProfilesResponse": {
     "properties": {

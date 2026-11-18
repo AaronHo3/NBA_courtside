@@ -716,6 +716,28 @@ class PerformerRow(BaseModel):
     flags: list[str]
 
 
+class LeaguePerformerRow(PerformerRow):
+    manager_id: str  # the fantasy team these games counted for
+
+
+class LeaguePerformersResponse(BaseModel):
+    """Every rostered player in the league on one contribution ranking (same numbers as PerformersResponse)."""
+
+    ids: ResponseIds
+    scope: Literal["week", "season"]
+    period: int | None
+    periods_available: list[int]
+    baseline: str
+    source: str
+    categories: list[CategoryDef]
+    unit_sizes: dict[str, float]
+    benchmark_rates: dict[str, float]
+    managers: dict[str, str]  # manager id -> team name
+    user_manager_id: str
+    rows: list[LeaguePerformerRow]  # rank 1..n by contribution across the league
+    notes: list[str]
+
+
 class PerformersResponse(BaseModel):
     ids: ResponseIds
     manager_id: str

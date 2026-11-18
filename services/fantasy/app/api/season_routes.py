@@ -99,6 +99,15 @@ def season_moves(session_id: str, period: int | None = Query(default=None, ge=1,
     return _run(season.roster_moves, ctx, session_id, period)
 
 
+@router.get("/sessions/{session_id}/season/performers/league", response_model=S.LeaguePerformersResponse)
+def season_league_performers(
+    session_id: str,
+    period: int | None = Query(default=None, ge=1, le=22),
+    ctx: AppContext = Depends(get_context),
+):
+    return _run(season.league_performers, ctx, session_id, period)
+
+
 @router.get("/sessions/{session_id}/season/performers", response_model=S.PerformersResponse)
 def season_performers(
     session_id: str,

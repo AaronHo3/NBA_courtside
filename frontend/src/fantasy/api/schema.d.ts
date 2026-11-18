@@ -523,6 +523,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sessions/{session_id}/season/performers/league": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Season League Performers */
+        get: operations["season_league_performers_api_sessions__session_id__season_performers_league_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sessions/{session_id}/season/performers": {
         parameters: {
             query?: never;
@@ -1176,6 +1193,100 @@ export interface components {
             };
             /** Espn Linked At */
             espn_linked_at?: string | null;
+        };
+        /** LeaguePerformerRow */
+        LeaguePerformerRow: {
+            /** Rank */
+            rank: number;
+            player: components["schemas"]["PlayerView"];
+            /** Games */
+            games: number;
+            /** Periods */
+            periods: number;
+            /** Minutes */
+            minutes: number;
+            /** Contribution */
+            contribution: number;
+            /** Contribution Per Game */
+            contribution_per_game: number | null;
+            /** Expected Contribution */
+            expected_contribution: number | null;
+            /** Over Expected */
+            over_expected: number | null;
+            /** Over Expected Per Game */
+            over_expected_per_game: number | null;
+            /** Actual */
+            actual: {
+                [key: string]: number | null;
+            };
+            /** Expected */
+            expected: {
+                [key: string]: number | null;
+            } | null;
+            /** Actual Per Game */
+            actual_per_game: {
+                [key: string]: number | null;
+            };
+            /** Expected Per Game */
+            expected_per_game: {
+                [key: string]: number | null;
+            } | null;
+            /** Category Z */
+            category_z: {
+                [key: string]: number;
+            };
+            /** Contribution By Category */
+            contribution_by_category: {
+                [key: string]: number;
+            };
+            /** Expected By Category */
+            expected_by_category: {
+                [key: string]: number;
+            } | null;
+            /** Flags */
+            flags: string[];
+            /** Manager Id */
+            manager_id: string;
+        };
+        /**
+         * LeaguePerformersResponse
+         * @description Every rostered player in the league on one contribution ranking (same numbers as PerformersResponse).
+         */
+        LeaguePerformersResponse: {
+            ids: components["schemas"]["ResponseIds"];
+            /**
+             * Scope
+             * @enum {string}
+             */
+            scope: "week" | "season";
+            /** Period */
+            period: number | null;
+            /** Periods Available */
+            periods_available: number[];
+            /** Baseline */
+            baseline: string;
+            /** Source */
+            source: string;
+            /** Categories */
+            categories: components["schemas"]["CategoryDef"][];
+            /** Unit Sizes */
+            unit_sizes: {
+                [key: string]: number;
+            };
+            /** Benchmark Rates */
+            benchmark_rates: {
+                [key: string]: number;
+            };
+            /** Managers */
+            managers: {
+                [key: string]: string;
+            };
+            /** User Manager Id */
+            user_manager_id: string;
+            /** Rows */
+            rows: components["schemas"]["LeaguePerformerRow"][];
+            /** Notes */
+            notes: string[];
         };
         /** LeagueProfilesResponse */
         LeagueProfilesResponse: {
@@ -3205,6 +3316,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RosterMovesResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    season_league_performers_api_sessions__session_id__season_performers_league_get: {
+        parameters: {
+            query?: {
+                period?: number | null;
+            };
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaguePerformersResponse"];
                 };
             };
             /** @description Validation Error */
