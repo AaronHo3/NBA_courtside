@@ -343,3 +343,19 @@ serialised by a lock), fixing intermittent 500s and `InterfaceError`s from a con
 across the server's worker threads. Calculations, labels, caveats and the pick-commit path are
 unchanged. Brief: `docs/superpowers/specs/2026-10-25-courtside-redesign-v2-brief.md`; plan:
 `docs/superpowers/plans/2026-10-25-courtside-redesign-v2.md`.
+
+## DEC-36 — 2026-11-18 — League-wide players view reuses the per-team performers numbers
+Comparing teams on the Performers page meant switching the team picker and remembering numbers.
+`season/performers/league` (`league_performers` in `app/season/service.py`) groups the stored
+period box scores by manager, runs `rank_performers` once per team exactly as the per-team endpoint
+does, tags each row with its `manager_id` and re-ranks the union by contribution, so the two views
+never disagree and a player who changed teams appears once per team with the games he played for
+each (as the per-team view already counted them). The response carries the manager names and the
+user's id so the tab needs no draft-store lookups. In the UI the view is a season tab ("All
+players") rather than a Performers mode: it is a league-wide table, which is what the "My league"
+group holds, and it keeps the Performers page's team-centric charts untouched. `PerformerTable`
+gained an optional `team` accessor (column + `--row-tint` on the row) instead of a second table.
+Team colours come from a fixed palette assigned in manager order (`lib/managerColors.ts`), chosen
+apart from the teal/coral signed pair and the orange action colour (DEC-32); highlighting is
+additive (several teams at once) and is view state only, not persisted.
+

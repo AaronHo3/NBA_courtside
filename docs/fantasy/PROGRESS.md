@@ -273,3 +273,7 @@ Real data: `make refresh && make build-snapshot`. Ports 8000/5173 may be busy on
 - 2026-10-09: Phase 0 (probes, docs), Phase 1 backend core, Phase 2 adapters (subagent), Phase 3/4
   engine layers, baseline + validation, CSV imports, schedule model.
 - 2026-10-10: frontend finished (takeover from the subagent), e2e, benchmarks, docs reconciled.
+- 2026-11-18: "All players" season tab (DEC-36): `GET /season/performers/league` runs the
+  per-team performers ranking for every manager and merges them into one list with a `manager_id`;
+  `LeaguePlayersTab` reuses `PerformerTable` with a fantasy-team column and per-team row tints
+  toggled from a legend (`lib/managerColors.ts`). Tests: API, store, table, tab, nav, colours, e2e.
