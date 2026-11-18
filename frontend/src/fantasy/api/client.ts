@@ -19,6 +19,7 @@ import type {
   LinkPreview,
   LinkRequest,
   MatchupResponse,
+  LeaguePerformersResponse,
   PerformersResponse,
   PlayerView,
   PredictionsResponse,
@@ -123,6 +124,8 @@ export interface ApiClient {
   seasonResults(id: string, period: number): Promise<WeekResultsResponse>
   seasonPredictions(id: string): Promise<PredictionsResponse>
   seasonPerformers(id: string, managerId: string, period?: number | null): Promise<PerformersResponse>
+  /** Every team's performers on one ranking; `period` null = season to date. */
+  seasonLeaguePerformers(id: string, period?: number | null): Promise<LeaguePerformersResponse>
   seasonMoves(id: string, period?: number | null): Promise<RosterMovesResponse>
 }
 
@@ -201,6 +204,7 @@ export function createApiClient(fetchImpl: FetchLike = (i, o) => fetch(i, o), ba
     seasonPredictions: (id) => request('GET', `/sessions/${encodeURIComponent(id)}/season/predictions`),
     seasonPerformers: (id, managerId, period = null) =>
       request('GET', `/sessions/${encodeURIComponent(id)}/season/performers${qs({ manager_id: managerId, period })}`),
+    seasonLeaguePerformers: (id, period = null) => request('GET', `/sessions/${encodeURIComponent(id)}/season/performers/league${qs({ period })}`),
     seasonMoves: (id, period = null) => request('GET', `/sessions/${encodeURIComponent(id)}/season/moves${qs({ period })}`),
   }
 }

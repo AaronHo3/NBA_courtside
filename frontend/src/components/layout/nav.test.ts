@@ -23,7 +23,7 @@ describe('nav', () => {
     expect(fantasy.items.map((i) => i.id)).toEqual(['draft', 'recap', 'season', 'performers', 'setup'])
     expect(navItemById('season')).toMatchObject({ label: 'My league', to: '#/season' })
     expect(navItemById('league-matchups')).toBeUndefined()
-    expect(SEASON_TABS.map((t) => t.id)).toEqual(['matchups', 'power', 'free-agents', 'results', 'predictions'])
+    expect(SEASON_TABS.map((t) => t.id)).toEqual(['matchups', 'power', 'players', 'free-agents', 'results', 'predictions'])
   })
   it('names fantasy crumbs from the hash', () => {
     expect(fantasyCrumbs('#/season?tab=free-agents')).toEqual(['My league', 'Free agents'])

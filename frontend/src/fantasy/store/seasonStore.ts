@@ -2,7 +2,7 @@
 // Sync is the only action that reaches ESPN; everything else reads the backend's stored state.
 import { create } from 'zustand'
 import { ApiError, api as defaultApi, type ApiClient } from '../api/client'
-import type { ActualsScope, FreeAgentsResponse, GameLogsView, PredictionsResponse, RosterMovesResponse, SeasonOverview, SyncResult, WeekResultsResponse } from '../api/types'
+import type { ActualsScope, FreeAgentsResponse, GameLogsView, LeaguePerformersResponse, PredictionsResponse, RosterMovesResponse, SeasonOverview, SyncResult, WeekResultsResponse } from '../api/types'
 import { browserStorage, type KeyValueStorage } from '../lib/storage'
 import { useDraftStore } from './draftStore'
 
@@ -47,6 +47,10 @@ export interface SeasonStore {
   moves: RosterMovesResponse | null
   movesStatus: LoadStatus
   movesError: string | null
+  /** Every team's performers on one ranking (the "All players" tab). */
+  leaguePerformers: LeaguePerformersResponse | null
+  leaguePerformersStatus: LoadStatus
+  leaguePerformersError: string | null
   syncStatus: 'idle' | 'syncing' | 'error'
   syncError: string | null
   lastSync: SyncResult | null
@@ -61,6 +65,7 @@ export interface SeasonStore {
   loadResults(sessionId: string, period: number): Promise<void>
   loadPredictions(sessionId: string): Promise<void>
   loadMoves(sessionId: string, period?: number | null): Promise<void>
+  loadLeaguePerformers(sessionId: string, period: number | null): Promise<void>
   setPeriod(period: number | null): void
   setAutoRefresh(minutes: AutoRefreshMinutes): void
   start(): void
@@ -84,6 +89,8 @@ export function createSeasonStore(overrides: Partial<SeasonDeps> = {}) {
   const { api, storage } = deps
   let timer: ReturnType<typeof setInterval> | null = null
   let overviewSeq = 0
+  let leagueSeq = 0
+  let leagueSession: string | null = null
 
   return create<SeasonStore>()((set, get) => {
     const clearTimer = () => {
@@ -123,6 +130,9 @@ export function createSeasonStore(overrides: Partial<SeasonDeps> = {}) {
       moves: null,
       movesStatus: 'idle',
       movesError: null,
+      leaguePerformers: null,
+      leaguePerformersStatus: 'idle',
+      leaguePerformersError: null,
       syncStatus: 'idle',
       syncError: null,
       lastSync: null,
@@ -211,6 +221,23 @@ export function createSeasonStore(overrides: Partial<SeasonDeps> = {}) {
           set({ predictions, predictionsStatus: 'ready' })
         } catch (e) {
           set({ predictionsStatus: 'error', predictionsError: errorText(e) })
+        }
+      },
+
+      async loadLeaguePerformers(sessionId, period) {
+        leagueSeq += 1
+        const mySeq = leagueSeq
+        // another session's rows must never show under this one, even while loading
+        const stale = leagueSession !== null && leagueSession !== sessionId ? { leaguePerformers: null } : {}
+        leagueSession = sessionId
+        set({ ...stale, leaguePerformersStatus: 'loading', leaguePerformersError: null })
+        try {
+          const leaguePerformers = await api.seasonLeaguePerformers(sessionId, period)
+          if (mySeq !== leagueSeq) return // a later request (other week or scope) wins
+          set({ leaguePerformers, leaguePerformersStatus: 'ready' })
+        } catch (e) {
+          if (mySeq !== leagueSeq) return
+          set({ leaguePerformersStatus: 'error', leaguePerformersError: errorText(e) })
         }
       },
 

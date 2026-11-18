@@ -733,3 +733,42 @@ table.grid.fa-table tr.fa-detail-row > td {
   }
 }
 /* ---- end Task 8 ---- */
+
+/* All players: one toggle per fantasy team; a pressed toggle colours that team's rows. */
+.team-legend-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2) var(--s-3);
+}
+.team-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.team-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-1);
+  color: var(--ink-2);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+.team-toggle:hover {
+  border-color: var(--row-tint);
+  color: var(--ink);
+}
+.team-toggle[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--row-tint) 22%, transparent);
+  border-color: var(--row-tint);
+  color: var(--ink);
+}
+.team-legend-actions {
+  display: inline-flex;
+  gap: var(--s-2);
+}

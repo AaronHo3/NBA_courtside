@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { type CSSProperties, useState } from 'react'
 import type { CategoryDef, PerformerRow } from '../../api/types'
 import { fmtNum, fmtSigned, positionsText } from '../../lib/format'
 import { Badge } from '../common/Badge'
@@ -16,7 +16,13 @@ export interface MoveTag {
 }
 /** Player id -> that team's adds/drops of him, for the shown scope. */
 export type MoveTags = Record<string, MoveTag[]>
-type SortKey = 'rank' | 'player' | 'games' | 'minutes' | 'contribution' | 'over_expected' | 'PTS' | 'REB' | 'AST' | 'STL' | 'BLK' | 'FG3M' | 'FG_PCT' | 'FT_PCT'
+/** The fantasy team a row's games counted for; `color` tints the row (null = plain). */
+export interface RowTeam {
+  id: string
+  name: string
+  color: string | null
+}
+type SortKey = 'rank' | 'player' | 'team' | 'games' | 'minutes' | 'contribution' | 'over_expected' | 'PTS' | 'REB' | 'AST' | 'STL' | 'BLK' | 'FG3M' | 'FG_PCT' | 'FT_PCT'
 
 const STAT_COLS: { key: 'PTS' | 'REB' | 'AST' | 'STL' | 'BLK' | 'FG3M' | 'FG_PCT' | 'FT_PCT'; label: string }[] = [
   { key: 'PTS', label: 'PTS' },
@@ -47,10 +53,12 @@ function statOf(r: PerformerRow, key: string, perGame: boolean): number | null |
   return perGame ? r.actual_per_game[key] : r.actual[key]
 }
 
-function sortValue(r: PerformerRow, key: SortKey, perGame: boolean): number | string {
+function sortValue<R extends PerformerRow>(r: R, key: SortKey, perGame: boolean, team?: (r: R) => RowTeam | null): number | string {
   switch (key) {
     case 'player':
       return r.player.name
+    case 'team':
+      return team?.(r)?.name ?? ''
     case 'rank':
     case 'games':
     case 'minutes':
@@ -64,8 +72,8 @@ function sortValue(r: PerformerRow, key: SortKey, perGame: boolean): number | st
   }
 }
 
-interface PerformerTableProps {
-  rows: PerformerRow[]
+interface PerformerTableProps<R extends PerformerRow> {
+  rows: R[]
   metric: Metric
   /** Row highlighted in sync with the charts. */
   selectedId?: string | null
@@ -81,10 +89,15 @@ interface PerformerTableProps {
   perGame?: boolean
   /** Back-link for the drawer's NBA profile link. */
   back?: BackLink
+  /** Adds a "Fantasy team" column; a row whose team has a colour is tinted with it. */
+  team?: (r: R) => RowTeam | null
+  /** React key per row; defaults to the player id. League-wide lists need player + team, since a traded player has a row per team. */
+  rowKey?: (r: R) => string
 }
 
 /** Sortable table of every rostered player; the name opens a detail drawer with actual vs expected. */
-export function PerformerTable({ rows, metric, selectedId = null, onSelect, openId, onOpenChange, categories, moves, perGame = false, back }: PerformerTableProps) {
+export function PerformerTable<R extends PerformerRow>({ rows, metric, selectedId = null, onSelect, openId, onOpenChange, categories, moves, perGame = false, back, team, rowKey }: PerformerTableProps<R>) {
+  const keyOf = rowKey ?? ((r: R) => r.player.player_id)
   const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({ key: 'rank', desc: false })
   const [localOpen, setLocalOpen] = useState<string | null>(null)
   const open = openId === undefined ? localOpen : openId
@@ -95,8 +108,8 @@ export function PerformerTable({ rows, metric, selectedId = null, onSelect, open
   const sorted = [...rows].sort((a, b) => {
     // players without a baseline always sort last on "vs expected", whichever direction
     if (sort.key === 'over_expected' && (a.over_expected === null) !== (b.over_expected === null)) return a.over_expected === null ? 1 : -1
-    const va = sortValue(a, sort.key, perGame)
-    const vb = sortValue(b, sort.key, perGame)
+    const va = sortValue(a, sort.key, perGame, team)
+    const vb = sortValue(b, sort.key, perGame, team)
     const cmp = typeof va === 'string' && typeof vb === 'string' ? va.localeCompare(vb) : Number(va) - Number(vb)
     return sort.desc ? -cmp : cmp
   })
@@ -118,6 +131,7 @@ export function PerformerTable({ rows, metric, selectedId = null, onSelect, open
             <tr>
               {head('rank', '#', 'rank', false)}
               {head('player', 'Player', 'player name', false, false)}
+              {team && head('team', 'Fantasy team', 'fantasy team', false, false)}
               <th scope="col">Team · pos</th>
               {head('games', 'GP', 'games played')}
               {head('minutes', 'MIN', 'minutes')}
@@ -128,11 +142,16 @@ export function PerformerTable({ rows, metric, selectedId = null, onSelect, open
           </thead>
           <tbody>
             {sorted.map((r) => {
-              const lead = (metric === 'contribution' ? r.rank === 1 : r.over_expected !== null && r.rank === 1) && rows[0]?.player.player_id === r.player.player_id
+              const lead = (metric === 'contribution' ? r.rank === 1 : r.over_expected !== null && r.rank === 1) && rows[0] !== undefined && keyOf(rows[0]) === keyOf(r)
               const over = overOf(r, perGame)
-              const cls = [lead ? 'leader' : '', selectedId === r.player.player_id ? 'selected' : ''].filter(Boolean).join(' ')
+              const rowTeam = team?.(r) ?? null
+              const tint = rowTeam?.color ?? null
+              const cls = [lead ? 'leader' : '', selectedId === r.player.player_id ? 'selected' : '', tint ? 'tinted' : ''].filter(Boolean).join(' ')
+              const style: CSSProperties & Record<string, string> = {}
+              if (onSelect) style.cursor = 'pointer'
+              if (tint) style['--row-tint'] = tint
               return (
-                <tr key={r.player.player_id} className={cls || undefined} data-testid="performer-row" onClick={onSelect ? () => onSelect(r.player.player_id) : undefined} style={onSelect ? { cursor: 'pointer' } : undefined}>
+                <tr key={keyOf(r)} className={cls || undefined} data-testid="performer-row" onClick={onSelect ? () => onSelect(r.player.player_id) : undefined} style={Object.keys(style).length ? style : undefined}>
                   <td className="num">{r.rank}</td>
                   <th scope="row">
                     <span className="row-player">
@@ -161,6 +180,16 @@ export function PerformerTable({ rows, metric, selectedId = null, onSelect, open
                       ))}
                     </span>
                   </th>
+                  {team && (
+                    <td className="fantasy-team">
+                      {rowTeam && (
+                        <span className="team-chip" style={rowTeam.color ? ({ '--row-tint': rowTeam.color } as CSSProperties) : undefined}>
+                          <span className="team-dot" aria-hidden="true" />
+                          {rowTeam.name}
+                        </span>
+                      )}
+                    </td>
+                  )}
                   <td className="muted">
                     <TeamMark team={r.player.team} /> · {positionsText(r.player.eligible_positions)}
                   </td>
@@ -185,7 +214,7 @@ export function PerformerTable({ rows, metric, selectedId = null, onSelect, open
             })}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={7 + STAT_COLS.length} className="muted">
+                <td colSpan={7 + STAT_COLS.length + (team ? 1 : 0)} className="muted">
                   Nothing to show.
                 </td>
               </tr>

@@ -129,6 +129,19 @@ test('link to ESPN (mocked), sync, matchups, power rankings, free agents, result
   await expect(page.getByTestId('power-table').locator('tbody tr')).toHaveCount(managers.length)
   await expect(page.getByTestId('power-table').locator('tbody tr.mine')).toHaveCount(1)
 
+  // --- all players (real backend): every team on one table, legend toggles tint rows ---------------
+  await page.getByTestId('season-tab-players').click()
+  await expect(page.getByTestId('season-tab-players')).toHaveAttribute('aria-selected', 'true')
+  await expect(page.getByText(/Could not load/)).toHaveCount(0)
+  const legend = page.getByRole('group', { name: 'Highlight teams' })
+  if (await legend.count()) {
+    await expect(legend.getByRole('button')).toHaveCount(managers.length)
+    await legend.getByRole('button').first().click()
+    await expect(page.locator('tr.tinted').first()).toBeVisible()
+    await page.getByRole('button', { name: 'Clear highlights' }).click()
+    await expect(page.locator('tr.tinted')).toHaveCount(0)
+  }
+
   // --- free agents (real backend): nobody owned, rows present ---------------------------------------
   await page.getByTestId('season-tab-free-agents').click()
   const rows = page.getByRole('table', { name: 'Free agents' }).locator('tbody tr')

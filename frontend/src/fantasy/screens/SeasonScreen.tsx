@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { SEASON_TABS, seasonTabFrom, type SeasonTabId } from '../lib/seasonTabs'
 import { PlayerDrawer } from '../components/draft/PlayerDrawer'
 import { FreeAgentsTab } from '../components/season/FreeAgentsTab'
+import { LeaguePlayersTab } from '../components/season/LeaguePlayersTab'
 import { LinkDialog } from '../components/season/LinkDialog'
 import { MatchupsTab } from '../components/season/MatchupsTab'
 import { PowerTab } from '../components/season/PowerTab'
@@ -66,7 +67,7 @@ export function SeasonScreen() {
     <div className="stack season-screen" data-testid="season">
       <PageHeader
         title="Season"
-        description="This week's matchup odds, power rankings, free-agent swaps and ESPN results for your league. Odds come from simulated weeks on real NBA schedules; results come from ESPN."
+        description="This week's matchup odds, power rankings, every team's players, free-agent swaps and ESPN results for your league. Odds come from simulated weeks on real NBA schedules; results come from ESPN."
       />
       {linked ? <SyncBar sessionId={sessionId} /> : <LinkDialog sessionId={sessionId} />}
       {overviewStatus === 'error' && <ErrorState title="Could not load the season overview">{overviewError}</ErrorState>}
@@ -75,6 +76,7 @@ export function SeasonScreen() {
         {!overview && overviewStatus === 'loading' && <LoadingState title="Simulating this week's matchups" />}
         {overview && tab === 'matchups' && (linked ? <MatchupsTab sessionId={sessionId} userId={userId} /> : <EmptyState title="Link the league to see ESPN pairings" />)}
         {overview && tab === 'power' && <PowerTab />}
+        {overview && tab === 'players' && (linked ? <LeaguePlayersTab sessionId={sessionId} /> : <EmptyState title="Link the league to see every team's players" />)}
         {overview && tab === 'free-agents' && <FreeAgentsTab sessionId={sessionId} />}
         {overview && tab === 'results' && (linked ? <ResultsTab sessionId={sessionId} /> : <EmptyState title="Link the league to see ESPN results" />)}
         {overview && tab === 'predictions' && (linked ? <PredictionsTab sessionId={sessionId} userId={userId} /> : <EmptyState title="Link the league to start the track record" />)}

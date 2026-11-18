@@ -87,3 +87,21 @@ describe('PerformerTable roster moves', () => {
     expect(within(body[2]).queryByText(/wk 1/)).toBeNull()
   })
 })
+
+describe('PerformerTable fantasy team column', () => {
+  it('shows each row\'s fantasy team, sorts by it, and tints only the highlighted teams', () => {
+    const rows = [row(1, 'a', 'Star Player', 12, 0.5), row(2, 'b', 'Role Player', 8, 3.2)]
+    const team = (r: PerformerRow) => (r.player.player_id === 'a' ? { id: 'm01', name: 'Zed Team', color: '#ff0000' } : { id: 'm02', name: 'Alpha Team', color: null })
+    render(<PerformerTable rows={rows} metric="contribution" team={team} />)
+    expect(screen.getByRole('columnheader', { name: /fantasy team/i })).toBeInTheDocument()
+    const starRow = screen.getByText('Star Player').closest('tr')!
+    const roleRow = screen.getByText('Role Player').closest('tr')!
+    expect(within(starRow).getByText('Zed Team')).toBeInTheDocument()
+    expect(starRow).toHaveClass('tinted')
+    expect(starRow.style.getPropertyValue('--row-tint')).toBe('#ff0000')
+    expect(roleRow).not.toHaveClass('tinted')
+    fireEvent.click(screen.getByRole('button', { name: /sort by fantasy team/i }))
+    const names = screen.getAllByTestId('performer-row').map((tr) => within(tr).getByRole('button', { name: /details for/i }).textContent)
+    expect(names).toEqual(['Role Player', 'Star Player'])
+  })
+})

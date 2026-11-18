@@ -156,6 +156,46 @@ describe('season store', () => {
     expect(store.getState().overview?.league_name).toBe('Fake League')
   })
 
+  it('loads the league-wide performers for a week or the season with its own status flag', async () => {
+    const calls: Array<number | null> = []
+    const api = fakeApi({
+      seasonLeaguePerformers: (_id, period) => {
+        calls.push(period ?? null)
+        return Promise.resolve({ ids: makeOverview().ids, scope: period ? 'week' : 'season', period: period ?? null, periods_available: [1], baseline: 'b', source: 's', categories: [], unit_sizes: {}, benchmark_rates: {}, managers: { m01: 'Me' }, user_manager_id: 'm01', rows: [], notes: [] })
+      },
+    })
+    const store = createSeasonStore({ api, storage: memoryStorage(), reloadSession: async () => {} })
+    await store.getState().loadLeaguePerformers('sess', 1)
+    expect(store.getState().leaguePerformersStatus).toBe('ready')
+    expect(store.getState().leaguePerformers?.scope).toBe('week')
+    await store.getState().loadLeaguePerformers('sess', null)
+    expect(store.getState().leaguePerformers?.scope).toBe('season')
+    expect(calls).toEqual([1, null])
+  })
+
+  it('a slower league-performers response never overwrites a newer one, and a session change drops the old rows', async () => {
+    const resolvers: Array<(v: unknown) => void> = []
+    const body = (period: number | null, sessionId: string) => ({ ids: makeOverview().ids, scope: period ? 'week' : 'season', period, periods_available: [1, 2], baseline: 'b', source: 's', categories: [], unit_sizes: {}, benchmark_rates: {}, managers: { m01: sessionId }, user_manager_id: 'm01', rows: [], notes: [] })
+    const api = fakeApi({
+      seasonLeaguePerformers: (id, period) => new Promise((resolve) => resolvers.push((v) => resolve((v as null) ?? body(period ?? null, id)))),
+    })
+    const store = createSeasonStore({ api, storage: memoryStorage(), reloadSession: async () => {} })
+    const first = store.getState().loadLeaguePerformers('sess', 1)
+    const second = store.getState().loadLeaguePerformers('sess', 2)
+    resolvers[1](null)
+    await second
+    expect(store.getState().leaguePerformers?.period).toBe(2)
+    resolvers[0](null)
+    await first
+    expect(store.getState().leaguePerformers?.period).toBe(2) // the slow week-1 answer was dropped
+    expect(store.getState().leaguePerformersStatus).toBe('ready')
+    const third = store.getState().loadLeaguePerformers('other', null)
+    expect(store.getState().leaguePerformers).toBeNull() // nothing from 'sess' shows under 'other'
+    resolvers[2](null)
+    await third
+    expect(store.getState().leaguePerformers?.managers.m01).toBe('other')
+  })
+
   it('loads free agents and results with their own status flags', async () => {
     const api = fakeApi({
       seasonFreeAgents: (_id, opts) => Promise.resolve({ ids: makeOverview().ids, items: [], synced_at: null, ...(opts.q ? {} : {}) }),
