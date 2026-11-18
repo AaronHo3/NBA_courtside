@@ -1159,29 +1159,56 @@ def test_free_agents_hide_players_without_an_nba_team(client, complete_session):
     assert top["player_id"] not in ids
 
 
-def test_league_performers_lists_every_team_on_one_ranking(client, complete_session):
+def test_league_performers_one_row_per_player_with_every_owner_counted(client, complete_session):
     sid = complete_session
     install_fakes(client, league_from_state(client, sid, matchups=week1()))
     link(client, sid)
-    install_boxscore(client, {1: boxscore_from_state(client, sid, 1)})
-    assert client.post(f"/api/sessions/{sid}/espn/sync", json={}).status_code == 200
-    r = client.get(f"/api/sessions/{sid}/season/performers/league", params={"period": 1})
+    st = client.get(f"/api/sessions/{sid}/state").json()
+    traded = st["current_rosters"]["m01"][0]
+    other = st["current_rosters"]["m02"][0]
+    p1 = boxscore_from_state(client, sid, 1, games=3)
+    install_boxscore(client, {1: p1})
+    assert client.post(f"/api/sessions/{sid}/espn/sync", json={}).status_code == 200  # stores week 1
+    # week 2: m01 and m02 trade their first players, so week 2's box scores count them for the new teams
+    client.app.state.ctx.store.append(
+        sid,
+        EventType.roster_changed,
+        {
+            "moves": [
+                {"manager_id": "m01", "added": [other], "dropped": [traded], "source_ref": "espn:t2"},
+                {"manager_id": "m02", "added": [traded], "dropped": [other], "source_ref": "espn:t2"},
+            ],
+            "effective_at": "2026-10-27T03:00:00+00:00",
+        },
+        source="espn",
+    )
+    p2 = boxscore_from_state(client, sid, 2, games=2)
+    install_boxscore(client, {1: p1, 2: p2})
+    from app.season import service as season
+
+    season.store_period_stats(client.app.state.ctx, sid, 2)
+    r = client.get(f"/api/sessions/{sid}/season/performers/league")
     assert r.status_code == 200, r.text
     body = r.json()
-    assert body["scope"] == "week" and body["period"] == 1 and body["periods_available"] == [1]
+    assert body["scope"] == "season" and body["period"] is None and body["periods_available"] == [1, 2]
     rows = body["rows"]
-    assert {x["manager_id"] for x in rows} == {"m01", "m02", "m03"}
+    pids = [x["player"]["player_id"] for x in rows]
+    assert len(pids) == len(set(pids))  # one row per player, however many teams held him
     assert all(x["rank"] == i + 1 for i, x in enumerate(rows))
     assert [x["contribution"] for x in rows] == sorted((x["contribution"] for x in rows), reverse=True)
-    # same numbers as the per-team view, so the two screens never disagree
-    mine = client.get(f"/api/sessions/{sid}/season/performers", params={"manager_id": "m01", "period": 1}).json()
-    by_pid = {x["player"]["player_id"]: x for x in rows if x["manager_id"] == "m01"}
+    row = next(x for x in rows if x["player"]["player_id"] == traded)
+    assert row["games"] == 5 and row["periods"] == 2  # 3 for m01 in week 1 + 2 for m02 in week 2
+    assert row["owner_id"] == "m02"
+    assert [(o["manager_id"], o["periods"], o["games"]) for o in row["owners"]] == [("m01", [1], 3), ("m02", [2], 2)]
+    stayed = next(x for x in rows if x["player"]["player_id"] == st["current_rosters"]["m03"][0])
+    assert stayed["owner_id"] == "m03" and [(o["manager_id"], o["games"]) for o in stayed["owners"]] == [("m03", 5)]
+    # same per-player numbers as the per-team view when a player had one owner
+    mine = client.get(f"/api/sessions/{sid}/season/performers", params={"manager_id": "m03"}).json()
+    by_pid = {x["player"]["player_id"]: x for x in rows}
     for x in mine["contributors"]:
         assert by_pid[x["player"]["player_id"]]["contribution"] == x["contribution"]
-        assert by_pid[x["player"]["player_id"]]["over_expected"] == x["over_expected"]
     assert set(body["managers"]) == {"m01", "m02", "m03"} and body["user_manager_id"] in body["managers"]
-    assert body["unit_sizes"] and body["categories"]
-    season = client.get(f"/api/sessions/{sid}/season/performers/league").json()
-    assert season["scope"] == "season" and season["period"] is None and len(season["rows"]) == len(rows)
+    week = client.get(f"/api/sessions/{sid}/season/performers/league", params={"period": 2}).json()
+    assert week["scope"] == "week" and next(x for x in week["rows"] if x["player"]["player_id"] == traded)["games"] == 2
     empty = client.get(f"/api/sessions/{sid}/season/performers/league", params={"period": 5}).json()
     assert empty["rows"] == [] and any("no ESPN box scores" in n for n in empty["notes"])

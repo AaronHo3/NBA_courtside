@@ -716,8 +716,17 @@ class PerformerRow(BaseModel):
     flags: list[str]
 
 
+class OwnerStint(BaseModel):
+    manager_id: str
+    periods: list[int]  # weeks in which the player's games counted for this team
+    games: int
+
+
 class LeaguePerformerRow(PerformerRow):
-    manager_id: str  # the fantasy team these games counted for
+    """One row per player: every ESPN-counted game, whichever fantasy team it counted for."""
+
+    owner_id: str | None  # the team that holds him now (None = free agent)
+    owners: list[OwnerStint]  # who his games counted for, first stint first
 
 
 class LeaguePerformersResponse(BaseModel):
@@ -734,7 +743,7 @@ class LeaguePerformersResponse(BaseModel):
     benchmark_rates: dict[str, float]
     managers: dict[str, str]  # manager id -> team name
     user_manager_id: str
-    rows: list[LeaguePerformerRow]  # rank 1..n by contribution across the league
+    rows: list[LeaguePerformerRow]  # one per player, rank 1..n by contribution across the league
     notes: list[str]
 
 

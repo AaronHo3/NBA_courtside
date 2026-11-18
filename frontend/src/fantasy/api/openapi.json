@@ -3740,9 +3740,23 @@
       "type": "array",
       "title": "Flags"
      },
-     "manager_id": {
-      "type": "string",
-      "title": "Manager Id"
+     "owner_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Owner Id"
+     },
+     "owners": {
+      "items": {
+       "$ref": "#/components/schemas/OwnerStint"
+      },
+      "type": "array",
+      "title": "Owners"
      }
     },
     "type": "object",
@@ -3765,9 +3779,11 @@
      "contribution_by_category",
      "expected_by_category",
      "flags",
-     "manager_id"
+     "owner_id",
+     "owners"
     ],
-    "title": "LeaguePerformerRow"
+    "title": "LeaguePerformerRow",
+    "description": "One row per player: every ESPN-counted game, whichever fantasy team it counted for."
    },
    "LeaguePerformersResponse": {
     "properties": {
@@ -4343,6 +4359,32 @@
     ],
     "title": "MinutesView",
     "description": "How the minutes behind a season-screen value were set (DEC-34)."
+   },
+   "OwnerStint": {
+    "properties": {
+     "manager_id": {
+      "type": "string",
+      "title": "Manager Id"
+     },
+     "periods": {
+      "items": {
+       "type": "integer"
+      },
+      "type": "array",
+      "title": "Periods"
+     },
+     "games": {
+      "type": "integer",
+      "title": "Games"
+     }
+    },
+    "type": "object",
+    "required": [
+     "manager_id",
+     "periods",
+     "games"
+    ],
+    "title": "OwnerStint"
    },
    "PerformerRow": {
     "properties": {

@@ -18,6 +18,15 @@ table.grid.performers tr.tinted:hover > td,
 table.grid.performers tr.tinted:hover > th {
   background: color-mix(in srgb, var(--row-tint) 26%, transparent);
 }
+.team-cell {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.team-detail {
+  font-size: var(--fs-xs, 11px);
+  white-space: nowrap;
+}
 .team-chip {
   display: inline-flex;
   align-items: center;

@@ -18,9 +18,13 @@ export interface MoveTag {
 export type MoveTags = Record<string, MoveTag[]>
 /** The fantasy team a row's games counted for; `color` tints the row (null = plain). */
 export interface RowTeam {
-  id: string
+  id: string | null
   name: string
   color: string | null
+  /** Small line under the name, e.g. who else held the player this season. */
+  detail?: string
+  /** Tooltip for the whole cell. */
+  title?: string
 }
 type SortKey = 'rank' | 'player' | 'team' | 'games' | 'minutes' | 'contribution' | 'over_expected' | 'PTS' | 'REB' | 'AST' | 'STL' | 'BLK' | 'FG3M' | 'FG_PCT' | 'FT_PCT'
 
@@ -91,13 +95,10 @@ interface PerformerTableProps<R extends PerformerRow> {
   back?: BackLink
   /** Adds a "Fantasy team" column; a row whose team has a colour is tinted with it. */
   team?: (r: R) => RowTeam | null
-  /** React key per row; defaults to the player id. League-wide lists need player + team, since a traded player has a row per team. */
-  rowKey?: (r: R) => string
 }
 
 /** Sortable table of every rostered player; the name opens a detail drawer with actual vs expected. */
-export function PerformerTable<R extends PerformerRow>({ rows, metric, selectedId = null, onSelect, openId, onOpenChange, categories, moves, perGame = false, back, team, rowKey }: PerformerTableProps<R>) {
-  const keyOf = rowKey ?? ((r: R) => r.player.player_id)
+export function PerformerTable<R extends PerformerRow>({ rows, metric, selectedId = null, onSelect, openId, onOpenChange, categories, moves, perGame = false, back, team }: PerformerTableProps<R>) {
   const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({ key: 'rank', desc: false })
   const [localOpen, setLocalOpen] = useState<string | null>(null)
   const open = openId === undefined ? localOpen : openId
@@ -142,7 +143,7 @@ export function PerformerTable<R extends PerformerRow>({ rows, metric, selectedI
           </thead>
           <tbody>
             {sorted.map((r) => {
-              const lead = (metric === 'contribution' ? r.rank === 1 : r.over_expected !== null && r.rank === 1) && rows[0] !== undefined && keyOf(rows[0]) === keyOf(r)
+              const lead = (metric === 'contribution' ? r.rank === 1 : r.over_expected !== null && r.rank === 1) && rows[0]?.player.player_id === r.player.player_id
               const over = overOf(r, perGame)
               const rowTeam = team?.(r) ?? null
               const tint = rowTeam?.color ?? null
@@ -151,7 +152,7 @@ export function PerformerTable<R extends PerformerRow>({ rows, metric, selectedI
               if (onSelect) style.cursor = 'pointer'
               if (tint) style['--row-tint'] = tint
               return (
-                <tr key={keyOf(r)} className={cls || undefined} data-testid="performer-row" onClick={onSelect ? () => onSelect(r.player.player_id) : undefined} style={Object.keys(style).length ? style : undefined}>
+                <tr key={r.player.player_id} className={cls || undefined} data-testid="performer-row" onClick={onSelect ? () => onSelect(r.player.player_id) : undefined} style={Object.keys(style).length ? style : undefined}>
                   <td className="num">{r.rank}</td>
                   <th scope="row">
                     <span className="row-player">
@@ -181,11 +182,14 @@ export function PerformerTable<R extends PerformerRow>({ rows, metric, selectedI
                     </span>
                   </th>
                   {team && (
-                    <td className="fantasy-team">
+                    <td className="fantasy-team" title={rowTeam?.title}>
                       {rowTeam && (
-                        <span className="team-chip" style={rowTeam.color ? ({ '--row-tint': rowTeam.color } as CSSProperties) : undefined}>
-                          <span className="team-dot" aria-hidden="true" />
-                          {rowTeam.name}
+                        <span className="team-cell">
+                          <span className="team-chip" style={rowTeam.color ? ({ '--row-tint': rowTeam.color } as CSSProperties) : undefined}>
+                            <span className="team-dot" aria-hidden="true" />
+                            {rowTeam.name}
+                          </span>
+                          {rowTeam.detail && <span className="team-detail muted">{rowTeam.detail}</span>}
                         </span>
                       )}
                     </td>

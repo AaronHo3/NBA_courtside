@@ -10,6 +10,17 @@ import { EmptyState, ErrorState, LoadingState } from '../ui/States'
 type Scope = 'week' | 'season'
 type Unit = 'total' | 'per_game'
 
+const weeksText = (periods: number[]) => (periods.length <= 1 ? `wk ${periods[0] ?? '?'}` : `wk ${periods[0]}–${periods[periods.length - 1]}`)
+
+/** Detail and tooltip for a player whose games counted for more than one team, or for a team other than his current one. */
+function ownerHistory(r: LeaguePerformerRow, nameOf: (id: string) => string): Pick<RowTeam, 'detail' | 'title'> {
+  const moved = r.owners.length > 1 || (r.owners.length === 1 && r.owners[0].manager_id !== r.owner_id)
+  if (!moved) return {}
+  const stints = r.owners.map((o) => `${nameOf(o.manager_id)} ${weeksText(o.periods)}`)
+  const games = r.owners.map((o) => `${o.games} for ${nameOf(o.manager_id)}`).join(', ')
+  return { detail: stints.join(' · '), title: `${r.games} games counted: ${games}` }
+}
+
 const UNIT_CAPTION = 'Units: category standard deviations × games (one unit ≈ one average starter-game in one category). Same numbers as the Performers page.'
 
 /** Every rostered player in the league on one contribution ranking, with each row's fantasy team; pick teams to colour their rows. */
@@ -46,12 +57,13 @@ export function LeaguePlayersTab({ sessionId }: { sessionId: string }) {
       else next.add(id)
       return next
     })
-  const team = (r: LeaguePerformerRow): RowTeam | null => ({
-    id: r.manager_id,
-    name: managers[r.manager_id] ?? r.manager_id,
-    color: highlighted.has(r.manager_id) ? colors.get(r.manager_id) ?? null : null,
+  const nameOf = (id: string) => (id === data?.user_manager_id ? 'you' : managers[id] ?? id)
+  const team = (r: LeaguePerformerRow): RowTeam => ({
+    id: r.owner_id,
+    name: r.owner_id ? managers[r.owner_id] ?? r.owner_id : 'Free agent',
+    color: r.owner_id && highlighted.has(r.owner_id) ? colors.get(r.owner_id) ?? null : null,
+    ...ownerHistory(r, nameOf),
   })
-  const rowKey = (r: LeaguePerformerRow) => `${r.player.player_id}:${r.manager_id}`
 
   return (
     <div className="stack league-players">
@@ -123,9 +135,9 @@ export function LeaguePlayersTab({ sessionId }: { sessionId: string }) {
       {data && inSync && rows.length === 0 && <EmptyState title="No box scores for this selection yet">{data.notes.join(' ') || 'Sync the league after games have been played; weekly stats fill in as ESPN applies them.'}</EmptyState>}
       {data && rows.length > 0 && (
         <>
-          <PerformerTable rows={rows} metric="contribution" categories={data.categories} perGame={perGame} team={team} rowKey={rowKey} />
+          <PerformerTable rows={rows} metric="contribution" categories={data.categories} perGame={perGame} team={team} />
           <p className="table-note">
-            Rank is by contribution across the whole league{perGame ? ', shown per game played' : ''}. {UNIT_CAPTION} A player who changed teams appears once per team, with the games he played for each.
+            Rank is by contribution across the whole league{perGame ? ', shown per game played' : ''}. {UNIT_CAPTION} Every game that counted for any team is included; a player who changed hands shows his current team with the earlier stints underneath. Games played while on waivers are not in ESPN's box scores.
           </p>
           {data.notes.length > 0 && (
             <ul className="table-note" style={{ paddingLeft: 18 }}>

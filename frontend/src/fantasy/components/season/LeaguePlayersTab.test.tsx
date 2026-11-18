@@ -5,11 +5,12 @@ import { useSeasonStore } from '../../store/seasonStore'
 import { makeOverview } from '../../test/seasonFixtures'
 import { LeaguePlayersTab } from './LeaguePlayersTab'
 
-function row(rank: number, id: string, name: string, manager: string, contribution: number): LeaguePerformerRow {
+function row(rank: number, id: string, name: string, manager: string, contribution: number, owners: LeaguePerformerRow['owners'] = [{ manager_id: manager, periods: [2], games: 3 }]): LeaguePerformerRow {
   const line = { PTS: 60, REB: 15, AST: 12, STL: 3, BLK: 2, TOV: 6, FG3M: 6, FG3A: 15, FGM: 21, FGA: 45, FTM: 12, FTA: 15, FG_PCT: 0.467, FT_PCT: 0.8 }
   return {
     rank,
-    manager_id: manager,
+    owner_id: manager,
+    owners,
     player: { player_id: id, name, team: 'BOS', primary_position: 'PG', eligible_positions: ['PG'], eligibility_verified: true, injury_status: null, adp: null, rank: null, projection_source: 'blend', per_game: {}, per_game_sd: {}, drafted_by: null, drafted_overall: null, espn_id: null, nba_id: null } as unknown as LeaguePerformerRow['player'],
     games: 3,
     periods: 1,
@@ -100,14 +101,21 @@ describe('LeaguePlayersTab week default', () => {
     expect((screen.getByLabelText('Week') as HTMLSelectElement).value).toBe('2')
   })
 
-  it('keys traded players by player and team so both rows render', () => {
-    const traded = { ...row(2, 'b', 'Their Guy', 'm02', 9), manager_id: 'm01' }
-    useSeasonStore.setState({ overview: makeOverview(), leaguePerformers: { ...response, rows: [response.rows[1], traded] }, leaguePerformersStatus: 'ready', leaguePerformersError: null, loadLeaguePerformers: async () => {} })
+  it('shows a traded player once, under his current team, with the earlier stint and the games per team', () => {
+    const traded = { ...row(1, 'b', 'Their Guy', 'm02', 9, [{ manager_id: 'm01', periods: [1, 2], games: 5 }, { manager_id: 'm02', periods: [3, 4, 5], games: 9 }]), games: 14 }
+    const released = { ...row(2, 'c', 'Cut Guy', 'm01', 4), owner_id: null }
+    useSeasonStore.setState({ overview: makeOverview(), leaguePerformers: { ...response, rows: [traded, released] }, leaguePerformersStatus: 'ready', leaguePerformersError: null, loadLeaguePerformers: async () => {} })
     render(<LeaguePlayersTab sessionId="sess" />)
     const rows = screen.getAllByTestId('performer-row')
     expect(rows).toHaveLength(2)
     expect(within(rows[0]).getByText('Them')).toBeInTheDocument()
-    expect(within(rows[1]).getByText('Me')).toBeInTheDocument()
+    expect(within(rows[0]).getByText('you wk 1–2 · Them wk 3–5')).toBeInTheDocument()
+    expect(within(rows[0]).getByTitle('14 games counted: 5 for you, 9 for Them')).toBeInTheDocument()
+    expect(within(rows[1]).getByText('Free agent')).toBeInTheDocument()
+    expect(within(rows[1]).getByText('you wk 2')).toBeInTheDocument()
+    fireEvent.click(within(screen.getByRole('group', { name: /highlight teams/i })).getByRole('button', { name: /them/i }))
+    expect(rows[0]).toHaveClass('tinted')
+    expect(rows[1]).not.toHaveClass('tinted')
   })
 })
 

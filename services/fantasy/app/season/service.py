@@ -454,21 +454,34 @@ def performers(ctx: AppContext, session_id: str, manager_id: str, period: int | 
     )
 
 
+def _owner_stints(records: list[dict[str, Any]]) -> dict[str, list[S.OwnerStint]]:
+    """player -> the teams his stored games counted for, in order of first week, with weeks and games."""
+    acc: dict[str, dict[str, dict[str, Any]]] = {}
+    for r in sorted(records, key=lambda x: (int(x["period"]), x["manager_id"])):
+        if int(r.get("games") or 0) <= 0:
+            continue
+        stint = acc.setdefault(r["player_id"], {}).setdefault(r["manager_id"], {"periods": [], "games": 0})
+        if int(r["period"]) not in stint["periods"]:
+            stint["periods"].append(int(r["period"]))
+        stint["games"] += int(r["games"])
+    return {
+        pid: [S.OwnerStint(manager_id=m, periods=v["periods"], games=v["games"]) for m, v in by_mgr.items()]
+        for pid, by_mgr in acc.items()
+    }
+
+
 def league_performers(ctx: AppContext, session_id: str, period: int | None) -> S.LeaguePerformersResponse:
-    """Every team's performers on one ranking: the per-team numbers of ``performers`` with a manager column."""
+    """Every rostered player on one ranking, each with all his ESPN-counted games and who they counted for."""
     meta, state = _session(ctx, session_id)
     snap = _snapshot(ctx, meta)
     available = ctx.store.periods_with_stats(session_id)
     records = ctx.store.period_player_stats(session_id, period=period)
     notes = _box_score_notes(available, records, period)
-    by_manager: dict[str, list[dict[str, Any]]] = {}
-    for rec in records:
-        by_manager.setdefault(rec["manager_id"], []).append(rec)
-    rows: list[dict[str, Any]] = []
-    for manager_id, recs in by_manager.items():
-        contributors, _ = rank_performers(snap, state, recs)  # same per-team ranking as ``performers``
-        rows.extend({**r, "manager_id": manager_id} for r in contributors)
-    rows.sort(key=lambda r: (-r["contribution"], -r["games"], r["player_id"]))
+    # one row per player: ``aggregate`` sums his period rows whichever team they counted for
+    contributors, _ = rank_performers(snap, state, records)
+    stints = _owner_stints(records)
+    owner_now = {pid: m for m, roster in state.current_rosters().items() for pid in roster}
+    rows = [{**r, "owner_id": owner_now.get(r["player_id"]), "owners": stints.get(r["player_id"], [])} for r in contributors]
     units, rates = unit_sizes(snap, state.league)
     notes += _unknown_notes(snap, records)
     return S.LeaguePerformersResponse(

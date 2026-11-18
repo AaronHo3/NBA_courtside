@@ -348,10 +348,15 @@ unchanged. Brief: `docs/superpowers/specs/2026-10-25-courtside-redesign-v2-brief
 Comparing teams on the Performers page meant switching the team picker and remembering numbers.
 `season/performers/league` (`league_performers` in `app/season/service.py`) groups the stored
 period box scores by manager, runs `rank_performers` once per team exactly as the per-team endpoint
-does, tags each row with its `manager_id` and re-ranks the union by contribution, so the two views
-never disagree and a player who changed teams appears once per team with the games he played for
-each (as the per-team view already counted them). The response carries the manager names and the
-user's id so the tab needs no draft-store lookups. In the UI the view is a season tab ("All
+does but over every team's records at once, so `aggregate` sums a player's games whichever team
+they counted for: one row per player, ranked on his whole stored season. A traded player therefore
+keeps his rank (five games for one team and nine for the next are fourteen, not two short rows).
+Ownership rides on the row instead: `owner_id` is who holds him now (null = free agent, used for the
+highlight colour) and `owners` lists each stint with its weeks and games, shown under the team name
+when he changed hands. Games played while on waivers are not in ESPN's applied box scores and so
+are not counted; filling them from the stored NBA logs would need the same treatment for the
+expectation and is left out. For a player with one owner the numbers equal the per-team view's.
+The response carries the manager names and the user's id so the tab needs no draft-store lookups. In the UI the view is a season tab ("All
 players") rather than a Performers mode: it is a league-wide table, which is what the "My league"
 group holds, and it keeps the Performers page's team-centric charts untouched. `PerformerTable`
 gained an optional `team` accessor (column + `--row-tint` on the row) instead of a second table.

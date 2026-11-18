@@ -1194,7 +1194,10 @@ export interface components {
             /** Espn Linked At */
             espn_linked_at?: string | null;
         };
-        /** LeaguePerformerRow */
+        /**
+         * LeaguePerformerRow
+         * @description One row per player: every ESPN-counted game, whichever fantasy team it counted for.
+         */
         LeaguePerformerRow: {
             /** Rank */
             rank: number;
@@ -1245,8 +1248,10 @@ export interface components {
             } | null;
             /** Flags */
             flags: string[];
-            /** Manager Id */
-            manager_id: string;
+            /** Owner Id */
+            owner_id: string | null;
+            /** Owners */
+            owners: components["schemas"]["OwnerStint"][];
         };
         /**
          * LeaguePerformersResponse
@@ -1464,6 +1469,15 @@ export interface components {
              * @enum {string}
              */
             source: "blend" | "override";
+        };
+        /** OwnerStint */
+        OwnerStint: {
+            /** Manager Id */
+            manager_id: string;
+            /** Periods */
+            periods: number[];
+            /** Games */
+            games: number;
         };
         /** PerformerRow */
         PerformerRow: {
