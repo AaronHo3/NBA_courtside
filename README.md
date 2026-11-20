@@ -163,6 +163,20 @@ original routes and response shapes (`/docs` on each port shows the OpenAPI sche
 UI calls `/api/analytics/...` through `src/lib/api.ts`; the fantasy UI has its own client
 (`src/fantasy/api/client.ts`, base `/api/fantasy`, error format `{code, message, detail}`).
 
+### As a Mac app
+
+```bash
+scripts/macos/install.sh <session_id>   # login item for `make dev` + ESPN sync at 01:30 and 09:00
+scripts/macos/uninstall.sh              # removes both
+```
+
+The login item skips itself while a terminal `make dev` already holds :5173. The scheduled job runs
+`espn-sync <session_id> --game-logs` and posts a macOS notification with the result. Logs go to
+`~/Library/Logs/Courtside/`. The session id lives only in `~/Library/LaunchAgents`. To get a Dock
+app, open http://127.0.0.1:5173/fantasy once with the session loaded, then use Chrome's
+**Install Courtside** (address bar icon, or menu > Cast, save and share). The installed app opens
+on the Season screen and reloads the last session from the browser's storage.
+
 ### How the fantasy UI is embedded
 
 `frontend/src/fantasy` is the copilot app (hash router, plain CSS), rendered at `/fantasy` inside

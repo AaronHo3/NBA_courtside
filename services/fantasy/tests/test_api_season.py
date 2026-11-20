@@ -618,6 +618,43 @@ def test_cli_link_and_sync(client, complete_session, monkeypatch, capsys):
     assert "period 1" in out and "m01" in out or "Team 1" in out
 
 
+
+def test_cli_sync_with_game_logs_refreshes_logs_and_reports_failure(client, complete_session, monkeypatch, capsys):
+    """The nightly job runs `espn-sync --game-logs`: one command, and a log failure must not hide behind exit 0."""
+    from app import cli
+    from app.api import schemas as S
+    from app.season import service as season
+
+    sid = complete_session
+    install_fakes(client, league_from_state(client, sid, matchups=week1()))
+    link(client, sid)
+    ctx = client.app.state.ctx
+    monkeypatch.setattr(cli, "build_context", lambda _settings: ctx)
+    calls: list[str] = []
+
+    def fake_logs(_ctx, session_id):
+        calls.append(session_id)
+        return S.GameLogsView(season="2026-27", fetched_at="2026-11-20T07:00:00+00:00", rows=12, max_game_date="2026-11-19")
+
+    monkeypatch.setattr(season, "refresh_game_logs", fake_logs)
+    assert cli.main(["espn-sync", sid, "--game-logs"]) == 0
+    out = capsys.readouterr().out
+    assert calls == [sid]
+    assert "ESPN sync:" in out and "game logs: 12 rows through 2026-11-19" in out
+
+    def failing_logs(_ctx, _session_id):
+        raise season.SeasonError(502, "provider_unavailable", "could not fetch NBA game logs: timeout")
+
+    monkeypatch.setattr(season, "refresh_game_logs", failing_logs)
+    assert cli.main(["espn-sync", sid, "--game-logs"]) == 1
+    out = capsys.readouterr().out
+    assert "ESPN sync:" in out and "game logs not refreshed" in out and "timeout" in out
+
+    calls.clear()
+    monkeypatch.setattr(season, "refresh_game_logs", fake_logs)
+    assert cli.main(["espn-sync", sid]) == 0
+    assert calls == []
+
 def test_sync_race_is_rejected_not_double_applied(client, complete_session):
     """A plan built from one state must not be applied over a state that moved on (auto-refresh vs manual)."""
     sid = complete_session

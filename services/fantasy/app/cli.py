@@ -242,6 +242,20 @@ def cmd_espn_sync(ns: argparse.Namespace) -> int:
         print(f"  {names.get(c.manager_id, c.manager_id)}: +{c.added} -{c.dropped}")
     for w in res.warnings:
         print("  !", w)
+    return _refresh_logs_after_sync(ctx, ns.session_id) if ns.game_logs else 0
+
+
+def _refresh_logs_after_sync(ctx, session_id: str) -> int:
+    """Refresh this season's NBA game logs after a sync; the sync stands even when this fails."""
+    from app.season import service as season
+    from app.season.service import SeasonError
+
+    try:
+        logs = season.refresh_game_logs(ctx, session_id)
+    except SeasonError as e:
+        print(f"game logs not refreshed ({e.code}): {e.message}")
+        return 1
+    print(f"game logs: {logs.rows} rows through {logs.max_game_date} (fetched {logs.fetched_at})")
     return 0
 
 
@@ -414,6 +428,7 @@ def main(argv: list[str] | None = None) -> int:
     el.set_defaults(fn=cmd_espn_link)
     es = sub.add_parser("espn-sync")
     es.add_argument("session_id")
+    es.add_argument("--game-logs", action="store_true", help="also refresh this season's NBA game logs")
     es.set_defaults(fn=cmd_espn_sync)
     pf = sub.add_parser("performance")
     pf.add_argument("session_id")
